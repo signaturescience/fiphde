@@ -34,4 +34,5 @@ Imports:
     lubridate,
     magrittr,
     RSocrata,
-    tibble
+    tibble,
+    tidyr
