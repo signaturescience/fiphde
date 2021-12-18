@@ -159,3 +159,29 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
 
 }
 
+
+#' @title Get ILI data from CDC FluView
+#' @description Get ILI data from CDC FluView
+#' @param region Either "state" or "national" or `c("national", "state")` for both.
+#' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
+#' @return A tibble
+#' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
+#' @examples
+#' \dontrun{
+#' get_cdc_ili(region="national", years=2021)
+#' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
+#' }
+#' @export
+get_cdc_ili <- function(region=c("national", "state"), years=NULL) {
+  # Map over regions calling cdcfluview::ilinet for that region and specified years
+  d <- purrr::map_dfr(region, ~cdcfluview::ilinet(., years=years))
+  # Get only relevant columns (drop age group distributions)
+  # Join to internal package data to get state abbreviations and FIPS codes
+  d <- d %>%
+    dplyr::select(region_type, region, year, week, week_start, dplyr::contains("ili"), ilitotal:total_patients) %>%
+    dplyr::mutate(region=gsub("National", "US", region)) %>%
+    dplyr::inner_join(locations, by=c("region"="location_name")) %>%
+    dplyr::select(location, region_type, abbreviation, region, dplyr::everything())
+  return(d)
+}
+
