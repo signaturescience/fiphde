@@ -30,9 +30,11 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: 
+    cdcfluview,
     dplyr,
     lubridate,
     magrittr,
+    purrr,
     RSocrata,
     tibble,
     tidyr
