@@ -159,3 +159,63 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
 
 }
 
+
+#' @title Get ILI data from CDC FluView
+#' @description Get ILI data from CDC FluView. See [cdcfluview::ilinet].
+#' @param region Either "state" or "national" or `c("national", "state")` for both.
+#' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
+#' @return A tibble
+#' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
+#' @examples
+#' \dontrun{
+#' get_cdc_ili(region="national", years=2021)
+#' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
+#' }
+#' @export
+get_cdc_ili <- function(region=c("national", "state"), years=NULL) {
+  # Map over regions calling cdcfluview::ilinet for that region and specified years
+  d <- purrr::map_dfr(region, ~cdcfluview::ilinet(., years=years))
+  # Get only relevant columns (drop age group distributions)
+  # Join to internal package data to get state abbreviations and FIPS codes
+  d <- d %>%
+    dplyr::select(region_type, region, year, week, week_start, dplyr::contains("ili"), ilitotal:total_patients) %>%
+    dplyr::mutate(region=gsub("National", "US", region)) %>%
+    dplyr::inner_join(locations, by=c("region"="location_name")) %>%
+    dplyr::select(location, region_type, abbreviation, region, dplyr::everything())
+  message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
+                  max(d$week_start),
+                  d$year[d$week_start==max(d$week_start)],
+                  d$week[d$week_start==max(d$week_start)]))
+  return(d)
+}
+
+#' @title Get hospitalization data from CDC FluView
+#' @description Get hospitalization data from CDC FluView. See [cdcfluview::hospitalizations].
+#' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
+#' @return A tibble
+#' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
+#' @examples
+#' \dontrun{
+#' get_cdc_hosp(years=2019)
+#' }
+#' @export
+get_cdc_hosp <- function(years=NULL) {
+  d <- cdcfluview::hospitalizations(surveillance_area="flusurv", region="all", years=years)
+  d <- d %>%
+    dplyr::filter(age_label=="Overall") %>%
+    dplyr::transmute(location="US",
+                     abbreviation="US",
+                     region="US",
+                     year,
+                     week=year_wk_num,
+                     week_start=wk_start,
+                     week_end=wk_end,
+                     rate,
+                     weeklyrate,
+                     season=sea_label)
+  message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
+                  max(d$week_start),
+                  d$year[d$week_start==max(d$week_start)],
+                  d$week[d$week_start==max(d$week_start)]))
+  return(d)
+}
