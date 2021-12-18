@@ -32,5 +32,11 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "epiyear",
                                                         "epiweek",
                                                         "imputed_value",
+                                                        "region_type",
+                                                        "week_start",
+                                                        "ilitotal",
+                                                        "total_patients",
+                                                        "location",
+                                                        "abbreviation",
                                                         "."))
 
