@@ -38,5 +38,12 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "total_patients",
                                                         "location",
                                                         "abbreviation",
+                                                        "age_label",
+                                                        "year_wk_num",
+                                                        "wk_start",
+                                                        "wk_end",
+                                                        "rate",
+                                                        "weeklyrate",
+                                                        "sea_label",
                                                         "."))
 
