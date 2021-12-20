@@ -34,9 +34,11 @@ Imports:
     dplyr,
     lubridate,
     magrittr,
+    MMWRweek,
     purrr,
     RSocrata,
     tibble,
-    tidyr
+    tidyr,
+    tsibble
 Depends: 
     R (>= 2.10)
