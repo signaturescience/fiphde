@@ -184,8 +184,8 @@ get_cdc_ili <- function(region=c("national", "state"), years=NULL) {
     dplyr::select(location, region_type, abbreviation, region, dplyr::everything())
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
-                  d$year[d$week_start==max(d$week_start)],
-                  d$week[d$week_start==max(d$week_start)]))
+                  unique(d$year[d$week_start==max(d$week_start)]),
+                  unique(d$week[d$week_start==max(d$week_start)])))
   return(d)
 }
 
@@ -215,7 +215,7 @@ get_cdc_hosp <- function(years=NULL) {
                      season=sea_label)
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
-                  d$year[d$week_start==max(d$week_start)],
-                  d$week[d$week_start==max(d$week_start)]))
+                  unique(d$year[d$week_start==max(d$week_start)]),
+                  unique(d$week[d$week_start==max(d$week_start)])))
   return(d)
 }
