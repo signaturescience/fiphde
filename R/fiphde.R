@@ -45,5 +45,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "rate",
                                                         "weeklyrate",
                                                         "sea_label",
+                                                        "monday",
+                                                        "yweek",
                                                         "."))
 
