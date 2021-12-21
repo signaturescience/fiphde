@@ -64,7 +64,7 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
     dplyr::arrange(date)
 
   # Make everything except state and date numeric
-  d %>% dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
+  d <- d %>% dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
 
   # Simplify column names for columns you care most about, and relocate to the front of the tibble
   d <- d %>%
