@@ -12,17 +12,17 @@
 #' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
 #' @examples
 #' \dontrun{
-#' get_hdgov_flu_hosp(mindate="2021-11-01", limitrows=10)
-#' get_hdgov_flu_hosp(state="VA")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", limitrows=5, limitcols=FALSE)
+#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=TRUE)
+#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
+#' get_hdgov_hosp(state="VA")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
 #' }
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.json",
                                state=NULL, limitrows=NULL, mindate=NULL, maxdate=NULL,
-                               limitcols=TRUE, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
+                               limitcols=FALSE, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
 
   # If limiting to a state, construct the state limit query string
   state <- if (!is.null(state) && is.character(state)) state <- paste0("state=", state)
@@ -63,25 +63,30 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
     dplyr::mutate(date=lubridate::as_date(date)) %>%
     dplyr::arrange(date)
 
-  # Just return the columns you care about, as numeric
+  # Make everything except state and date numeric
+  d %>% dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
+
+  # Simplify column names for columns you care most about, and relocate to the front of the tibble
+  d <- d %>%
+    dplyr::select(state,
+                  date,
+                  flu.admits     = previous_day_admission_influenza_confirmed,
+                  flu.admits.cov = previous_day_admission_influenza_confirmed_coverage,
+                  flu.deaths     = previous_day_deaths_influenza,
+                  flu.deaths.cov = previous_day_deaths_influenza_coverage,
+                  flu.icu        = icu_patients_confirmed_influenza,
+                  flu.icu.cov    = icu_patients_confirmed_influenza_coverage,
+                  flu.tot        = total_patients_hospitalized_confirmed_influenza,
+                  flu.tot.cov    = total_patients_hospitalized_confirmed_influenza_coverage,
+                  cov.admits     = previous_day_admission_adult_covid_confirmed,
+                  cov.admits.cov = previous_day_admission_adult_covid_confirmed_coverage,
+                  cov.deaths     = deaths_covid,
+                  cov.deaths.cov = deaths_covid_coverage,
+                  dplyr::everything())
+
+  # Limit to a few columns you care about
   if (limitcols) {
-    d <- d %>%
-      dplyr::select(state,
-                    date,
-                    flu.admits     = previous_day_admission_influenza_confirmed,
-                    flu.admits.cov = previous_day_admission_influenza_confirmed_coverage,
-                    flu.deaths     = previous_day_deaths_influenza,
-                    flu.deaths.cov = previous_day_deaths_influenza_coverage,
-                    flu.icu        = icu_patients_confirmed_influenza,
-                    flu.icu.cov    = icu_patients_confirmed_influenza_coverage,
-                    flu.tot        = total_patients_hospitalized_confirmed_influenza,
-                    flu.tot.cov    = total_patients_hospitalized_confirmed_influenza_coverage,
-                    cov.admits     = previous_day_admission_adult_covid_confirmed,
-                    cov.admits.cov = previous_day_admission_adult_covid_confirmed_coverage,
-                    cov.deaths     = deaths_covid,
-                    cov.deaths.cov = deaths_covid_coverage
-      ) %>%
-      dplyr::mutate(dplyr::across(c(-state, -date), as.integer))
+    d <- d %>% dplyr::select(state:cov.deaths.cov)
   }
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
