@@ -1,75 +1,10 @@
 library(fiphde)
-# library(tidyverse)
-# library(lubridate)
-# library(focustools)
-# library(fabletools)
-# library(fable)
+ilidat <- get_cdc_ili(region="national", years=2010:lubridate::year(lubridate::today()))
+ilifor <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01", constrained=TRUE)
+ilifor$arima_params
+ilifor$ili_bound %>% tail()
 
-### Function arguments
-#' @param trim_date Earliest start date you want to use for ILI data
-#' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
-#' @param region Either "national" or "state" or c("national", "state") for both national and state-level data.
-#' @param location Vector specifying locations to filter to; `'US'` by default.
-trim_date="2020-03-01"
-horizon=4
-region="national"
-location="US"
-
-# Set the years passed to get_cdc_ili starting with the year of the trim_date to the current year
-years <- lubridate::year(trim_date):lubridate::year(lubridate::today())
-
-## retreive ILI data
-ilidat_all <- get_cdc_ili(region=region, years=years)
-
-## subset to US only and subset to the trim date to present
-ilidat <-
-  ilidat_all %>%
-  dplyr::filter(location %in% location) %>%
-  dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d")) %>%
-  dplyr::select(location, year, week, weighted_ili)
-
-## make a tsibble. do not chop the last week - because this is weekly data we won't have an incomplete final week
-ilidat_tsibble <-
-  ilidat %>%
-  fiphde::make_tsibble(epiyear = year, epiweek = week, chop=FALSE)
-tail(ilidat_tsibble)
-
-# Nonseasonal fit: PDQ(0, 0, 0)
-# Nonseasonal components unrestricted: pdq(0:5,0:5,0:5)
-ili_fit <- fabletools::model(ilidat_tsibble,
-                             arima = fable::ARIMA(weighted_ili ~ PDQ(0,0,0) + pdq(0:5,0:5,0:5),
-                                                  stepwise=FALSE,
-                                                  approximation=FALSE))
-# ili_fit %>% focustools::extract_arima_params()
-
-## oddly this WORKS (even though the outcome is not icases) ... need to fix that behavior in focustools
-# ili_forecast <- focustools::ts_forecast(ili_fit, outcome = "icases")
-
-# Get the forecast
-ili_forecast <- fabletools::forecast(ili_fit, h=horizon)
-
-## Look at the quantiles
-# ili_forecast %>%
-#   fabletools::hilo()
-# ili_forecast %>%
-#   fabletools::hilo() %>%
-#   fabletools::unpack_hilo(`80%`) %>%
-#   fabletools::unpack_hilo(`95%`)
-
-# Get the next #horizon weeks in a tibble
-ili_future <- ili_forecast %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(year=lubridate::epiyear(yweek)) %>%
-  dplyr::mutate(week=lubridate::epiweek(yweek)) %>%
-  dplyr::select(location, year, week, weighted_ili=.mean)
-
-
-ili_bound <- dplyr::bind_rows(ilidat     %>% dplyr::mutate(forecasted=FALSE),
-                              ili_future %>% dplyr::mutate(forecasted=TRUE))
-
-return(ili_bound)
-
-source("glm.R")
+source(here::here("scratch/glm.R"))
 
 hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-12")
 
@@ -83,7 +18,8 @@ tmp_weekly_flu <-
             flu.admits.cov = sum(flu.admits.cov, na.rm = TRUE),
             .groups = "drop") %>%
   mutate(location = "US", .before = "epiweek") %>%
-  left_join(ilidat)
+  left_join(ilidat) %>%
+  print()
 
 ## add lag columns
 tmp_weekly_flu_w_lag <-
