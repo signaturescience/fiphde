@@ -29,7 +29,7 @@ glm_fit <- function(.data,
     trendeval::evaluate_models(
       .models,
       dat,
-      method = evaluate_resampling,
+      method = trendeval::evaluate_resampling,
       metrics = list(yardstick::rmse)
     )
 
@@ -51,7 +51,7 @@ glm_fit <- function(.data,
   ret <- dplyr::tibble(model_class = best_by_rmse$model_class,
                        fit = tmp_fit,
                        location = unique(dat$location),
-                       data = tidyr::nest(dat, fit_data = everything()))
+                       data = tidyr::nest(dat, fit_data = dplyr::everything()))
 
   message("Selected model ...")
   message(as.character(ret$fit$fitted_model$family)[1])
@@ -84,7 +84,7 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
   ## run the predict method on the fitted model
   ## use the given alpha
   fit %>%
-    predict(new_data, alpha = alpha) %>%
+    stats::predict(new_data, alpha = alpha) %>%
     ## get just the prediction interval bounds ...
     ## index (time column must be named index) ...
     dplyr::select(epiyear, epiweek, lower_pi, upper_pi) %>%
@@ -137,14 +137,14 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
   # ## take the fit object provided and use predict
   point_estimates <-
     fit %>%
-    predict(new_data) %>%
+    stats::predict(new_data) %>%
     dplyr::select(epiweek, epiyear, estimate) %>%
     dplyr::mutate(estimate = round(estimate)) %>%
     dplyr::mutate(quantile = NA) %>%
     dplyr::select(epiweek, epiyear, quantile, value = estimate)
 
   ## map the quibble function over the alphas
-  quants <- map_df(alpha, .f = function(x) glm_quibble(fit = fit, new_data = new_data, alpha = x))
+  quants <- purrr::map_df(alpha, .f = function(x) glm_quibble(fit = fit, new_data = new_data, alpha = x))
 
   ## prep data
   dplyr::bind_rows(point_estimates,quants) %>%
@@ -196,7 +196,7 @@ glm_wrap <- function(.data, .models, new_covariates = NULL, horizon = 4, alpha =
         dplyr::select(-quantile) %>%
         dplyr::mutate(flu.admits.cov = NA, location = "US")
 
-      forc_list[[i]] <- glm_forecast(.data = bind_rows(.data, prev_weeks),
+      forc_list[[i]] <- glm_forecast(.data = dplyr::bind_rows(.data, prev_weeks),
                                      new_covariates = new_covariates[i,],
                                      fit = tmp_fit$fit,
                                      alpha = alpha)
