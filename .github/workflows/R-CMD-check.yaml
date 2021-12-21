@@ -24,5 +24,10 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v1
         with:
           extra-packages: rcmdcheck
-
+      - name: Install R package dependencies
+        run: |
+          install.packages(c("remotes"))
+          remotes::install_github("cmu-delphi/covidcast", ref = "main", subdir = "R-packages/evalcast")
+        shell: Rscript {0}
       - uses: r-lib/actions/check-r-package@v1
+
