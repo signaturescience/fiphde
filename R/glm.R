@@ -45,7 +45,7 @@ glm_fit <- function(.data,
   ## fit the model
   tmp_fit <-
     best_by_rmse %>%
-    fit(dat)
+    trending::fit(dat)
 
   ## construct tibble with model type, actual fit, and the location
   ret <- dplyr::tibble(model_class = best_by_rmse$model_class,
