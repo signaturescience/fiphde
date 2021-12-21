@@ -65,5 +65,12 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "truth",
                                                         "rmse",
                                                         "value",
+                                                        "unweighted_ili",
+                                                        "ili",
+                                                        "miss",
+                                                        "total",
+                                                        "pmiss",
+                                                        "arima",
+                                                        "x",
                                                         "."))
 
