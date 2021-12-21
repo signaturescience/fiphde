@@ -12,17 +12,17 @@
 #' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
 #' @examples
 #' \dontrun{
-#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10)
+#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=TRUE)
+#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
 #' get_hdgov_hosp(state="VA")
 #' get_hdgov_hosp(state="VA", mindate="2021-10-01")
 #' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
 #' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01", limitrows=5, limitcols=FALSE)
 #' }
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.json",
                                state=NULL, limitrows=NULL, mindate=NULL, maxdate=NULL,
-                               limitcols=TRUE, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
+                               limitcols=FALSE, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
 
   # If limiting to a state, construct the state limit query string
   state <- if (!is.null(state) && is.character(state)) state <- paste0("state=", state)
