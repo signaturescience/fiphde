@@ -53,7 +53,7 @@ models <-
 
 res <- glm_wrap(train_dat,
                 ## NOTE: hardcoding ili covariates ... butshould actually get from forecasts above
-                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), weighted_ili = c(2.31,2.43,2.45,2.68)),
+                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), weighted_ili = ilifor$ili_future$weighted_ili),
                 .models = models,
                 alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
 
