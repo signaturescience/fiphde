@@ -7,7 +7,7 @@
 #' @param df A `tibble` containing columns `epiyear` and `epiweek`.
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.
-#' @param epiweek Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
+#' @param key Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
 #' @param chop Logical indicating whether or not to remove the most current week (default `TRUE`).
 #' @return A `tsibble` containing additional columns `monday` indicating the date
 #'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
