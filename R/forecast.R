@@ -43,9 +43,12 @@
 #'            by = c("location", "year", "week", "forecasted")) %>%
 #'   gather(key, value, ends_with("ili")) %>%
 #'   mutate(date=cdcfluview::mmwr_week_to_date(year, week)) %>%
-#'   filter(date>"2021-01-01") %>%
-#'   ggplot(aes(date, value)) + geom_point(aes(col=forecasted)) +
-#'   facet_wrap(~key)
+#'   filter(date>"2021-07-01") %>%
+#'   ggplot(aes(date, value)) +
+#'   geom_line(alpha=.5) +
+#'   geom_point(aes(col=forecasted)) +
+#'   facet_wrap(~key) +
+#'   theme_bw()
 #' }
 #' @export
 forecast_ili <- function(ilidat, horizon=4L, location="US", trim_date=NULL, constrained=TRUE) {
