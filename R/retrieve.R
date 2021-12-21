@@ -63,25 +63,30 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
     dplyr::mutate(date=lubridate::as_date(date)) %>%
     dplyr::arrange(date)
 
-  # Just return the columns you care about, as numeric
+  # Make everything except state and date numeric
+  d %>% mutate(across(.cols=-c(state, date), as.numeric))
+
+  # Simplify column names for columns you care most about, and relocate to the front of the tibble
+  d <- d %>%
+    dplyr::select(state,
+                  date,
+                  flu.admits     = previous_day_admission_influenza_confirmed,
+                  flu.admits.cov = previous_day_admission_influenza_confirmed_coverage,
+                  flu.deaths     = previous_day_deaths_influenza,
+                  flu.deaths.cov = previous_day_deaths_influenza_coverage,
+                  flu.icu        = icu_patients_confirmed_influenza,
+                  flu.icu.cov    = icu_patients_confirmed_influenza_coverage,
+                  flu.tot        = total_patients_hospitalized_confirmed_influenza,
+                  flu.tot.cov    = total_patients_hospitalized_confirmed_influenza_coverage,
+                  cov.admits     = previous_day_admission_adult_covid_confirmed,
+                  cov.admits.cov = previous_day_admission_adult_covid_confirmed_coverage,
+                  cov.deaths     = deaths_covid,
+                  cov.deaths.cov = deaths_covid_coverage,
+                  everything())
+
+  # Limit to a few colums you care about
   if (limitcols) {
-    d <- d %>%
-      dplyr::select(state,
-                    date,
-                    flu.admits     = previous_day_admission_influenza_confirmed,
-                    flu.admits.cov = previous_day_admission_influenza_confirmed_coverage,
-                    flu.deaths     = previous_day_deaths_influenza,
-                    flu.deaths.cov = previous_day_deaths_influenza_coverage,
-                    flu.icu        = icu_patients_confirmed_influenza,
-                    flu.icu.cov    = icu_patients_confirmed_influenza_coverage,
-                    flu.tot        = total_patients_hospitalized_confirmed_influenza,
-                    flu.tot.cov    = total_patients_hospitalized_confirmed_influenza_coverage,
-                    cov.admits     = previous_day_admission_adult_covid_confirmed,
-                    cov.admits.cov = previous_day_admission_adult_covid_confirmed_coverage,
-                    cov.deaths     = deaths_covid,
-                    cov.deaths.cov = deaths_covid_coverage
-      ) %>%
-      dplyr::mutate(dplyr::across(c(-state, -date), as.integer))
+    d <- d %>% select(state:cov.deaths.cov)
   }
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
