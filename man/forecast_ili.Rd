@@ -44,7 +44,7 @@ Currently limited to one location only.
 \examples{
 \dontrun{
 # Get data
-ilidat <- get_cdc_ili(region="national", years=2010:lubridate::year(lubridate::today()))
+ilidat <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
 # Using data only from march 2020 forward
 ilifor_2020 <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01")
 head(ilifor_2020$ili_bound)
