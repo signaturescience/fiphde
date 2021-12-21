@@ -72,7 +72,7 @@ wis_score <- function(.forecasts, .test) {
     dplyr::left_join(.test) %>%
     dplyr::select(epiweek,epiyear,quantile,value,flu.admits) %>%
     dplyr::group_by(epiweek, epiyear) %>%
-    dplyr::summarise(wis = evalcast::weighted_interval_score(quantile = quantile, value = value, actual_value = flu.admits))
+    dplyr::summarise(wis = fiphde::weighted_interval_score(quantile = quantile, value = value, actual_value = flu.admits))
 }
 
 #' Plot forecasts against observed data
