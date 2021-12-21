@@ -1,41 +1,19 @@
 library(fiphde)
-library(tidyverse)
-library(lubridate)
-library(focustools)
-library(fabletools)
-library(fable)
 
-## retreive ILI data
-ilidat <- get_cdc_ili()
+# Get data
+ilidat <- get_cdc_ili(region="national", years=2020:lubridate::year(lubridate::today()))
 
-## set a date from whihc the
-trim_date <- "2020-03-01"
+# Forecast ILI
+ilifor <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01", constrained=TRUE)
 
-us_ilidat <-
-  ilidat %>%
-  filter(location == "US") %>%
-  mutate(epiyear = epiyear(week_start),
-         epiweek = epiweek(week_start)) %>%
-  filter(week_start > as.Date(trim_date, format = "%Y-%m-%d")) %>%
-  select(location, epiyear, epiweek, weighted_ili)
+# What are the arima params?
+ilifor$arima_params
 
-us_ilidat_tsibble <-
-  us_ilidat %>%
-  make_tsibble(chop=TRUE)
+# Take a look at the forecasted data
+ilifor$ili_future
 
-us_ili_fit <-
-  us_ilidat_tsibble %>%
-  ## NOTE: parameter space here ??
-  model(arima = ARIMA(weighted_ili~PDQ(0,0,0)+pdq(0:5,0:5,0:5), stepwise=FALSE, approximation=FALSE))
-
-us_ili_fit %>%
-  extract_arima_params()
-
-## oddly this WORKS (even though the outcome is not icases) ... need to fix that behavior in focustools
-us_ili_forecast <-
-  focustools::ts_forecast(us_ili_fit, outcome = "icases")
-
-us_ili_forecast
+# Take a look at the forecasted data bound do the real data
+ilifor$ili_bound %>% tail(8)
 
 hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-12")
 
@@ -44,14 +22,14 @@ tmp_weekly_flu <-
   mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
-  mutate(epiweek = lubridate::epiweek(date),
-         epiyear = lubridate::epiyear(date)) %>%
-  group_by(epiweek, epiyear) %>%
+  mutate(week = lubridate::epiweek(date),
+         year = lubridate::epiyear(date)) %>%
+  group_by(year, week) %>%
   summarise(flu.admits = sum(flu.admits, na.rm = TRUE),
             flu.admits.cov = sum(flu.admits.cov, na.rm = TRUE),
             .groups = "drop") %>%
-  mutate(location = "US", .before = "epiweek") %>%
-  left_join(us_ilidat)
+  mutate(location = "US", .before = "week") %>%
+  left_join(ilifor$ilidat)
 
 ## add lag columns
 tmp_weekly_flu_w_lag <-
@@ -85,7 +63,7 @@ models <-
 
 res <- glm_wrap(train_dat,
                 ## NOTE: hardcoding ili covariates ... butshould actually get from forecasts above
-                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), weighted_ili = c(2.31,2.43,2.45,2.68)),
+                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), weighted_ili = ilifor$ili_future$weighted_ili),
                 .models = models,
                 alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
 
