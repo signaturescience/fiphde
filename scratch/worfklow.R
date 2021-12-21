@@ -42,6 +42,8 @@ hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-12")
 tmp_weekly_flu <-
   hosp %>%
   mutate(date = date - 1) %>%
+  mutate(flu.admits = as.numeric(flu.admits),
+         flu.admits.cov = as.numeric(flu.admits.cov)) %>%
   mutate(epiweek = lubridate::epiweek(date),
          epiyear = lubridate::epiyear(date)) %>%
   group_by(epiweek, epiyear) %>%
@@ -91,3 +93,4 @@ res$forecasts
 res$model
 
 plot_forc(res$forecasts, train_dat, test_dat)
+
