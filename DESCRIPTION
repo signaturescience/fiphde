@@ -32,6 +32,8 @@ RoxygenNote: 7.1.2
 Imports: 
     cdcfluview,
     dplyr,
+    fable,
+    fabletools,
     lubridate,
     magrittr,
     MMWRweek,
