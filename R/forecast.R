@@ -17,7 +17,7 @@
 #' @examples
 #' \dontrun{
 #' # Get data
-#' ilidat <- get_cdc_ili(region="national", years=2010:lubridate::year(lubridate::today()))
+#' ilidat <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
 #' # Using data only from march 2020 forward
 #' ilifor_2020 <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01")
 #' head(ilifor_2020$ili_bound)
@@ -61,16 +61,17 @@ forecast_ili <- function(ilidat, horizon=4L, location="US", trim_date=NULL, cons
   }
 
   ## subset to selected location and get columns you care about
+  ## fixme: remove this filter column later when you get kinks worked out of state-level forecasts with key
   ilidat <-
     ilidat %>%
-    dplyr::filter(location %in% location) %>%
+    dplyr::filter(location %in% !!location) %>%
     dplyr::select(location, year, week, weighted_ili)
 
 
   ## make a tsibble. do not chop the last week - because this is weekly data we won't have an incomplete final week
   ilidat_tsibble <-
     ilidat %>%
-    fiphde::make_tsibble(epiyear = year, epiweek = week, chop=FALSE)
+    make_tsibble(epiyear = year, epiweek = week, key=location, chop=FALSE)
 
   # Defaults to constrained, non-seasonal model.
   if (constrained) {
