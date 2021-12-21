@@ -7,13 +7,14 @@
 #' @param df A `tibble` containing columns `epiyear` and `epiweek`.
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.
+#' @param epiweek Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
 #' @param chop Logical indicating whether or not to remove the most current week (default `TRUE`).
 #' @return A `tsibble` containing additional columns `monday` indicating the date
 #'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
 #'   that indexes the `tsibble` in 1 week increments.
 #' @export
 #' @md
-make_tsibble <- function(df, epiyear, epiweek, chop=TRUE) {
+make_tsibble <- function(df, epiyear, epiweek, key=location, chop=TRUE) {
   out <- df %>%
     # get the monday that starts the MMWRweek
     dplyr::mutate(monday=MMWRweek::MMWRweek2Date(MMWRyear={{epiyear}},
@@ -23,7 +24,7 @@ make_tsibble <- function(df, epiyear, epiweek, chop=TRUE) {
     # convert represent as yearweek (see package?tsibble)
     dplyr::mutate(yweek=tsibble::yearweek(monday), .after="monday") %>%
     # convert to tsibble
-    tsibble::as_tsibble(index=yweek, key=location)
+    tsibble::as_tsibble(index=yweek, key={{key}})
   # Remove the incomplete week
   if (chop) out <- utils::head(out, -1)
   return(out)
