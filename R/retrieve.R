@@ -12,12 +12,12 @@
 #' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
 #' @examples
 #' \dontrun{
-#' get_hdgov_flu_hosp(mindate="2021-11-01", limitrows=10)
-#' get_hdgov_flu_hosp(state="VA")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
-#' get_hdgov_flu_hosp(state="VA", mindate="2021-10-01", limitrows=5, limitcols=FALSE)
+#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10)
+#' get_hdgov_hosp(state="VA")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
+#' get_hdgov_hosp(state="VA", mindate="2021-10-01", limitrows=5, limitcols=FALSE)
 #' }
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.json",
