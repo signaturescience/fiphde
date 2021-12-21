@@ -4,20 +4,12 @@
 \alias{forecast_ili}
 \title{Forecast ILI}
 \usage{
-forecast_ili(
-  ilidat,
-  horizon = 4L,
-  location = "US",
-  trim_date = NULL,
-  constrained = TRUE
-)
+forecast_ili(ilidat, horizon = 4L, trim_date = NULL, constrained = TRUE)
 }
 \arguments{
 \item{ilidat}{Data returned from \link{get_cdc_ili}.}
 
 \item{horizon}{Optional horizon periods through which the forecasts should be generated; default is \code{4}}
-
-\item{location}{Vector specifying locations to filter to; \code{'US'} by default.}
 
 \item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
 
@@ -32,7 +24,9 @@ A named list containing:
 \item \code{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
 \item \code{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
 \item \code{ili_bound}: The data in 1 bound to the data in 5.
-\item \code{arima_params}: A named character vector of the ARIMA model parameters.
+\item \code{arima_params}: A tibble with ARIMA model parameters for each location.
+\item \code{locstats}: A tibble with missing data information on all locations.
+\item \code{removed}: A tibble with locations removed because of high missing ILI data.
 }
 }
 \description{
@@ -45,36 +39,43 @@ Currently limited to one location only.
 \dontrun{
 # Get data
 ilidat <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
-# Using data only from march 2020 forward
-ilifor_2020 <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01")
-head(ilifor_2020$ili_bound)
-tail(ilifor_2020$ili_bound, 10)
-ilifor_2020$ili_fit
-ilifor_2020$ili_fit \%>\% focustools::extract_arima_params()
-ilifor_2020$arima_params
-ilifor_2020$ili_forecast
-# Using all the data we have (2010-forward, in this example)
-ilifor_2010 <- forecast_ili(ilidat, horizon=4L, location="US", constrained=FALSE)
-head(ilifor_2010$ili_bound)
-tail(ilifor_2010$ili_bound, 10)
-ilifor_2010$ili_fit
-ilifor_2010$ili_fit \%>\% focustools::extract_arima_params()
-ilifor_2010$arima_params
-ilifor_2010$ili_forecast
-# Plot both forecasts
+
+# Using data only from march 2020 forward, for US only
+ilidat_us <- ilidat \%>\% dplyr::filter(location=="US")
+ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+ilifor_us$ili_fit
+ilifor_us$arima_params
+ilifor_us$ili_forecast
+head(ilifor_us$ili_bound)
+tail(ilifor_us$ili_bound, 10)
+# Plot
 library(dplyr)
-library(tidyr)
 library(ggplot2)
-inner_join(ilifor_2020$ili_bound \%>\% rename(nonseasonal_weighted_ili=weighted_ili),
-           ilifor_2010$ili_bound \%>\% rename(unconstrained_weighted_ili=weighted_ili),
-           by = c("location", "year", "week", "forecasted")) \%>\%
-  gather(key, value, ends_with("ili")) \%>\%
+theme_set(theme_classic())
+ilifor_us$ili_bound \%>\%
+ mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
+ filter(date>"2021-03-01") \%>\%
+ ggplot(aes(date, ili)) +
+ geom_line(lwd=.3, alpha=.5) +
+ geom_point(aes(col=forecasted), size=2)
+
+# At the state level
+ilifor_st <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
+ilifor_st$ili_fit
+ilifor_st$arima_params
+ilifor_st$ili_forecast
+head(ilifor_us$ili_bound)
+tail(ilifor_us$ili_bound, 10)
+# Plot
+library(dplyr)
+library(ggplot2)
+theme_set(theme_classic())
+ilifor_st$ili_bound \%>\%
   mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
-  filter(date>"2021-07-01") \%>\%
-  ggplot(aes(date, value)) +
-  geom_line(alpha=.5) +
-  geom_point(aes(col=forecasted)) +
-  facet_wrap(~key) +
-  theme_bw()
+  filter(date>"2021-08-01") \%>\%
+  ggplot(aes(date, ili, col=forecasted)) +
+  geom_line(lwd=.3) +
+  geom_point(aes(col=forecasted), size=.7) +
+  facet_wrap(~abbreviation, scale="free_y")
 }
 }
