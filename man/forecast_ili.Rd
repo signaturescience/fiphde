@@ -39,37 +39,43 @@ Currently limited to one location only.
 \dontrun{
 # Get data
 ilidat <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
+
 # Using data only from march 2020 forward, for US only
 ilidat_us <- ilidat \%>\% dplyr::filter(location=="US")
-ilifor_us <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
-head(ilifor_us$ili_bound)
-tail(ilifor_us$ili_bound, 10)
+ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
 ilifor_us$ili_fit
-ilifor_us$ili_fit \%>\% focustools::extract_arima_params()
 ilifor_us$arima_params
 ilifor_us$ili_forecast
-# Using all the data we have (2010-forward, in this example)
-ilifor_2010 <- forecast_ili(ilidat, horizon=4L, location="US", constrained=FALSE)
-head(ilifor_2010$ili_bound)
-tail(ilifor_2010$ili_bound, 10)
-ilifor_2010$ili_fit
-ilifor_2010$ili_fit \%>\% focustools::extract_arima_params()
-ilifor_2010$arima_params
-ilifor_2010$ili_forecast
-# Plot both forecasts
+head(ilifor_us$ili_bound)
+tail(ilifor_us$ili_bound, 10)
+# Plot
 library(dplyr)
-library(tidyr)
 library(ggplot2)
-inner_join(ilifor_2020$ili_bound \%>\% rename(nonseasonal_unweighted_ili=unweighted_ili),
-           ilifor_2010$ili_bound \%>\% rename(unconstrained_unweighted_ili=unweighted_ili),
-           by = c("location", "year", "week", "forecasted")) \%>\%
-  gather(key, value, ends_with("ili")) \%>\%
+theme_set(theme_classic())
+ilifor_us$ili_bound \%>\%
+ mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
+ filter(date>"2021-03-01") \%>\%
+ ggplot(aes(date, ili)) +
+ geom_line(lwd=.3, alpha=.5) +
+ geom_point(aes(col=forecasted), size=2)
+
+# At the state level
+ilifor_st <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
+ilifor_st$ili_fit
+ilifor_st$arima_params
+ilifor_st$ili_forecast
+head(ilifor_us$ili_bound)
+tail(ilifor_us$ili_bound, 10)
+# Plot
+library(dplyr)
+library(ggplot2)
+theme_set(theme_classic())
+ilifor_st$ili_bound \%>\%
   mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
-  filter(date>"2021-07-01") \%>\%
-  ggplot(aes(date, value)) +
-  geom_line(alpha=.5) +
-  geom_point(aes(col=forecasted)) +
-  facet_wrap(~key) +
-  theme_bw()
+  filter(date>"2021-08-01") \%>\%
+  ggplot(aes(date, ili, col=forecasted)) +
+  geom_line(lwd=.3) +
+  geom_point(aes(col=forecasted), size=.7) +
+  facet_wrap(~abbreviation, scale="free_y")
 }
 }
