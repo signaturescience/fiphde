@@ -64,7 +64,7 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
     dplyr::arrange(date)
 
   # Make everything except state and date numeric
-  d %>% mutate(across(.cols=-c(state, date), as.numeric))
+  d %>% dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
 
   # Simplify column names for columns you care most about, and relocate to the front of the tibble
   d <- d %>%
@@ -82,11 +82,11 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
                   cov.admits.cov = previous_day_admission_adult_covid_confirmed_coverage,
                   cov.deaths     = deaths_covid,
                   cov.deaths.cov = deaths_covid_coverage,
-                  everything())
+                  dplyr::everything())
 
-  # Limit to a few colums you care about
+  # Limit to a few columns you care about
   if (limitcols) {
-    d <- d %>% select(state:cov.deaths.cov)
+    d <- d %>% dplyr::select(state:cov.deaths.cov)
   }
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
