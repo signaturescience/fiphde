@@ -106,7 +106,7 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
 #' @references API documentation: <https://dev.socrata.com/foundry/data.cdc.gov/k87d-gv3u>.
 #' @examples
 #' \dontrun{
-#' d <- get_cdc_vax_data()
+#' d <- get_cdc_vax()
 #' d
 #' library(ggplot2)
 #' d %>%
@@ -183,14 +183,14 @@ get_cdc_ili <- function(region=c("national", "state"), years=NULL) {
   # Get only relevant columns (drop age group distributions)
   # Join to internal package data to get state abbreviations and FIPS codes
   d <- d %>%
-    dplyr::select(region_type, region, year, week, week_start, dplyr::contains("ili"), ilitotal:total_patients) %>%
+    dplyr::select(region_type, region, epiyear=year, epiweek=week, week_start, dplyr::contains("ili"), ilitotal:total_patients) %>%
     dplyr::mutate(region=gsub("National", "US", region)) %>%
     dplyr::inner_join(locations, by=c("region"="location_name")) %>%
     dplyr::select(location, region_type, abbreviation, region, dplyr::everything())
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
-                  unique(d$year[d$week_start==max(d$week_start)]),
-                  unique(d$week[d$week_start==max(d$week_start)])))
+                  unique(d$epiyear[d$week_start==max(d$week_start)]),
+                  unique(d$epiweek[d$week_start==max(d$week_start)])))
   return(d)
 }
 
@@ -211,8 +211,8 @@ get_cdc_hosp <- function(years=NULL) {
     dplyr::transmute(location="US",
                      abbreviation="US",
                      region="US",
-                     year,
-                     week=year_wk_num,
+                     epiyear=year,
+                     epiweek=year_wk_num,
                      week_start=wk_start,
                      week_end=wk_end,
                      rate,
@@ -220,7 +220,7 @@ get_cdc_hosp <- function(years=NULL) {
                      season=sea_label)
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
-                  unique(d$year[d$week_start==max(d$week_start)]),
-                  unique(d$week[d$week_start==max(d$week_start)])))
+                  unique(d$epiyear[d$week_start==max(d$week_start)]),
+                  unique(d$epiweek[d$week_start==max(d$week_start)])))
   return(d)
 }

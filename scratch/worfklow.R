@@ -22,7 +22,7 @@ ilifor$ili_bound %>% tail(8)
 # Plot actual versus forecasted values
 p.ili <-
   ilifor$ili_bound %>%
-  mutate(date=cdcfluview::mmwr_week_to_date(year, week)) %>%
+  mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
   ggplot(aes(date, ili)) +
   geom_line(alpha=.5, lwd=.2) +
   geom_point(aes(col=forecasted)) +
@@ -44,7 +44,7 @@ tmp_weekly_flu <-
             flu.admits.cov = sum(flu.admits.cov, na.rm = TRUE),
             .groups = "drop") %>%
   mutate(location = "US", .before = "epiweek") %>%
-  left_join(rename(ilifor$ilidat, epiweek = week, epiyear = year))
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek"))
 
 ## add lag columns
 tmp_weekly_flu_w_lag <-
@@ -85,6 +85,7 @@ res$forecasts
 res$model
 
 p.hosp <- plot_forc(res$forecasts, train_dat, test_dat)
+p.hosp
 
 library(patchwork)
 p.ili / p.hosp
