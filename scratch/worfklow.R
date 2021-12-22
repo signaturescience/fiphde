@@ -27,7 +27,7 @@ p.ili <-
   geom_line(alpha=.5, lwd=.2) +
   geom_point(aes(col=forecasted)) +
   theme_bw() +
-  labs(x="Date", y="Unweighted ILI")
+  labs(x="Date", y="Unweighted ILI", title="ILI forecast")
 p.ili
 
 hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-12")
@@ -84,5 +84,7 @@ res <- glm_wrap(train_dat,
 res$forecasts
 res$model
 
-plot_forc(res$forecasts, train_dat, test_dat)
+p.hosp <- plot_forc(res$forecasts, train_dat, test_dat)
 
+library(patchwork)
+p.ili / p.hosp
