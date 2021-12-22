@@ -37,14 +37,14 @@ tmp_weekly_flu <-
   mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
-  mutate(week = lubridate::epiweek(date),
-         year = lubridate::epiyear(date)) %>%
-  group_by(year, week) %>%
+  mutate(epiweek = lubridate::epiweek(date),
+         epiyear = lubridate::epiyear(date)) %>%
+  group_by(epiyear, epiweek) %>%
   summarise(flu.admits = sum(flu.admits, na.rm = TRUE),
             flu.admits.cov = sum(flu.admits.cov, na.rm = TRUE),
             .groups = "drop") %>%
-  mutate(location = "US", .before = "week") %>%
-  left_join(ilifor$ilidat)
+  mutate(location = "US", .before = "epiweek") %>%
+  left_join(rename(ilifor$ilidat, epiweek = week, epiyear = year))
 
 ## add lag columns
 tmp_weekly_flu_w_lag <-
@@ -54,7 +54,7 @@ tmp_weekly_flu_w_lag <-
          lag_3 = lag(flu.admits, 3),
          lag_4 = lag(flu.admits, 4)) %>%
   filter(complete.cases(.)) %>%
-  dplyr::mutate(date = MMWRweek::MMWRweek2Date(year, week)) %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
   filter(date >= max(date) - 7*24)
 
 train_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() < n() - 3)
@@ -62,18 +62,18 @@ test_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() >= n() - 3)
 
 models <-
   list(
-    glm_poisson_ili = trending::glm_model(flu.admits ~ weighted_ili, family = "poisson"),
-    glm_quasipoisson_ili = trending::glm_model(flu.admits ~ weighted_ili, family = "quasipoisson"),
-    glm_negbin_ili = trending::glm_nb_model(flu.admits ~ weighted_ili),
-    glm_poisson_ili_offset = trending::glm_model(flu.admits ~ weighted_ili + offset(flu.admits.cov), family = "poisson"),
-    glm_quasipoisson_ili_offset = trending::glm_model(flu.admits ~ weighted_ili + offset(flu.admits.cov), family = "quasipoisson"),
-    glm_negbin_ili_offset = trending::glm_nb_model(flu.admits ~ weighted_ili + offset(flu.admits.cov)),
-    glm_poisson_ili_lags = trending::glm_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4, family = "poisson"),
-    glm_quasipoisson_ili_lags = trending::glm_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4, family = "quasipoisson"),
-    glm_negbin_ili_lags = trending::glm_nb_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4),
-    glm_poisson_ili_lags_offset = trending::glm_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov), family = "poisson"),
-    glm_quasipoisson_ili_lags_offset = trending::glm_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov), family = "quasipoisson"),
-    glm_negbin_ili_lags_offset = trending::glm_nb_model(flu.admits ~ weighted_ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov))
+    glm_poisson_ili = trending::glm_model(flu.admits ~ ili, family = "poisson"),
+    glm_quasipoisson_ili = trending::glm_model(flu.admits ~ ili, family = "quasipoisson"),
+    glm_negbin_ili = trending::glm_nb_model(flu.admits ~ ili),
+    glm_poisson_ili_offset = trending::glm_model(flu.admits ~ ili + offset(flu.admits.cov), family = "poisson"),
+    glm_quasipoisson_ili_offset = trending::glm_model(flu.admits ~ ili + offset(flu.admits.cov), family = "quasipoisson"),
+    glm_negbin_ili_offset = trending::glm_nb_model(flu.admits ~ ili + offset(flu.admits.cov)),
+    glm_poisson_ili_lags = trending::glm_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4, family = "poisson"),
+    glm_quasipoisson_ili_lags = trending::glm_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4, family = "quasipoisson"),
+    glm_negbin_ili_lags = trending::glm_nb_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4),
+    glm_poisson_ili_lags_offset = trending::glm_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov), family = "poisson"),
+    glm_quasipoisson_ili_lags_offset = trending::glm_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov), family = "quasipoisson"),
+    glm_negbin_ili_lags_offset = trending::glm_nb_model(flu.admits ~ ili + lag_1 + lag_2 + lag_3 + lag_4 + offset(flu.admits.cov))
   )
 
 res <- glm_wrap(train_dat,
