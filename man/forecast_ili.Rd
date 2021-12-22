@@ -4,7 +4,13 @@
 \alias{forecast_ili}
 \title{Forecast ILI}
 \usage{
-forecast_ili(ilidat, horizon = 4L, trim_date = NULL, constrained = TRUE)
+forecast_ili(
+  ilidat,
+  horizon = 4L,
+  trim_date = NULL,
+  constrained = TRUE,
+  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, 0)
+)
 }
 \arguments{
 \item{ilidat}{Data returned from \link{get_cdc_ili}.}
@@ -13,7 +19,9 @@ forecast_ili(ilidat, horizon = 4L, trim_date = NULL, constrained = TRUE)
 
 \item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
 
-\item{constrained}{Should the model be constrained to a non-seasonal model? Default \code{TRUE} sets PQD(0,0,0) & pdq(0:5,0:5,0:5). See \link[fable:ARIMA]{fable::ARIMA}.}
+\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
+
+\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
 }
 \value{
 A named list containing:
