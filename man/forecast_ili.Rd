@@ -53,7 +53,7 @@ library(dplyr)
 library(ggplot2)
 theme_set(theme_classic())
 ilifor_us$ili_bound \%>\%
- mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
+ mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) \%>\%
  filter(date>"2021-03-01") \%>\%
  ggplot(aes(date, ili)) +
  geom_line(lwd=.3, alpha=.5) +
@@ -71,7 +71,7 @@ library(dplyr)
 library(ggplot2)
 theme_set(theme_classic())
 ilifor_st$ili_bound \%>\%
-  mutate(date=cdcfluview::mmwr_week_to_date(year, week)) \%>\%
+  mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) \%>\%
   filter(date>"2021-08-01") \%>\%
   ggplot(aes(date, ili, col=forecasted)) +
   geom_line(lwd=.3) +

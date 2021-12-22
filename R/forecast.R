@@ -33,7 +33,7 @@
 #' library(ggplot2)
 #' theme_set(theme_classic())
 #' ilifor_us$ili_bound %>%
-#'  mutate(date=cdcfluview::mmwr_week_to_date(year, week)) %>%
+#'  mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
 #'  filter(date>"2021-03-01") %>%
 #'  ggplot(aes(date, ili)) +
 #'  geom_line(lwd=.3, alpha=.5) +
@@ -51,7 +51,7 @@
 #' library(ggplot2)
 #' theme_set(theme_classic())
 #' ilifor_st$ili_bound %>%
-#'   mutate(date=cdcfluview::mmwr_week_to_date(year, week)) %>%
+#'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
 #'   filter(date>"2021-08-01") %>%
 #'   ggplot(aes(date, ili, col=forecasted)) +
 #'   geom_line(lwd=.3) +
@@ -71,7 +71,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
   # Select just the columns you care about, and call "ili" the measure you're using
   ilidat <-
     ilidat %>%
-    dplyr::select(location, year, week, ili=unweighted_ili)
+    dplyr::select(location, epiyear, epiweek, ili=unweighted_ili)
 
   # Get missing data rates
   locstats <- ilidat %>%
@@ -96,7 +96,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
   ## make a tsibble. do not chop the last week - because this is weekly data we won't have an incomplete final week
   ilidat_tsibble <-
     ilidat %>%
-    make_tsibble(epiyear = year, epiweek = week, key=location, chop=FALSE)
+    make_tsibble(epiyear = epiyear, epiweek = epiweek, key=location, chop=FALSE)
 
   # Defaults to constrained, non-seasonal model.
   if (constrained) {
@@ -140,14 +140,14 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
   # Get the next #horizon weeks in a tibble
   ili_future <- ili_forecast %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(year=lubridate::epiyear(yweek)) %>%
-    dplyr::mutate(week=lubridate::epiweek(yweek)) %>%
-    dplyr::select(location, year, week, ili=.mean)
+    dplyr::mutate(epiyear=lubridate::epiyear(yweek)) %>%
+    dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
+    dplyr::select(location, epiyear, epiweek, ili=.mean)
 
   # bind the historical data to the new data
   ili_bound <- dplyr::bind_rows(ilidat     %>% dplyr::mutate(forecasted=FALSE),
                                 ili_future %>% dplyr::mutate(forecasted=TRUE)) %>%
-    dplyr::arrange(location, year, week) %>%
+    dplyr::arrange(location, epiyear, epiweek) %>%
     dplyr::inner_join(locations, by="location")
 
   # Create results

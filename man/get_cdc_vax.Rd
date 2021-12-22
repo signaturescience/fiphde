@@ -28,7 +28,7 @@ Get vaccination data from cdc.gov endpoint.
 }
 \examples{
 \dontrun{
-d <- get_cdc_vax_data()
+d <- get_cdc_vax()
 d
 library(ggplot2)
 d \%>\%
