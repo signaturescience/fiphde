@@ -1,10 +1,14 @@
+library(tidyverse)
 library(fiphde)
 
 # Get data
 ilidat <- get_cdc_ili(region="national", years=2020:lubridate::year(lubridate::today()))
 
+# Subset to US only
+ilidat_us <- ilidat %>% filter(location=="US")
+
 # Forecast ILI
-ilifor <- forecast_ili(ilidat, horizon=4L, location="US", trim_date="2020-03-01", constrained=TRUE)
+ilifor <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01", constrained=TRUE)
 
 # What are the arima params?
 ilifor$arima_params
@@ -14,6 +18,17 @@ ilifor$ili_future
 
 # Take a look at the forecasted data bound do the real data
 ilifor$ili_bound %>% tail(8)
+
+# Plot actual versus forecasted values
+p.ili <-
+  ilifor$ili_bound %>%
+  mutate(date=cdcfluview::mmwr_week_to_date(year, week)) %>%
+  ggplot(aes(date, ili)) +
+  geom_line(alpha=.5, lwd=.2) +
+  geom_point(aes(col=forecasted)) +
+  theme_bw() +
+  labs(x="Date", y="Unweighted ILI")
+p.ili
 
 hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-12")
 
@@ -39,7 +54,7 @@ tmp_weekly_flu_w_lag <-
          lag_3 = lag(flu.admits, 3),
          lag_4 = lag(flu.admits, 4)) %>%
   filter(complete.cases(.)) %>%
-  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(year, week)) %>%
   filter(date >= max(date) - 7*24)
 
 train_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() < n() - 3)
@@ -62,8 +77,7 @@ models <-
   )
 
 res <- glm_wrap(train_dat,
-                ## NOTE: hardcoding ili covariates ... butshould actually get from forecasts above
-                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), weighted_ili = ilifor$ili_future$weighted_ili),
+                new_covariates = tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4), ili = ilifor$ili_future$ili),
                 .models = models,
                 alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
 
