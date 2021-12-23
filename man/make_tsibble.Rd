@@ -4,7 +4,7 @@
 \alias{make_tsibble}
 \title{Make \code{tsibble}}
 \usage{
-make_tsibble(df, epiyear, epiweek, chop = TRUE)
+make_tsibble(df, epiyear, epiweek, key = location, chop = TRUE)
 }
 \arguments{
 \item{df}{A \code{tibble} containing columns \code{epiyear} and \code{epiweek}.}
@@ -12,6 +12,8 @@ make_tsibble(df, epiyear, epiweek, chop = TRUE)
 \item{epiyear}{Unquoted variable name containing the MMWR epiyear.}
 
 \item{epiweek}{Unquoted variable name containing the MMWR epiweek.}
+
+\item{key}{Unquoted variable name containing the name of the column to be the tsibble key. See \link[tsibble:as-tsibble]{tsibble::as_tsibble}.}
 
 \item{chop}{Logical indicating whether or not to remove the most current week (default \code{TRUE}).}
 }
