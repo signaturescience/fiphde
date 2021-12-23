@@ -9,7 +9,7 @@ forecast_ili(
   horizon = 4L,
   trim_date = NULL,
   constrained = TRUE,
-  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, 0)
+  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0)
 )
 }
 \arguments{

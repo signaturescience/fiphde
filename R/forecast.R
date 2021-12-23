@@ -60,7 +60,7 @@
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE, param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,0)) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE, param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0)) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
