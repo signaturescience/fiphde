@@ -48,9 +48,9 @@ ilisum <-
   ili %>%
   filter(year %>% between(2010, 2019)) %>%
   group_by(week) %>%
-  summarize(ili=mean(unweighted_ili)) %>%
+  summarize(ili_mean=mean(unweighted_ili)) %>%
   rename(epiweek=week) %>%
-  mutate(ili_rank=rank(-ili) %>% as.integer())
+  mutate(ili_rank=rank(-ili_mean) %>% as.integer())
 ilisum
 
 # Get historical hospitalization data (2010-2019), summarize by epiweek
@@ -62,8 +62,8 @@ hospsum <-
   filter(age_label=="Overall") %>%
   rename(epiweek=year_wk_num) %>%
   group_by(epiweek) %>%
-  summarize(hosp=mean(weeklyrate)) %>%
-  mutate(hosp_rank=rank(-hosp) %>% as.integer())
+  summarize(hosp_mean=mean(weeklyrate)) %>%
+  mutate(hosp_rank=rank(-hosp_mean) %>% as.integer())
 hospsum
 
 # join ili and hosp summaries
@@ -102,8 +102,8 @@ ih
 historical_severity <- ih %>% select(-day)
 
 historical_severity %>%
-  gather(key, value, ili, hosp) %>%
-  ggplot(aes(epiweek, value)) + facet_wrap(~key) + geom_point()
+  gather(key, value, ili_mean, hosp_mean) %>%
+  ggplot(aes(epiweek, value)) + geom_point() + geom_line() + facet_wrap(~key)
 
 # Write package data ------------------------------------------------------
 
