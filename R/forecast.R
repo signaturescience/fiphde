@@ -4,7 +4,8 @@
 #' @param ilidat Data returned from [get_cdc_ili].
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
 #' @param trim_date Earliest start date you want to use for ILI data. Default `NULL` doesn't trim.
-#' @param constrained Should the model be constrained to a non-seasonal model? Default `TRUE` sets PQD(0,0,0) & pdq(0:5,0:5,0:5). See [fable::ARIMA].
+#' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
+#' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
 #' @return A named list containing:
 #' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
 #' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.
@@ -59,7 +60,7 @@
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE, param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0)) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
@@ -104,7 +105,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
     # Nonseasonal components unrestricted: pdq(0:5,0:5,0:5)
     message("Fitting nonseasonal constrained ARIMA model...")
     ili_fit <- fabletools::model(ilidat_tsibble,
-                                 arima = fable::ARIMA(ili ~ PDQ(0,0,0) + pdq(1:2,0:2,0),
+                                 arima = fable::ARIMA(ili ~ PDQ(param_space$P,param_space$D,param_space$Q) + pdq(param_space$p,param_space$d, param_space$q),
                                                       stepwise=FALSE,
                                                       approximation=FALSE))
   } else {
@@ -116,26 +117,14 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
                                                       approximation=NULL))
   }
 
-
-  # # arima_params <- unlist(ili_fit$arima[[1]]$fit$spec[,1:6])
   arima_params <-
     ili_fit %>%
     dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
     tidyr::unnest_wider(col=x) %>%
     dplyr::select(-arima)
-  # arima_params <- ili_fit %>% extract_arima_params()
-
 
   # Get the forecast
   ili_forecast <- fabletools::forecast(ili_fit, h=horizon)
-
-  ## Look at the quantiles
-  # ili_forecast %>%
-  #   fabletools::hilo()
-  # ili_forecast %>%
-  #   fabletools::hilo() %>%
-  #   fabletools::unpack_hilo(`80%`) %>%
-  #   fabletools::unpack_hilo(`95%`)
 
   # Get the next #horizon weeks in a tibble
   ili_future <- ili_forecast %>%
@@ -145,7 +134,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE) {
     dplyr::select(location, epiyear, epiweek, ili=.mean)
 
   # bind the historical data to the new data
-  ili_bound <- dplyr::bind_rows(ilidat     %>% dplyr::mutate(forecasted=FALSE),
+  ili_bound <- dplyr::bind_rows(ilidat %>% dplyr::mutate(forecasted=FALSE),
                                 ili_future %>% dplyr::mutate(forecasted=TRUE)) %>%
     dplyr::arrange(location, epiyear, epiweek) %>%
     dplyr::inner_join(locations, by="location")
