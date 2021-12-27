@@ -33,7 +33,7 @@ p.ili <-
   labs(x="Date", y="Unweighted ILI", title="ILI forecast")
 p.ili
 
-hosp <- get_hdgov_hosp(mindate="2021-04-01", maxdate="2021-12-25")
+hosp <- get_hdgov_hosp(maxdate="2021-12-26")
 
 tmp_weekly_flu <-
   hosp %>%
@@ -57,7 +57,7 @@ tmp_weekly_flu_w_lag <-
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
   inner_join(fiphde:::historical_severity, by="epiweek") %>%
   filter(date >= max(date) - 7*24)
-  print()
+
 tmp_weekly_flu_w_lag
 
 train_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() < n() - 3)
