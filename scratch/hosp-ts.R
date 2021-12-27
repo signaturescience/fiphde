@@ -127,3 +127,27 @@ model_4_exo <-
 
 # Forecast the next four weeks, with exogenous regressors
 model_4_exo %>% forecast(new_data=make_new_data(htsus_4)) %>% autoplot(htsus_c, level=10)
+
+
+
+# Loop over lots of previous weeks
+plot_ts_forecast <- function(dat, weeksback=0) {
+  origdat <- dat
+  dat <- dat %>% head(nrow(dat)-weeksback)
+  newdat <- make_new_data(dat)
+  dat %>%
+    model(ets=ETS(flu.admits ~ season(method="N")),
+          arima=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank)) %>%
+    mutate(ensemble=(ets+arima)/2) %>%
+    forecast(new_data=newdat) %>%
+    autoplot(origdat, level=10) + ggtitle(max(dat$week_start))
+}
+# plot_ts_forecast(htsus_c, 0)
+# plot_ts_forecast(htsus_c, 40)
+plots <-
+  tibble(weeksback=1:5) %>%
+  mutate(plot=map(weeksback, ~plot_ts_forecast(htsus_c, .)))
+plots <- map(0:60, ~plot_ts_forecast(htsus_c, .))
+pdf("~/Downloads/tsplots.pdf", width=11.5, height=8)
+print(plots)
+dev.off()
