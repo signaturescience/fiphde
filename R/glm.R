@@ -115,6 +115,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
     .data %>%
     dplyr::arrange(location, epiweek, epiyear) %>%
     dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+    dplyr::arrange(date) %>%
     dplyr::pull(date) %>%
     utils::tail(1)
 
