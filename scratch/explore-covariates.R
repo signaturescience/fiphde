@@ -130,9 +130,9 @@ horizon <- 4
 
 (last_date <- as.Date(max(hi$week_start)))
 
-splits <- hi %>% group_split(training = week_start <= last_date-lubridate::weeks(horizon))
-(training <- splits[[2]])
-(testing <- splits[[1]])
+hi <- hi %>% mutate(training = week_start <= last_date-lubridate::weeks(horizon))
+(training <- hi %>% filter(training))
+(testing <- hi %>% filter(!training))
 
 # (model <- glm_model(flu.admits    ~ ililagma + hosp_rank + ili_rank + flu.admits.lag, family="quasipoisson"))
 (model <- glm_nb_model(flu.admits ~ ililagma + hosp_rank + ili_rank + flu.admits.lag))
@@ -156,4 +156,4 @@ ggplot(x, aes(week_start, flu.admits)) +
   geom_point() + geom_line() +
   geom_point(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
   geom_line(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
-  geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_ci, ymax = upper_ci), alpha = 0.5, fill = "#BBB67E")
+  geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_ci, ymax = upper_ci), alpha = 0.2, fill = "red")
