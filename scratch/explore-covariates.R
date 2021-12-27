@@ -165,5 +165,5 @@ ggplot(x, aes(week_start, flu.admits)) +
 library(fable)
 hits <- hi %>% make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
 hits %>%
-  tsibble::fill_gaps() %>%
-  model(CROSTON(flu.admits))
+  model(ARIMA(flu.admits~ili_mean)) %>%
+  forecast(h=6)
