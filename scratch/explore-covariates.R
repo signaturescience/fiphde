@@ -3,6 +3,9 @@ library(fiphde)
 theme_set(theme_bw())
 # library(fable)
 
+
+# Get ILI and hosp data ---------------------------------------------------
+
 # Get ili data from 2010 forward
 i <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
 i
@@ -44,7 +47,7 @@ tail(hi)
 nmiss_ili <- sum(is.na(hi$ili))
 message(nmiss_ili)
 
-# lag by nmiss_ili weeks
+# lag by nmiss_ili weeks, and ililagma is moving average of previous four weeks
 hi <- hi %>%
   arrange(week_start) %>%
   mutate(ililag=lag(ili, n = nmiss_ili), .after=ili) %>%
@@ -53,7 +56,7 @@ hi <- hi %>%
 tail(hi)
 head(hi)
 
-# hospitalization data doesn't really pick up until flu season 2020-2021
+# hospitalization data doesn't really pick up until flu season 2020-2021. Limit it to after 2020:42
 ggplot(hi, aes(week_start, flu.admits)) + geom_point()
 h %>% filter(flu.admits>1)
 hi <-
@@ -61,6 +64,8 @@ hi <-
   filter(epiyear>=2020 & epiweek>=42)
 ggplot(hi, aes(week_start, flu.admits)) + geom_point()
 
+
+# EDA: which features most related to flu.admits --------------------------
 
 library(ggpubr)
 scatter <- function(.data, .x, .y) {
@@ -72,6 +77,7 @@ scatter <- function(.data, .x, .y) {
             cor.coeff.args = list(method = "pearson", label.x = 1, label.sep = "\n"))
 }
 
+# ILI, lagged ILI, and moving average ILI on flu admits
 hi %>%
   scatter("ili", "flu.admits")
 hi %>%
@@ -79,9 +85,11 @@ hi %>%
 hi %>%
   scatter("ililagma", "flu.admits")
 
+# Coverage not strongly correlated
 hi %>%
   scatter("flu.admits.cov", "flu.admits")
 
+# Most recent lags more correlated than more distant lags
 hi %>%
   mutate(lag=lag(flu.admits, 1)) %>%
   scatter("lag", "flu.admits")
@@ -98,6 +106,7 @@ hi %>%
   mutate(lag=lag(flu.admits, 5)) %>%
   scatter("lag", "flu.admits")
 
+# take historical severity into account
 hi %>%
   scatter("hosp_mean", "flu.admits")
 hi %>%
@@ -106,3 +115,4 @@ hi %>%
   scatter("ili_mean", "flu.admits")
 hi %>%
   scatter("ili_rank", "flu.admits")
+
