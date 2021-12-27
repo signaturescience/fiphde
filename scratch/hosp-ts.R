@@ -56,41 +56,74 @@ h %>%
   filter(location=="US") %>%
   ggplot(aes(week_start, flu.admits)) + geom_point()
 
+# Join in the historical data
+h <- h %>%
+  inner_join(fiphde:::historical_severity, by="epiweek")
 
 # tsibble/fable -----------------------------------------------------------
 
+# Forecast horizon in weeks
 horizon <- 4
 
+# hospitalization tsibble
 hts <-
   h %>%
   # filter(week_start<"2021-10-01") %>%
   make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
 
-# US Only
-hts_us <- hts %>% filter(location=="US")
 
-# Forecast the next four weeks
-hts_us %>%
+# US Only, current
+htsus_c <- hts %>% filter(location=="US")
+
+# US only, minus four weeks
+htsus_4 <- htsus_c %>% head(nrow(htsus)-4)
+
+# Model (current) for the next four weeks, no exogenous regressors
+model_c <-
+  htsus_c %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
         arima=ARIMA(flu.admits~PDQ(0,0,0))) %>%
-  mutate(ensemble=(ets+arima)/2) %>%
-  forecast(h=horizon) %>%
-  autoplot(hts, level=10)
+  mutate(ensemble=(ets+arima)/2)
 
-# Forecast the previous four weeks
-hts_us %>%
-  head(nrow(hts_us)-4) %>%
+# Forecast the next four weeks, no exogenous regressors
+model_c %>% forecast(h=horizon) %>% autoplot(htsus_c, level=10)
+
+# Model (minus four weeks) for the current four weeks, no exogenous regressors
+model_4 <-
+  htsus_4 %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
         arima=ARIMA(flu.admits~PDQ(0,0,0))) %>%
-  mutate(ensemble=(ets+arima)/2) %>%
-  forecast(h=horizon) %>%
-  autoplot(hts, level=10)
+  mutate(ensemble=(ets+arima)/2)
 
-# Forecast the previous four weeks, with a wider confidence band
-hts_us %>%
-  head(nrow(hts_us)-4) %>%
+# Forecast the next four weeks, no exogenous regressors
+model_4 %>% forecast(h=horizon) %>% autoplot(htsus_c, level=10)
+
+
+# Function to make new data with historical epiweek severity
+make_new_data <- function(.data, .horizon=4) {
+  tsibble::new_data(.data, n=.horizon) %>%
+    dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
+    dplyr::inner_join(fiphde:::historical_severity)
+}
+# example:
+# make_new_data(htsus_c)
+
+# Model (current) for the next four weeks, with exogenous regressors
+model_c_exo <-
+  htsus_c %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
-        arima=ARIMA(flu.admits~PDQ(0,0,0))) %>%
-  mutate(ensemble=(ets+arima)/2) %>%
-  forecast(h=horizon) %>%
-  autoplot(hts, level=c(80, 95))
+        arima=ARIMA(flu.admits~PDQ(0,0,0) + hosp_rank)) %>%
+  mutate(ensemble=(ets+arima)/2)
+
+# Forecast the next four weeks, with exogenous regressors
+model_c_exo %>% forecast(new_data=make_new_data(htsus_c)) %>% autoplot(htsus_c, level=10)
+
+# Model (minus four weeks) for the current four weeks, with exogenous regressors
+model_4_exo <-
+  htsus_4 %>%
+  model(ets=ETS(flu.admits ~ season(method="N")),
+        arima=ARIMA(flu.admits~PDQ(0,0,0) + hosp_rank)) %>%
+  mutate(ensemble=(ets+arima)/2)
+
+# Forecast the next four weeks, with exogenous regressors
+model_4_exo %>% forecast(new_data=make_new_data(htsus_4)) %>% autoplot(htsus_c, level=10)
