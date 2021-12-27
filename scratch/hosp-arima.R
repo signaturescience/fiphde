@@ -62,8 +62,8 @@ forcs <-
   dplyr::bind_rows(q5) %>%
   dplyr::bind_rows(point_estimates) %>%
   dplyr::arrange(yweek, quantile) %>%
-  dplyr::mutate(epiweek = epiweek(yweek),
-                epiyear = epiyear(yweek)) %>%
+  dplyr::mutate(epiweek = lubridate::epiweek(yweek),
+                epiyear = lubridate::epiyear(yweek)) %>%
   select(epiweek, epiyear, quantile, value)
 
 plot_forc(forcs, train_hosp_dat, test_hosp_dat)
