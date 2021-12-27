@@ -66,7 +66,7 @@ ggplot(hi, aes(week_start, flu.admits)) + geom_point()
 h %>% filter(flu.admits>1)
 hi <-
   hi %>%
-  filter(epiyear>=2020 & epiweek>=42)
+  filter(week_start >= lubridate::as_date("2020-10-17"))
 ggplot(hi, aes(week_start, flu.admits)) + geom_point()
 
 
@@ -157,3 +157,13 @@ ggplot(x, aes(week_start, flu.admits)) +
   geom_point(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
   geom_line(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
   geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_ci, ymax = upper_ci), alpha = 0.2, fill = "red")
+
+
+
+# tsibble/fable -----------------------------------------------------------
+
+library(fable)
+hits <- hi %>% make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
+hits %>%
+  tsibble::fill_gaps() %>%
+  model(CROSTON(flu.admits))
