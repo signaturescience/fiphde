@@ -76,7 +76,7 @@ hts <-
 htsus_c <- hts %>% filter(location=="US")
 
 # US only, minus four weeks
-htsus_4 <- htsus_c %>% head(nrow(htsus)-4)
+htsus_4 <- htsus_c %>% head(nrow(htsus_c)-4)
 
 # Model (current) for the next four weeks, no exogenous regressors
 model_c <-
@@ -128,8 +128,6 @@ model_4_exo <-
 # Forecast the next four weeks, with exogenous regressors
 model_4_exo %>% forecast(new_data=make_new_data(htsus_4)) %>% autoplot(htsus_c, level=10)
 
-
-
 # Loop over lots of previous weeks
 plot_ts_forecast <- function(dat, weeksback=0) {
   origdat <- dat
@@ -140,7 +138,7 @@ plot_ts_forecast <- function(dat, weeksback=0) {
           arima=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank)) %>%
     mutate(ensemble=(ets+arima)/2) %>%
     forecast(new_data=newdat) %>%
-    autoplot(origdat, level=10) + ggtitle(max(dat$week_start))
+    autoplot(origdat, level=95) + ggtitle(max(dat$week_start))
 }
 # plot_ts_forecast(htsus_c, 0)
 # plot_ts_forecast(htsus_c, 40)
@@ -149,5 +147,84 @@ plots <-
   mutate(plot=map(weeksback, ~plot_ts_forecast(htsus_c, .)))
 plots <- map(0:60, ~plot_ts_forecast(htsus_c, .))
 pdf("~/Downloads/tsplots.pdf", width=11.5, height=8)
+print(plots)
+dev.off()
+
+
+
+#########################################################
+## trying this with the plot_forc helper from fiphde
+
+prep_mable <- function(myforecast) {
+  q5 <-
+    myforecast %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile=0.5, value=.mean, type="quantile")
+
+  point_estimates <-
+    myforecast %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(quantile=NA_real_, .after=yweek) %>%
+    dplyr::mutate(type="point") %>%
+    dplyr::rename(value=.mean) %>%
+    dplyr::select(.model, yweek, location, quantile, value, type)
+
+  forcs <-
+    myforecast %>%
+    fabletools::hilo(sort(unique(focustools:::quidk$interval))) %>%
+    fabletools::unpack_hilo(dplyr::ends_with("%")) %>%
+    tidyr::gather(key, value, dplyr::contains("%")) %>%
+    dplyr::inner_join(focustools:::quidk, by="key") %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile, value, type="quantile") %>%
+    dplyr::bind_rows(q5) %>%
+    dplyr::bind_rows(point_estimates) %>%
+    dplyr::arrange(yweek, quantile) %>%
+    dplyr::mutate(epiweek = lubridate::epiweek(yweek),
+                  epiyear = lubridate::epiyear(yweek)) %>%
+    select(-type)
+
+  return(forcs)
+}
+
+
+# Loop over lots of previous weeks
+plot_ts_forecast <- function(dat, weeksback=0, method) {
+  origdat <- dat
+  dat <- dat %>% head(nrow(dat)-weeksback)
+  newdat <- make_new_data(dat)
+  myforecast <-
+    dat %>%
+    model(ets=ETS(flu.admits ~ season(method="N")),
+          arima=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank)) %>%
+    mutate(ensemble=(ets+arima)/2) %>%
+    forecast(new_data=newdat)
+
+  forcs <- prep_mable(myforecast)
+
+  test_dat <-
+    htsus_c %>%
+    filter(yweek %in% newdat$yweek) %>%
+    as_tibble()
+
+  train_dat <-
+    anti_join(htsus_c, test_dat) %>%
+    as_tibble()
+
+
+  fiphde::wis_score(filter(forcs, .model == method), test_dat) %>%
+      print()
+
+   plot_forc(filter(forcs, .model == method), train_dat, test_dat) +
+      labs(caption = paste0(method, "\n", max(dat$week_start)))
+
+}
+
+
+to_map <- crossing(wback = 4:60,method = c("ets","arima","ensemble"))
+# plot_ts_forecast(htsus_c, 0)
+# plot_ts_forecast(htsus_c, 40)
+plots <- map2(to_map$wback, to_map$method, ~plot_ts_forecast(htsus_c, .x, .y))
+pdf("~/Downloads/tsplots_v2.pdf", width=11.5, height=8)
 print(plots)
 dev.off()
