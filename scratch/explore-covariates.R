@@ -89,6 +89,22 @@ hi %>%
   scatter("ililag", "flu.admits")
 hi %>%
   scatter("ililagma", "flu.admits")
+hi %>%
+  mutate(ililag=lag(ili, 2)) %>%
+  scatter("ililag", "flu.admits")
+hi %>%
+  mutate(ililag=lag(ili, 3)) %>%
+  scatter("ililag", "flu.admits")
+hi %>%
+  mutate(ililag=lag(ili, 4)) %>%
+  scatter("ililag", "flu.admits")
+hi %>%
+  mutate(ililag=lag(ili, 5)) %>%
+  scatter("ililag", "flu.admits")
+hi %>%
+  mutate(ililag=lag(ili, 6)) %>%
+  scatter("ililag", "flu.admits")
+
 
 # Coverage not strongly correlated
 hi %>%
@@ -156,14 +172,14 @@ ggplot(x, aes(week_start, flu.admits)) +
   geom_point() + geom_line() +
   geom_point(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
   geom_line(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
-  geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_ci, ymax = upper_ci), alpha = 0.2, fill = "red")
+  geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_pi, ymax = upper_pi), alpha = 0.2, fill = "red")
 
 
 
 # tsibble/fable -----------------------------------------------------------
 
-library(fable)
-hits <- hi %>% make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
-hits %>%
-  model(ARIMA(flu.admits~ili_mean)) %>%
-  forecast(h=6)
+# library(fable)
+# hits <- hi %>% make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
+# hits %>%
+#   model(ARIMA(flu.admits~ili_mean)) %>%
+#   forecast(h=6)
