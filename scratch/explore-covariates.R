@@ -48,7 +48,8 @@ message(nmiss_ili)
 hi <- hi %>%
   arrange(week_start) %>%
   mutate(ililag=lag(ili, n = nmiss_ili), .after=ili) %>%
-  mutate(ililag=ifelse(is.na(ililag), first(ili), ililag))
+  mutate(ililag=ifelse(is.na(ililag), first(ili), ililag)) %>%
+  mutate(ililagma=slider::slide_dbl(ili, mean, na.rm=TRUE, .before=4))
 tail(hi)
 head(hi)
 
@@ -75,6 +76,8 @@ hi %>%
   scatter("ili", "flu.admits")
 hi %>%
   scatter("ililag", "flu.admits")
+hi %>%
+  scatter("ililagma", "flu.admits")
 
 hi %>%
   scatter("flu.admits.cov", "flu.admits")
