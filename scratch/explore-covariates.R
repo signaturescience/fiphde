@@ -47,14 +47,19 @@ tail(hi)
 nmiss_ili <- sum(is.na(hi$ili))
 message(nmiss_ili)
 
-# lag by nmiss_ili weeks, and ililagma is moving average of previous four weeks
+# lag ili by nmiss_ili weeks, and ililagma is moving average of previous four weeks
 hi <- hi %>%
   arrange(week_start) %>%
   mutate(ililag=lag(ili, n = nmiss_ili), .after=ili) %>%
   mutate(ililag=ifelse(is.na(ililag), first(ili), ililag)) %>%
-  mutate(ililagma=slider::slide_dbl(ili, mean, na.rm=TRUE, .before=4))
+  mutate(ililagma=slider::slide_dbl(ili, mean, na.rm=TRUE, .before=4L))
 tail(hi)
 head(hi)
+
+# Add lagged flu.admits (see first plot below)
+hi <-
+  hi %>%
+  mutate(flu.admits.lag = lag(flu.admits, 1))
 
 # hospitalization data doesn't really pick up until flu season 2020-2021. Limit it to after 2020:42
 ggplot(hi, aes(week_start, flu.admits)) + geom_point()
@@ -116,3 +121,39 @@ hi %>%
 hi %>%
   scatter("ili_rank", "flu.admits")
 
+
+# trending ----------------------------------------------------------------
+
+library(trending)
+
+horizon <- 4
+
+(last_date <- as.Date(max(hi$week_start)))
+
+splits <- hi %>% group_split(training = week_start <= last_date-lubridate::weeks(horizon))
+(training <- splits[[2]])
+(testing <- splits[[1]])
+
+# (model <- glm_model(flu.admits    ~ ililagma + hosp_rank + ili_rank + flu.admits.lag, family="quasipoisson"))
+(model <- glm_nb_model(flu.admits ~ ililagma + hosp_rank + ili_rank + flu.admits.lag))
+(fitted_model <- fit(model, training))
+fitted_model %>% get_result()
+
+fitted_model %>%
+  predict(testing) %>%
+  get_result() %>%
+  pluck(1) %>%
+  select(location, epiyear, epiweek, week_start, flu.admits, estimate, lower_ci, upper_ci, lower_pi, upper_pi)
+
+x <- bind_rows(training, testing) %>%
+  predict(fitted_model, .) %>%
+  get_result() %>%
+  pluck(1) %>%
+  select(location, epiyear, epiweek, week_start, flu.admits, training, estimate, lower_ci, upper_ci, lower_pi, upper_pi)
+x <- x %>% filter(week_start>"2021-10-01")
+
+ggplot(x, aes(week_start, flu.admits)) +
+  geom_point() + geom_line() +
+  geom_point(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
+  geom_line(data=x %>% filter(!training), aes(x=week_start, y=estimate), col="red") +
+  geom_ribbon(data=x %>% filter(!training), aes(x = week_start, ymin = lower_ci, ymax = upper_ci), alpha = 0.5, fill = "#BBB67E")
