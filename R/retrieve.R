@@ -1,11 +1,10 @@
 #' @title Get hospitalization data
-#' @name Get flu and COVID-19 hospitalization data from healthdata.gov endpoint
 #' @description Retrieves hospitalization data from the healthdata.gov endpoint with optional filtering on fields, and return the results into a nice tibble.
 #' @param endpoint URL to healthdata.gov endpoint (see references)..
 #' @param state A two-letter state abbreviation.
 #' @param limitrows Limit API query to at most this number of results. Default is `NULL` (no limit).
-#' @param mindate Minimum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples.
-#' @param maxdate Maximum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples.
+#' @param mindate Minimum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is _previous_ day's flu/covid admissions.
+#' @param maxdate Maximum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is _previous_ day's flu/covid admissions.
 #' @param limitcols Limit the columns returned to the subjectively defined important ones?
 #' @param app_token App token from healthdata.gov. If `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
 #' @return A tibble
@@ -88,6 +87,9 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
   if (limitcols) {
     d <- d %>% dplyr::select(state:cov.deaths.cov)
   }
+
+  # Data is previous day's stats. Shift dates back one day to deal with this.
+  d$date <- d$date-1
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
   return(d)
