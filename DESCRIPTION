@@ -46,7 +46,8 @@ Imports:
     trendeval,
     ggplot2,
     yardstick,
-    assertthat
+    assertthat,
+    lifecycle
 Depends: 
     R (>= 2.10)
 Suggests: 
