@@ -208,7 +208,6 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' \dontrun{
 #' get_cdc_hosp(years=2019)
 #' }
-#' @export
 get_cdc_hosp <- function(years=NULL) {
   d <- cdcfluview::hospitalizations(surveillance_area="flusurv", region="all", years=years)
   d <- d %>%
