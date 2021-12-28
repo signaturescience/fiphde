@@ -12,6 +12,18 @@ h_raw
 # What's the last date you have data on? You'll need this to chop the data later on.
 last_date <- max(h_raw$date)
 
+# states with small numbers
+states_with_low_numbers <-
+  h_raw %>%
+  filter(date >= last_date-30) %>%
+  group_by(state) %>%
+  summarize(across(c(flu.admits, flu.admits.cov), mean, na.rm=TRUE)) %>%
+  arrange(flu.admits, flu.admits.cov) %>%
+  filter(flu.admits<1) %>%
+  pull(state) %>%
+  unique()
+
+
 # Summarize to epiyear, epiweek
 hweek <- h_raw %>%
   rename(location=state) %>%
@@ -68,6 +80,7 @@ horizon <- 4
 # hospitalization tsibble
 hts <-
   h %>%
+  filter(!(location %in% states_with_low_numbers)) %>%
   # filter(location %in% c("US", "NY", "FL", "VA")) %>%
   # filter(location=="US") %>%
   mutate(location=location %>% factor() %>% fct_relevel("US")) %>%
@@ -87,7 +100,10 @@ make_new_data <- function(.data, .horizon=4) {
 tsfit <-
   hts %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
-        arima=ARIMA(flu.admits~PDQ(0,0,0))) %>%
+        boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
+        sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
+        arima=ARIMA(flu.admits~PDQ(0,0,0))
+  ) %>%
   mutate(ensemble=(ets+arima)/2)
 
 # forecast
@@ -100,7 +116,10 @@ p1 <- tsfor %>% autoplot(hts, level=10) + ggtitle("No exogenous regressors")
 tsfit_exo <-
   hts %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
-        arima=ARIMA(flu.admits~PDQ(0,0,0) + hosp_rank)) %>%
+        boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
+        sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
+        arima=ARIMA(flu.admits~PDQ(0,0,0))
+  ) %>%
   mutate(ensemble=(ets+arima)/2)
 
 # forecast
