@@ -19,7 +19,8 @@
 #' @examples
 #' \dontrun{
 #' # Get data
-#' ilidat <- get_cdc_ili(region=c("national", "state"), years=2010:lubridate::year(lubridate::today()))
+#' ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
+#'                       years = 2010:lubridate::year(lubridate::today()))
 #'
 #' # Using data only from march 2020 forward, for US only
 #' ilidat_us <- ilidat %>% dplyr::filter(location=="US")
@@ -34,14 +35,15 @@
 #' library(ggplot2)
 #' theme_set(theme_classic())
 #' ilifor_us$ili_bound %>%
-#'  mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
-#'  filter(date>"2021-03-01") %>%
-#'  ggplot(aes(date, ili)) +
-#'  geom_line(lwd=.3, alpha=.5) +
-#'  geom_point(aes(col=forecasted), size=2)
+#'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
+#'   filter(date>"2021-03-01") %>%
+#'   ggplot(aes(date, ili)) +
+#'   geom_line(lwd=.3, alpha=.5) +
+#'   geom_point(aes(col=forecasted), size=2)
 #'
 #' # At the state level
-#' ilifor_st <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
+#' ilidat_st <- ilidat %>% dplyr::filter(region_type=="States")
+#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
 #' ilifor_st$ili_fit
 #' ilifor_st$arima_params
 #' ilifor_st$ili_forecast
@@ -52,6 +54,26 @@
 #' library(ggplot2)
 #' theme_set(theme_classic())
 #' ilifor_st$ili_bound %>%
+#'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
+#'   filter(date>"2021-08-01") %>%
+#'   ggplot(aes(date, ili, col=forecasted)) +
+#'   geom_line(lwd=.3) +
+#'   geom_point(aes(col=forecasted), size=.7) +
+#'   facet_wrap(~abbreviation, scale="free_y")
+#'
+#' ## At the HHS regional level
+#' ilidat_hhs <- ilidat %>% dplyr::filter(region_type=="HHS Regions")
+#' ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, trim_date="2020-03-01")
+#' ilifor_hhs$ili_fit
+#' ilifor_hhs$arima_params
+#' ilifor_hhs$ili_forecast
+#' head(ilifor_us$ili_bound)
+#' tail(ilifor_us$ili_bound, 10)
+#' # Plot
+#' library(dplyr)
+#' library(ggplot2)
+#' theme_set(theme_classic())
+#' ilifor_hhs$ili_bound %>%
 #'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
 #'   filter(date>"2021-08-01") %>%
 #'   ggplot(aes(date, ili, col=forecasted)) +
