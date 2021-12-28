@@ -37,7 +37,7 @@ hosp <- get_hdgov_hosp(maxdate="2021-12-26")
 
 tmp_weekly_flu <-
   hosp %>%
-  mutate(date = date - 1) %>%
+  # mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
   mutate(epiweek = lubridate::epiweek(date),

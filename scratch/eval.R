@@ -32,7 +32,7 @@ eval_wrap <- function(hosp = NULL, ilidat = NULL, min_hhs = "2020-10-12", max_hh
 
     hosp <-
       get_hdgov_hosp(mindate = min_hhs, maxdate=max_hhs) %>%
-      mutate(date = date - 1) %>%
+      # mutate(date = date - 1) %>%
       mutate(flu.admits = as.numeric(flu.admits),
              flu.admits.cov = as.numeric(flu.admits.cov)) %>%
       mutate(epiweek = lubridate::epiweek(date),
@@ -128,7 +128,7 @@ models <-
 ## alternative is to keep hosp=NULL param to eval_wrap and the function will retrieve each time
 hosp_dat <-
   get_hdgov_hosp(mindate =  "2020-10-12", maxdate="2021-12-27") %>%
-  mutate(date = date - 1) %>%
+  # mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
   mutate(epiweek = lubridate::epiweek(date),

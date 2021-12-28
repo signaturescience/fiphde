@@ -26,7 +26,7 @@ tail(h)
 # weekly data summed across states
 hu <-
   h %>%
-  mutate(date = date - 1) %>%
+  # mutate(date = date - 1) %>%
   mutate(epiweek = lubridate::epiweek(date),
          epiyear = lubridate::epiyear(date),
          .after=date) %>%

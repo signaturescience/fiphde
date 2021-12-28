@@ -3,7 +3,7 @@ library(fiphde)
 
 tmp_hosp_dat <-
   get_hdgov_hosp(maxdate="2021-12-26") %>%
-  mutate(date = date - 1) %>%
+  # mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
   mutate(epiweek = lubridate::epiweek(date),
