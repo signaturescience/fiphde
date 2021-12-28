@@ -1,20 +1,27 @@
-#' Make `tsibble`
-#'
-#' @description
-#'
-#' This function converts an input `tibble` with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row. Users can optionally ignore the current week when generating the `tsibble` via the "chop" argument.
-#'
+#' @title Make `tsibble`
+#' @description This function converts an input `tibble` with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
 #' @param df A `tibble` containing columns `epiyear` and `epiweek`.
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.
 #' @param key Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
-#' @param chop Logical indicating whether or not to remove the most current week (default `TRUE`).
+#' @param chop (Deprecated)
 #' @return A `tsibble` containing additional columns `monday` indicating the date
 #'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
 #'   that indexes the `tsibble` in 1 week increments.
+#' @examples
+#' d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
+#'                     epiweek=c(52, 53, 1, 2),
+#'                     location="US",
+#'                     somedata=101:104)
+#' make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
 #' @export
-#' @md
-make_tsibble <- function(df, epiyear, epiweek, key=location, chop=TRUE) {
+make_tsibble <- function(df, epiyear, epiweek, key=location, chop=deprecated()) {
+  # Deprecate the chop argument, and assign it back to itself for compatibility
+  if (lifecycle::is_present(chop)) {
+    lifecycle::deprecate_warn("0.0.0.9000", "fiphde::make_tsibble(chop)")
+    chop <- chop
+  }
+  # Continue with the normal make_tsibble function
   out <- df %>%
     # get the monday that starts the MMWRweek
     dplyr::mutate(monday=MMWRweek::MMWRweek2Date(MMWRyear={{epiyear}},
@@ -25,8 +32,6 @@ make_tsibble <- function(df, epiyear, epiweek, key=location, chop=TRUE) {
     dplyr::mutate(yweek=tsibble::yearweek(monday), .after="monday") %>%
     # convert to tsibble
     tsibble::as_tsibble(index=yweek, key={{key}})
-  # Remove the incomplete week
-  if (chop) out <- utils::head(out, -1)
   return(out)
 }
 
