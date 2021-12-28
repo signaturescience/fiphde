@@ -18,6 +18,17 @@ locations <-
   locations %>%
   dplyr::filter(location != "11001")
 
+# If using cdcfluview::ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
+# Bind to this tibble above 10 more rows for the 10 hhs regions so the get_cdc_ili function will work out of the box.
+locations <-
+  tibble::tibble(abbreviation=1:10,
+                 location=NA_character_,
+                 location_name=paste("Region", abbreviation),
+                 population=NA_real_) %>%
+  dplyr::mutate(abbreviation=sprintf("HHS%02d", abbreviation)) %>%
+  dplyr::mutate(location=abbreviation) %>%
+  bind_rows(locations)
+
 
 # Quantiles ---------------------------------------------------------------
 
