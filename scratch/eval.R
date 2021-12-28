@@ -100,7 +100,6 @@ eval_wrap <- function(ts_method = NULL, hosp = NULL, ilidat = NULL, min_hhs = "2
     }
 
   } else {
-    message(sprintf("Step 2: Skipping HHS hospitalization data and using 'hosp' argument. Ensuring data is restricted from %s to %s ...", min_hhs, max_hhs))
     hosp <-
       hosp %>%
       dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
@@ -151,6 +150,7 @@ eval_wrap <- function(ts_method = NULL, hosp = NULL, ilidat = NULL, min_hhs = "2
                        paste0(names(res$model$fit$fitted_model$coefficients), collapse = " + "))
 
   } else {
+    message(sprintf("Step 3: Fitting TS %s model ...", ts_method))
     hosp_tsibble <-
       hosp %>%
       left_join(fiphde:::historical_severity, by="epiweek") %>%
@@ -232,71 +232,127 @@ hosp_dat <-
             n_days = n(),
             .groups = "drop")
 
+## vector of dates through which try to mask training data to iteratively fit models
+thru_dates <- seq(as.Date("2020-11-15", format = "%Y-%m-%d"), as.Date("2021-12-26", format = "%Y-%m-%d"), by = 7)
 
+## hack with two step call to eval_wrap map
+## ... because i cant use a NULL when defining a vector ...
+to_loop <-
+  crossing(
+    # ts_methods = c("ets","ensemble","arima",NULL),
+    ts_methods = c("ets","ensemble","arima"),
+    thru_dates = thru_dates)
 
-forc_res <- eval_wrap(ts_method = "ets", hosp = hosp_dat, .models = NULL)
-forc_res
+forc_res_ts <- map2(to_loop$ts_methods, to_loop$thru_dates, .f = ~eval_wrap(hosp = hosp_dat, ts_method = .x, max_hhs = .y, .models = NULL))
 
-# for(i in sq)
-# forc_res <- eval_wrap(ts_method = "ets", hosp = hosp_dat, .models = NULL)
-#
-#
-#
-# eval_wrap(hosp  = hosp_dat, .models = models, max_hhs = "2021-10-27") %>%
-#   .$scores %>%
-#   mutate(approach = .$method) %>%
-#   mutate(last_week = .$thru_week)
-#
-# forc_res2 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-10-27")
-# forc_res2$plots$p.hosp
-# forc_res2$scores %>%
-#   mutate(approach = forc_res2$method) %>%
-#   mutate(last_week = forc_res2$thru_week)
-
-## specify a list models
-## NOTE: we could do this differently per call to eval_wrap if we wanted to assess different families of models
-models <-
+glm_models <-
   list(
     glm_negbin_lags_ranks = trending::glm_nb_model(flu.admits ~ lag_1 + ili_rank + hosp_rank),
     glm_negbin_ili_lags_ranks = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank),
     glm_negbin_ili_lags_ranks_offset = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank + offset(flu.admits.cov))
   )
 
+## NOTE: glm wont fit at earlier dates ...
+forc_res_glm <- map(thru_dates[10:length(thru_dates)], .f = ~eval_wrap(hosp = hosp_dat, ts_method = NULL, max_hhs = .x, .models = glm_models))
 
-## if we want the function to retrieve the data each time keep hosp = NULL
-## complete = TRUE means only the full epiweeks will be used in modeling
-# forc_res <- eval_wrap(hosp = NULL, .models = models, complete = TRUE)
+forc_res <- c(forc_res_glm,forc_res_ts)
+
+## that ^ took a while!
+## save for later
+# save(forc_res, file = "~/Downloads/forc_res.rda")
+# load("~/Downloads/forc_res.rda")
+
+## helper to pull out scores and methods
+get_scores <- function(x) {
+  x$scores %>%
+    mutate(method = x$method) %>%
+    mutate(thru_week = x$thru_week)
+}
+
+scores_by_method <-
+  map_df(forc_res, get_scores) %>%
+  ## fragile: only looks for negative binomial as method (would need to edit if poisson was chosen )
+  mutate(method = ifelse(grepl("Negative", method), "GLM-NB", method))
+
+scores_by_method %>%
+  mutate(Horizon = as.factor(horizon)) %>%
+  ggplot(aes(thru_week, wis)) +
+  geom_col(aes(fill = Horizon), position = "dodge") +
+  scale_x_date(date_breaks = "month", date_labels = "%Y-%m") +
+  facet_wrap(~method) +
+  theme(legend.position= "bottom", axis.text.x = element_text(angle = 90)) +
+  labs(y = "WIS", x = "Last week of training data")
+
+## tabulate wis across methods
+scores_by_method %>%
+  ## this bit of code ensures that the weeks evaluated overlap all methods
+  add_count(thru_week) %>%
+  filter(n == n_distinct(method)*4) %>%
+  group_by(method) %>%
+  summarise(wis_median = median(wis),
+            wis_mean = mean(wis),
+            wis = sum(wis),
+            n = n())
+
+## same thing as above but also grouping by horizon
+scores_by_method %>%
+  ## this bit of code ensures that the weeks evaluated overlap all methods
+  add_count(thru_week) %>%
+  filter(n == n_distinct(method)*4) %>%
+  group_by(horizon,method) %>%
+  summarise(wis_median = median(wis),
+            wis_mean = mean(wis),
+            wis = sum(wis),
+            n = n())
+
+# ## you can also use this on individual models
+# forc_res <- eval_wrap(ts_method = "ets", hosp = hosp_dat, .models = NULL)
 # forc_res$plots$p.hosp
 # forc_res$scores
-
-## use defaults; HHS is 2020-10-12 to current date; ILI data used for forecasting starts at 2020-03-01
-forc_res <- eval_wrap(hosp = hosp_dat, .models = models)
-forc_res$plots$p.hosp
-forc_res$scores
-
-## move the max hhs back
-forc_res2 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-10-27")
-forc_res2$plots$p.hosp
-forc_res2$scores
-
-## again
-forc_res3 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-06-27")
-forc_res3$plots$p.hosp
-forc_res3$scores
-
-## what about shortening the window for training data used
-## 6 months plus 4 weeks to account for train/test split at last four weeks
-forc_res4 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = Sys.Date() - (6*30 + 28), max_hhs = Sys.Date())
-forc_res4$plots$p.hosp
-forc_res4$scores
-
-## shorter?
-## 3 months plus 4 weeks to account for train/test split at last 4 weeks
-forc_res5 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = Sys.Date() - (3*30 + 28), max_hhs = Sys.Date())
-forc_res5$plots$p.hosp
-forc_res5$scores
-
-## what does that do with moving max hhs back?
-forc_res6 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = as.Date("2021-10-27", format = "%Y-%m-%d") - (3*30 + 28), max_hhs = "2021-10-27")
-forc_res6$plots$p.hosp
-forc_res6$scores
+#
+# ## NOTE: we could do this differently per call to eval_wrap if we wanted to assess different families of models
+# models <-
+#   list(
+#     glm_negbin_lags_ranks = trending::glm_nb_model(flu.admits ~ lag_1 + ili_rank + hosp_rank),
+#     glm_negbin_ili_lags_ranks = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank),
+#     glm_negbin_ili_lags_ranks_offset = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank + offset(flu.admits.cov))
+#   )
+#
+#
+# ## if we want the function to retrieve the data each time keep hosp = NULL
+# ## complete = TRUE means only the full epiweeks will be used in modeling
+# # forc_res <- eval_wrap(hosp = NULL, .models = models, complete = TRUE)
+# # forc_res$plots$p.hosp
+# # forc_res$scores
+#
+# ## use defaults; HHS is 2020-10-12 to current date; ILI data used for forecasting starts at 2020-03-01
+# forc_res <- eval_wrap(hosp = hosp_dat, .models = models)
+# forc_res$plots$p.hosp
+# forc_res$scores
+#
+# ## move the max hhs back
+# forc_res2 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-10-27")
+# forc_res2$plots$p.hosp
+# forc_res2$scores
+#
+# ## again
+# forc_res3 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-06-27")
+# forc_res3$plots$p.hosp
+# forc_res3$scores
+#
+# ## what about shortening the window for training data used
+# ## 6 months plus 4 weeks to account for train/test split at last four weeks
+# forc_res4 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = Sys.Date() - (6*30 + 28), max_hhs = Sys.Date())
+# forc_res4$plots$p.hosp
+# forc_res4$scores
+#
+# ## shorter?
+# ## 3 months plus 4 weeks to account for train/test split at last 4 weeks
+# forc_res5 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = Sys.Date() - (3*30 + 28), max_hhs = Sys.Date())
+# forc_res5$plots$p.hosp
+# forc_res5$scores
+#
+# ## what does that do with moving max hhs back?
+# forc_res6 <- eval_wrap(hosp = hosp_dat, .models = models, min_hhs = as.Date("2021-10-27", format = "%Y-%m-%d") - (3*30 + 28), max_hhs = "2021-10-27")
+# forc_res6$plots$p.hosp
+# forc_res6$scores
