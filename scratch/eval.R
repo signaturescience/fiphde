@@ -1,8 +1,50 @@
 library(tidyverse)
 library(fiphde)
 
+## some helpers used in the eval_wrap wrapper
+
+## Function to make new data with historical epiweek severity
+make_new_data <- function(.data, .horizon=4) {
+  tsibble::new_data(.data, n=.horizon) %>%
+    dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
+    dplyr::inner_join(fiphde:::historical_severity)
+}
+
+prep_mable <- function(myforecast) {
+  q5 <-
+    myforecast %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile=0.5, value=.mean, type="quantile")
+
+  point_estimates <-
+    myforecast %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(quantile=NA_real_, .after=yweek) %>%
+    dplyr::mutate(type="point") %>%
+    dplyr::rename(value=.mean) %>%
+    dplyr::select(.model, yweek, location, quantile, value, type)
+
+  forcs <-
+    myforecast %>%
+    fabletools::hilo(sort(unique(focustools:::quidk$interval))) %>%
+    fabletools::unpack_hilo(dplyr::ends_with("%")) %>%
+    tidyr::gather(key, value, dplyr::contains("%")) %>%
+    dplyr::inner_join(focustools:::quidk, by="key") %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile, value, type="quantile") %>%
+    dplyr::bind_rows(q5) %>%
+    dplyr::bind_rows(point_estimates) %>%
+    dplyr::arrange(yweek, quantile) %>%
+    dplyr::mutate(epiweek = lubridate::epiweek(yweek),
+                  epiyear = lubridate::epiyear(yweek)) %>%
+    select(-type)
+
+  return(forcs)
+}
+
+
 ## write wrapper function for data prep / modeling with different dates
-eval_wrap <- function(hosp = NULL, ilidat = NULL, min_hhs = "2020-10-12", max_hhs = Sys.Date(), min_flu = "2020-03-01", complete = TRUE, covariates = NULL, .models, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
+eval_wrap <- function(ts_method = NULL, hosp = NULL, ilidat = NULL, min_hhs = "2020-10-12", max_hhs = Sys.Date(), min_flu = "2020-03-01", complete = TRUE, covariates = NULL, .models, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## ILI forecasting
   message(sprintf("Step 1: ILI forecasting using historical data from %s to present ...", min_flu))
@@ -66,38 +108,89 @@ eval_wrap <- function(hosp = NULL, ilidat = NULL, min_hhs = "2020-10-12", max_hh
       dplyr::select(-date) %>%
       dplyr::left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek"))
 
+    if(complete) {
+      hosp <-
+        hosp %>%
+        dplyr::filter(n_days == 7)
+    }
+
   }
 
-  tmp_weekly_flu_w_lag <-
-    hosp %>%
-    dplyr::select(-n_days) %>%
-    dplyr::mutate(lag_1 = lag(flu.admits, 1)) %>%
-    dplyr::mutate(lag_2 = lag(flu.admits, 2)) %>%
-    dplyr::mutate(lag_3 = lag(flu.admits, 3)) %>%
-    dplyr::mutate(lag_4 = lag(flu.admits, 4)) %>%
-    dplyr::filter(complete.cases(.)) %>%
-    dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
-    dplyr::inner_join(fiphde:::historical_severity, by="epiweek")
+  if(is.null(ts_method)) {
+    tmp_weekly_flu_w_lag <-
+      hosp %>%
+      dplyr::select(-n_days) %>%
+      dplyr::mutate(lag_1 = lag(flu.admits, 1)) %>%
+      dplyr::mutate(lag_2 = lag(flu.admits, 2)) %>%
+      dplyr::mutate(lag_3 = lag(flu.admits, 3)) %>%
+      dplyr::mutate(lag_4 = lag(flu.admits, 4)) %>%
+      dplyr::filter(complete.cases(.)) %>%
+      dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+      dplyr::inner_join(fiphde:::historical_severity, by="epiweek")
 
-  train_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() < n() - 3)
-  test_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() >= n() - 3)
+    train_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() < n() - 3)
+    test_dat <- tmp_weekly_flu_w_lag %>% filter(row_number() >= n() - 3)
 
-  new_covariates <-
-    dplyr::tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4),
-                  ili_rank=test_dat$ili_rank,
-                  hosp_rank=test_dat$hosp_rank,
-                  ili_mean=test_dat$ili_mean,
-                  hosp_mean=test_dat$hosp_mean,
-                  ili=test_dat$ili)
+    new_covariates <-
+      dplyr::tibble(flu.admits.cov = rep(tail(train_dat$flu.admits.cov,1), 4),
+                    ili_rank=test_dat$ili_rank,
+                    hosp_rank=test_dat$hosp_rank,
+                    ili_mean=test_dat$ili_mean,
+                    hosp_mean=test_dat$hosp_mean,
+                    ili=test_dat$ili)
 
-  if(!is.null(covariates)) {
-    new_covariates <- cbind(new_covariates, covariates)
+    if(!is.null(covariates)) {
+      new_covariates <- cbind(new_covariates, covariates)
+    }
+
+    message(sprintf("Step 3: Fitting %d glm models ...", length(.models)))
+    res <- glm_wrap(train_dat, new_covariates = new_covariates,.models = .models, alpha = alpha)
+
+    approach <- paste0("GLM-", as.character(res$model$fit$fitted_model$family)[1],
+                       "\n",
+                       paste0(names(res$model$fit$fitted_model$coefficients), collapse = " + "))
+
+  } else {
+    hosp_tsibble <-
+      hosp %>%
+      left_join(fiphde:::historical_severity, by="epiweek") %>%
+      make_tsibble(epiyear, epiweek, key=location, chop=FALSE) %>%
+      mutate(date = MMWRweek::MMWRweek2Date(epiyear,epiweek)) %>%
+      filter(location=="US")
+
+    train_dat <- hosp_tsibble %>% filter(row_number() < n() - 3)
+    test_dat <- make_new_data(train_dat)
+
+    tmp_fit <-
+      train_dat %>%
+      model(ets=ETS(flu.admits ~ season(method="N")),
+            arima=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank)) %>%
+      mutate(ensemble=(ets+arima)/2)
+
+    myforecast <-
+      tmp_fit %>%
+      forecast(new_data=test_dat)
+
+    forcs <-
+      myforecast %>%
+      prep_mable() %>%
+      filter(.model == ts_method)
+
+    train_dat <- as_tibble(train_dat)
+
+    test_dat <-
+      as_tibble(test_dat) %>%
+      left_join(select(hosp_tsibble,epiweek,epiyear,flu.admits))
+
+    res <- list(forecasts = forcs, model = tmp_fit)
+
+    approach <- paste0("TS-",ts_method)
+
   }
 
-  message(sprintf("Step 3: Fitting %d glm models ...", length(.models)))
-  res <- glm_wrap(train_dat, new_covariates = new_covariates,.models = .models, alpha = alpha)
-
-  p.hosp <- plot_forc(res$forecasts, train_dat, test_dat)
+  p.hosp <-
+    plot_forc(res$forecasts, train_dat, test_dat) +
+    labs(caption = paste0(approach, "\n", max(train_dat$date)))
 
   scores <-
     wis_score(res$forecasts, test_dat) %>%
@@ -110,18 +203,11 @@ eval_wrap <- function(hosp = NULL, ilidat = NULL, min_hhs = "2020-10-12", max_hh
        scores = scores ,
        min_hhs = min_hhs,
        max_hhs = max_hhs,
-       min_flu = min_flu)
+       min_flu = min_flu,
+       thru_week = max(train_dat$date),
+       method = approach)
 }
 
-
-## specify a list models
-## NOTE: we could do this differently per call to eval_wrap if we wanted to assess different families of models
-models <-
-  list(
-    glm_negbin_lags_ranks = trending::glm_nb_model(flu.admits ~ lag_1 + ili_rank + hosp_rank),
-    glm_negbin_ili_lags_ranks = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank),
-    glm_negbin_ili_lags_ranks_offset = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank + offset(flu.admits.cov))
-  )
 
 ## lets set up the hosp data to pass in ...
 ## do it once and trim as many times as we want
@@ -145,6 +231,37 @@ hosp_dat <-
             flu.admits.cov = sum(flu.admits.cov),
             n_days = n(),
             .groups = "drop")
+
+
+
+forc_res <- eval_wrap(ts_method = "ets", hosp = hosp_dat, .models = NULL)
+forc_res
+
+# for(i in sq)
+# forc_res <- eval_wrap(ts_method = "ets", hosp = hosp_dat, .models = NULL)
+#
+#
+#
+# eval_wrap(hosp  = hosp_dat, .models = models, max_hhs = "2021-10-27") %>%
+#   .$scores %>%
+#   mutate(approach = .$method) %>%
+#   mutate(last_week = .$thru_week)
+#
+# forc_res2 <- eval_wrap(hosp = hosp_dat, .models = models, max_hhs = "2021-10-27")
+# forc_res2$plots$p.hosp
+# forc_res2$scores %>%
+#   mutate(approach = forc_res2$method) %>%
+#   mutate(last_week = forc_res2$thru_week)
+
+## specify a list models
+## NOTE: we could do this differently per call to eval_wrap if we wanted to assess different families of models
+models <-
+  list(
+    glm_negbin_lags_ranks = trending::glm_nb_model(flu.admits ~ lag_1 + ili_rank + hosp_rank),
+    glm_negbin_ili_lags_ranks = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank),
+    glm_negbin_ili_lags_ranks_offset = trending::glm_nb_model(flu.admits ~ ili + lag_1 + ili_rank + hosp_rank + offset(flu.admits.cov))
+  )
+
 
 ## if we want the function to retrieve the data each time keep hosp = NULL
 ## complete = TRUE means only the full epiweeks will be used in modeling
