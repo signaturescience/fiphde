@@ -167,17 +167,20 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
 
 #' @title Get ILI data from CDC FluView
 #' @description Get ILI data from CDC FluView. See [cdcfluview::ilinet].
-#' @param region Either "state" or "national" or `c("national", "state")` for both.
+#' @param region Either "state", "national", or "hhs". Defaults to `c("national", "state", "hhs") for all three`.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
 #' @return A tibble
 #' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
 #' @examples
 #' \dontrun{
 #' get_cdc_ili(region="national", years=2021)
+#' get_cdc_ili(region="hhs", years=2021)
 #' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
 #' }
 #' @export
-get_cdc_ili <- function(region=c("national", "state"), years=NULL) {
+get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
+  # Check that you aren't specifying unsupported regions
+  if (!all(region %in% c("national", "state", "hhs"))) stop("Invalid region. See ?get_cdc_ili.")
   # Map over regions calling cdcfluview::ilinet for that region and specified years
   d <- purrr::map_dfr(region, ~cdcfluview::ilinet(., years=years))
   # Get only relevant columns (drop age group distributions)

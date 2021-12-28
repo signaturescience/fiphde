@@ -4,10 +4,10 @@
 \alias{get_cdc_ili}
 \title{Get ILI data from CDC FluView}
 \usage{
-get_cdc_ili(region = c("national", "state"), years = NULL)
+get_cdc_ili(region = c("national", "state", "hhs"), years = NULL)
 }
 \arguments{
-\item{region}{Either "state" or "national" or \code{c("national", "state")} for both.}
+\item{region}{Either "state", "national", or "hhs". Defaults to \verb{c("national", "state", "hhs") for all three}.}
 
 \item{years}{A vector of years to retrieve data for. CDC has data going back to 1997. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
@@ -20,6 +20,7 @@ Get ILI data from CDC FluView. See \link[cdcfluview:ilinet]{cdcfluview::ilinet}.
 \examples{
 \dontrun{
 get_cdc_ili(region="national", years=2021)
+get_cdc_ili(region="hhs", years=2021)
 get_cdc_ili(region="state", years=2021) \%>\% dplyr::filter(abbreviation=="VA")
 }
 }
