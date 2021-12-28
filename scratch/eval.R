@@ -145,9 +145,6 @@ hosp_dat <-
             flu.admits.cov = sum(flu.admits.cov),
             n_days = n(),
             .groups = "drop")
-dplyr::left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
-  dplyr::filter(n_days == 7)
-
 
 ## if we want the function to retrieve the data each time keep hosp = NULL
 ## complete = TRUE means only the full epiweeks will be used in modeling
