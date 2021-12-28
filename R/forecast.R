@@ -119,7 +119,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, constrained=TRUE, p
   ## make a tsibble. do not chop the last week - because this is weekly data we won't have an incomplete final week
   ilidat_tsibble <-
     ilidat %>%
-    make_tsibble(epiyear = epiyear, epiweek = epiweek, key=location, chop=FALSE)
+    make_tsibble(epiyear = epiyear, epiweek = epiweek, key=location)
 
   # Defaults to constrained, non-seasonal model.
   if (constrained) {
