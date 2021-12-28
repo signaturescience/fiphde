@@ -4,7 +4,7 @@
 \alias{make_tsibble}
 \title{Make \code{tsibble}}
 \usage{
-make_tsibble(df, epiyear, epiweek, key = location, chop = TRUE)
+make_tsibble(df, epiyear, epiweek, key = location, chop = deprecated())
 }
 \arguments{
 \item{df}{A \code{tibble} containing columns \code{epiyear} and \code{epiweek}.}
@@ -15,7 +15,7 @@ make_tsibble(df, epiyear, epiweek, key = location, chop = TRUE)
 
 \item{key}{Unquoted variable name containing the name of the column to be the tsibble key. See \link[tsibble:as-tsibble]{tsibble::as_tsibble}.}
 
-\item{chop}{Logical indicating whether or not to remove the most current week (default \code{TRUE}).}
+\item{chop}{(Deprecated)}
 }
 \value{
 A \code{tsibble} containing additional columns \code{monday} indicating the date
@@ -23,5 +23,12 @@ for the Monday of that epiweek, and \code{yweek} (a yearweek vctr class object)
 that indexes the \code{tsibble} in 1 week increments.
 }
 \description{
-This function converts an input \code{tibble} with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The \code{tsibble} has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row. Users can optionally ignore the current week when generating the \code{tsibble} via the "chop" argument.
+This function converts an input \code{tibble} with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The \code{tsibble} has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+}
+\examples{
+d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
+                    epiweek=c(52, 53, 1, 2),
+                    location="US",
+                    somedata=101:104)
+make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
 }
