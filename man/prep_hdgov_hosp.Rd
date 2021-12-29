@@ -32,6 +32,9 @@ Prep healthdata.gov hospitalization data retrieved using \link{get_hdgov_hosp} f
 \examples{
 \dontrun{
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
-prep_hdgov_hosp(h_raw)
+h <- prep_hdgov_hosp(h_raw)
+h
+hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
+hts
 }
 }
