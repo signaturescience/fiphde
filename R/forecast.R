@@ -1,3 +1,14 @@
+#' @title Time series hospitalization forecasts
+#' @description Forecasts hospitalizations with time series methods
+#' @examples
+#' \dontrun{
+#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' h <- prep_hdgov_hosp(h_raw)
+#' hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
+#' htsu <- hts %>% dplyr::filter(location=="US")
+#' }
+NULL
+
 #' @title Forecast ILI
 #' @description Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
 #' @details Currently limited to one location only.
