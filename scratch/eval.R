@@ -1,6 +1,7 @@
 library(tidyverse)
 library(fiphde)
-
+library(fable)
+theme_set(theme_bw())
 ## some helpers used in the eval_wrap wrapper
 
 ## Function to make new data with historical epiweek severity
@@ -164,8 +165,12 @@ eval_wrap <- function(ts_method = NULL, hosp = NULL, ilidat = NULL, min_hhs = "2
     tmp_fit <-
       train_dat %>%
       model(ets=ETS(flu.admits ~ season(method="N")),
-            arima=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank)) %>%
-      mutate(ensemble=(ets+arima)/2)
+            rw_naive=NAIVE(flu.admits),
+            rw_drift=RW(flu.admits~drift()),
+            arima=ARIMA(flu.admits~PDQ(0,0,0)),
+            arima_hosp=ARIMA(flu.admits~PDQ(0,0,0)+ hosp_rank),
+            arima_ili=ARIMA(flu.admits~PDQ(0,0,0)+ ili_rank)) %>%
+      mutate(ensemble=(ets+arima_hosp+arima_ili)/3)
 
     myforecast <-
       tmp_fit %>%
@@ -239,7 +244,7 @@ thru_dates <- seq(as.Date("2020-11-15", format = "%Y-%m-%d"), as.Date("2021-12-2
 to_loop <-
   crossing(
     # ts_methods = c("ets","ensemble","arima",NULL),
-    ts_methods = c("ets","ensemble","arima"),
+    ts_methods = c("ets","ensemble", "arima", "arima_hosp", "arima_ili", "rw_naive", "rw_drift"),
     thru_dates = thru_dates)
 
 forc_res_ts <- map2(to_loop$ts_methods, to_loop$thru_dates, .f = ~eval_wrap(hosp = hosp_dat, ts_method = .x, max_hhs = .y, .models = NULL))
@@ -289,15 +294,42 @@ scores_by_method %>%
   theme(legend.position= "bottom", axis.text.x = element_text(angle = 90)) +
   labs(y = "WIS", x = "Last week of training data")
 
+# summarize over all horizons
+scores_by_method %>%
+  group_by(epiweek, epiyear, method, thru_week) %>%
+  summarize(wis=mean(wis)) %>%
+  ggplot(aes(thru_week, wis)) +
+  geom_col() +
+  scale_x_date(date_breaks = "month", date_labels = "%Y-%m") +
+  facet_wrap(~method) +
+  theme(legend.position= "bottom", axis.text.x = element_text(angle = 90)) +
+  labs(y = "WIS", x = "Last week of training data")
+
+# summarize over all horizons, compare to naive model
+sbm <- scores_by_method %>%
+  group_by(epiweek, epiyear, method, thru_week) %>%
+  summarize(wis=mean(wis), .groups="drop")
+sbm %>%
+  filter(method=="TS-rw_naive") %>%
+  select(epiweek, epiyear, thru_week, naive=wis) %>%
+  inner_join(sbm) %>%
+  mutate(rwis=(wis-naive)/naive) %>%
+  ggplot(aes(thru_week, rwis)) +
+  geom_col() +
+  scale_x_date(date_breaks = "month", date_labels = "%Y-%m") +
+  facet_wrap(~method) +
+  theme(legend.position= "bottom", axis.text.x = element_text(angle = 90)) +
+  labs(y = "WIS", x = "Last week of training data")
+
 ## tabulate wis across methods
 scores_by_method %>%
   ## this bit of code ensures that the weeks evaluated overlap all methods
   add_count(thru_week) %>%
   filter(n == n_distinct(method)*4) %>%
   group_by(method) %>%
-  summarise(wis_median = median(wis),
-            wis_mean = mean(wis),
-            wis = sum(wis),
+  summarise(wis_median = median(wis, na.rm=TRUE),
+            wis_mean = mean(wis, na.rm=TRUE),
+            wis = sum(wis, na.rm=TRUE),
             n = n())
 
 ## same thing as above but also grouping by horizon
@@ -306,9 +338,9 @@ scores_by_method %>%
   add_count(thru_week) %>%
   filter(n == n_distinct(method)*4) %>%
   group_by(horizon,method) %>%
-  summarise(wis_median = median(wis),
-            wis_mean = mean(wis),
-            wis = sum(wis),
+  summarise(wis_median = median(wis, na.rm=TRUE),
+            wis_mean = mean(wis, na.rm=TRUE),
+            wis = sum(wis, na.rm=TRUE),
             n = n())
 
 # ## you can also use this on individual models
