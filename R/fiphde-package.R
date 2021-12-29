@@ -72,6 +72,11 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "total",
                                                         "pmiss",
                                                         "arima",
+                                                        "state",
+                                                        "flu.admits.cov",
+                                                        "week_end",
+                                                        "location_name",
+                                                        "population",
                                                         "x",
                                                         "."))
 
