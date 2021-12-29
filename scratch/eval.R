@@ -214,7 +214,6 @@ eval_wrap <- function(ts_method = NULL, hosp = NULL, ilidat = NULL, min_hhs = "2
 ## alternative is to keep hosp=NULL param to eval_wrap and the function will retrieve each time
 hosp_dat <-
   get_hdgov_hosp(mindate =  "2020-10-12", maxdate="2021-12-27") %>%
-  # mutate(date = date - 1) %>%
   mutate(flu.admits = as.numeric(flu.admits),
          flu.admits.cov = as.numeric(flu.admits.cov)) %>%
   mutate(epiweek = lubridate::epiweek(date),
@@ -262,6 +261,9 @@ forc_res <- c(forc_res_glm,forc_res_ts)
 # save(forc_res, file = "~/Downloads/forc_res.rda")
 # load("~/Downloads/forc_res.rda")
 
+## NOTE: ran this once and included in analysis below ... worse than GLM with no trim so leaving out
+# forc_res_glm2 <- map(thru_dates[10:length(thru_dates)], .f = ~eval_wrap(hosp = hosp_dat, ts_method = NULL, min_hhs = .x - (7*28),  max_hhs = .x, .models = glm_models))
+
 ## helper to pull out scores and methods
 get_scores <- function(x) {
   x$scores %>%
@@ -274,7 +276,12 @@ scores_by_method <-
   ## fragile: only looks for negative binomial as method (would need to edit if poisson was chosen )
   mutate(method = ifelse(grepl("Negative", method), "GLM-NB", method))
 
+# scores_by_method2 <-
+#   map_df(forc_res_glm2, get_scores) %>%
+#   mutate(method = "GLM-NB-trim6")
+
 scores_by_method %>%
+  bind_rows(scores_by_method2) %>%
   mutate(Horizon = as.factor(horizon)) %>%
   ggplot(aes(thru_week, wis)) +
   geom_col(aes(fill = Horizon), position = "dodge") +
