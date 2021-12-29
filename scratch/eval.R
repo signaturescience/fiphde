@@ -259,7 +259,7 @@ forc_res <- c(forc_res_glm,forc_res_ts)
 ## that ^ took a while!
 ## save for later
 # save(forc_res, file = "~/Downloads/forc_res.rda")
-# load("~/Downloads/forc_res.rda")
+load("~/Downloads/forc_res.rda")
 
 ## NOTE: ran this once and included in analysis below ... worse than GLM with no trim so leaving out
 # forc_res_glm2 <- map(thru_dates[10:length(thru_dates)], .f = ~eval_wrap(hosp = hosp_dat, ts_method = NULL, min_hhs = .x - (7*28),  max_hhs = .x, .models = glm_models))
@@ -281,7 +281,6 @@ scores_by_method <-
 #   mutate(method = "GLM-NB-trim6")
 
 scores_by_method %>%
-  bind_rows(scores_by_method2) %>%
   mutate(Horizon = as.factor(horizon)) %>%
   ggplot(aes(thru_week, wis)) +
   geom_col(aes(fill = Horizon), position = "dodge") +
