@@ -84,7 +84,7 @@ hts <-
   # filter(location %in% c("US", "NY", "FL", "VA")) %>%
   # filter(location=="US") %>%
   mutate(location=location %>% factor() %>% fct_relevel("US")) %>%
-  make_tsibble(epiyear, epiweek, key=location, chop=FALSE)
+  make_tsibble(epiyear, epiweek, key=location)
 
 # Function to make new data with historical epiweek severity
 make_new_data <- function(.data, .horizon=4) {
@@ -100,8 +100,9 @@ make_new_data <- function(.data, .horizon=4) {
 tsfit <-
   hts %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
-        boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
-        sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
+        # boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
+        # sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
+        naive=NAIVE(flu.admits),
         arima=ARIMA(flu.admits~PDQ(0,0,0))
   ) %>%
   mutate(ensemble=(ets+arima)/2)
@@ -116,9 +117,10 @@ p1 <- tsfor %>% autoplot(hts, level=10) + ggtitle("No exogenous regressors")
 tsfit_exo <-
   hts %>%
   model(ets=ETS(flu.admits ~ season(method="N")),
-        boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
-        sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
-        arima=ARIMA(flu.admits~PDQ(0,0,0))
+        # boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
+        # sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
+        naive=NAIVE(flu.admits),
+        arima=ARIMA(flu.admits~PDQ(0,0,0) + hosp_rank + ili_rank)
   ) %>%
   mutate(ensemble=(ets+arima)/2)
 
