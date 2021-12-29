@@ -103,6 +103,7 @@ tsfit <-
         # boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
         # sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
         naive=NAIVE(flu.admits),
+        drift=RW(flu.admits~drift()),
         arima=ARIMA(flu.admits~PDQ(0,0,0))
   ) %>%
   mutate(ensemble=(ets+arima)/2)
@@ -120,6 +121,7 @@ tsfit_exo <-
         # boxcosxets=ETS(box_cox(flu.admits, .5) ~ season(method="N")),
         # sqrtets=ETS(sqrt(flu.admits) ~ season(method="N")),
         naive=NAIVE(flu.admits),
+        drift=RW(flu.admits~drift()),
         arima=ARIMA(flu.admits~PDQ(0,0,0) + hosp_rank + ili_rank)
   ) %>%
   mutate(ensemble=(ets+arima)/2)
