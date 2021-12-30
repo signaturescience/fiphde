@@ -54,6 +54,8 @@ ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
 
 # Using data only from march 2020 forward, for US only
 ilidat_us <- ilidat \%>\% dplyr::filter(location=="US")
+# Replace most recent week with nowcast data, and nowcast last week
+ilidat_us <- ilidat_us \%>\% replace_ili_nowcast(weeks_to_replace=1)
 ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
 ilifor_us$ili_fit
 ilifor_us$arima_params

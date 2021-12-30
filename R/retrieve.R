@@ -264,6 +264,7 @@ get_cdc_hosp <- function(years=NULL) {
 #'   mutate(diff=weighted_ili_now-weighted_ili) %>%
 #'   arrange(desc(abs(diff)))
 #' }
+#' @export
 get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7)) {
 
   # Check that you're not supplying both. If you are, error out.
