@@ -4,10 +4,48 @@
 #' \dontrun{
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
 #' h <- prep_hdgov_hosp(h_raw)
-#' hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
-#' htsu <- hts %>% dplyr::filter(location=="US")
+#' prepped_hosp_tsibble <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
+#' prepped_hosp_tsibble <- prepped_hosp_tsibble %>% dplyr::filter(location=="US")
 #' }
 NULL
+# horizon=4L
+# trim_date="2021-01-01"
+# type="arima"
+# constrained=TRUE
+# param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0)
+# covariates=c("hosp_rank", "ili_rank")
+# outcome="flu.admits"
+#
+# if (!is.null(trim_date)) {
+#   message(sprintf("Trimming to %s", trim_date))
+#   prepped_hosp_tsibble <-
+#     prepped_hosp_tsibble %>%
+#     dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d"))
+# }
+#
+#
+# param_space <- lapply(param_space, deparse)
+# if (constrained) {
+#   .stepwise <- FALSE
+#   .approximation <- FALSE
+#   PDQ <- sprintf("PDQ(%s,%s,%s)", param_space$P,param_space$D,param_space$Q)
+#   pdq <- sprintf("pdq(%s,%s,%s)", param_space$p,param_space$d,param_space$q)
+#   arima_formula <- reformulate(c(PDQ, pdq, covariates), response=outcome)
+# } else {
+#   .stepwise <- TRUE
+#   .approximation <- TRUE
+#   if (!is.null(covariates)) {
+#     arima_formula <- reformulate(covariates, response=outcome)
+#   } else {
+#     arima_formula <- reformulate("0", response=outcome)
+#   }
+# }
+# ets_formula <- reformulate("season(method='N')", response=outcome)
+#
+# hosp_tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
+#                                 arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
+#                                 ets = fable::ETS(ets_formula))
+
 
 #' @title Forecast ILI
 #' @description Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
