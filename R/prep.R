@@ -1,6 +1,6 @@
 #' @title Prep hospitalization data
 #' @description Prep healthdata.gov hospitalization data retrieved using [get_hdgov_hosp] for downstream forecasting. Limits to states only, trims to where you have data, removes the incomplete week, and removes locations with little reporting over the last month.
-#' @param h_raw Raw hospitalization data from [get_hdgov_hosp]
+#' @param hdgov_hosp Raw hospitalization data from [get_hdgov_hosp]
 #' @param statesonly Limit to US+DC+States only (i.e., drop territories)? Defaults to `TRUE`.
 #' @param trim list with epiyear and epiweek to trim on. Defaults to October 25, 2020 (2020:43). There isn't any data before this.
 #' @param remove_incomplete Remove the last week if incomplete? Defaults to `TRUE`.
@@ -9,23 +9,23 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' h <- prep_hdgov_hosp(h_raw)
+#' hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
+#' h <- prep_hdgov_hosp(hdgov_hosp)
 #' h
 #' hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
 #' hts
 #' }
-prep_hdgov_hosp <- function(h_raw,
+prep_hdgov_hosp <- function(hdgov_hosp,
                             statesonly=TRUE,
                             trim=list(epiyear=2020, epiweek=43),
                             remove_incomplete=TRUE,
                             min_per_week=1) {
   # What's the last date you have data on? You'll need this to chop the data later on.
-  last_date <- max(h_raw$date)
+  last_date <- max(hdgov_hosp$date)
 
   # Summarize to epiyear, epiweek
   message("Summarizing to epiyear/epiweek")
-  hweek <- h_raw %>%
+  hweek <- hdgov_hosp %>%
     dplyr::rename(location=state) %>%
     dplyr::mutate(epiyear=lubridate::epiyear(date), epiweek=lubridate::epiweek(date), .after=date) %>%
     dplyr::group_by(location, epiyear, epiweek) %>%

@@ -5,7 +5,7 @@
 \title{Prep hospitalization data}
 \usage{
 prep_hdgov_hosp(
-  h_raw,
+  hdgov_hosp,
   statesonly = TRUE,
   trim = list(epiyear = 2020, epiweek = 43),
   remove_incomplete = TRUE,
@@ -13,7 +13,7 @@ prep_hdgov_hosp(
 )
 }
 \arguments{
-\item{h_raw}{Raw hospitalization data from \link{get_hdgov_hosp}}
+\item{hdgov_hosp}{Raw hospitalization data from \link{get_hdgov_hosp}}
 
 \item{statesonly}{Limit to US+DC+States only (i.e., drop territories)? Defaults to \code{TRUE}.}
 
@@ -31,8 +31,8 @@ Prep healthdata.gov hospitalization data retrieved using \link{get_hdgov_hosp} f
 }
 \examples{
 \dontrun{
-h_raw <- get_hdgov_hosp(limitcols=TRUE)
-h <- prep_hdgov_hosp(h_raw)
+hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
+h <- prep_hdgov_hosp(hdgov_hosp)
 h
 hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
 hts
