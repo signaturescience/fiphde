@@ -5,3 +5,4 @@
 ^README\.Rmd$
 ^scratch$
 ^data-raw$
+^submission$
