@@ -93,7 +93,7 @@ NULL
 #'
 #' # At the state level
 #' ilidat_st <- ilidat %>% dplyr::filter(region_type=="States")
-#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
+#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01", type="ets")
 #' ilifor_st$ili_fit
 #' ilifor_st$arima_params
 #' ilifor_st$ili_forecast
@@ -155,7 +155,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
   # Select just the columns you care about, and call "ili" the measure you're using
   ilidat <-
     ilidat %>%
-    dplyr::select(location, epiyear, epiweek, ili=unweighted_ili)
+    dplyr::select(location, epiyear, epiweek, ili=weighted_ili)
 
   # Get missing data rates
   locstats <- ilidat %>%

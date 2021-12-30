@@ -178,6 +178,7 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
 #' get_cdc_ili(region="national", years=2021)
 #' get_cdc_ili(region="hhs", years=2021)
 #' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
+#' get_cdc_ili(region=c("national", "state"), years=2021)
 #' }
 #' @export
 get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
@@ -192,6 +193,10 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
     dplyr::mutate(region=gsub("National", "US", region)) %>%
     dplyr::inner_join(locations, by=c("region"="location_name")) %>%
     dplyr::select(location, region_type, abbreviation, region, dplyr::everything())
+  # if region_type is States, make weighted_ili = unweighted_ili
+  d <- d %>%
+    dplyr::mutate(weighted_ili=ifelse(region_type=="States", unweighted_ili/1, weighted_ili))
+  # Let the user know which weeks you have data for
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
                   unique(d$epiyear[d$week_start==max(d$week_start)]),
@@ -209,6 +214,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' get_cdc_hosp(years=2019)
 #' }
 get_cdc_hosp <- function(years=NULL) {
+  warning("CDC hospitalization should only be used for historical analysis. Use get_hdgov_hosp() for flusight forecasting.")
   d <- cdcfluview::hospitalizations(surveillance_area="flusurv", region="all", years=years)
   d <- d %>%
     dplyr::filter(age_label=="Overall") %>%

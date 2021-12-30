@@ -22,6 +22,7 @@ Get ILI data from CDC FluView. See \link[cdcfluview:ilinet]{cdcfluview::ilinet}.
 get_cdc_ili(region="national", years=2021)
 get_cdc_ili(region="hhs", years=2021)
 get_cdc_ili(region="state", years=2021) \%>\% dplyr::filter(abbreviation=="VA")
+get_cdc_ili(region=c("national", "state"), years=2021)
 }
 }
 \references{
