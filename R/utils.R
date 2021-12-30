@@ -82,4 +82,52 @@ plot_forc <- function(.forecasts, .train, .test) {
 }
 
 
-
+#' @title Replace ILInet with nowcast data
+#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
+#' @param ilidat Data from [get_cdc_ili].
+#' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
+#' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
+#' @export
+#' @examples
+#' \dontrun{
+#' ilidat <- get_cdc_ili(years=2021)
+#' ilidat <-
+#'   ilidat %>%
+#'   dplyr::filter(location=="US" | abbreviation=="VA") %>%
+#'   dplyr::group_by(location) %>%
+#'   dplyr::slice_max(week_start, n=4) %>%
+#'   dplyr::select(location:weighted_ili)
+#' ilidat
+#' iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+#' iliaug
+#'
+#' # arrange for comparison
+#' ilidat <- ilidat %>% dplyr::arrange(location, week_start)
+#' iliaug <- iliaug %>% dplyr::arrange(location, week_start)
+#' # Compare US
+#' waldo::compare(ilidat %>% dplyr::filter(location=="US"),
+#'                iliaug %>% dplyr::filter(location=="US"))
+#' # Compare VA
+#' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
+#'                iliaug %>% dplyr::filter(location=="51"))
+#' }
+replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
+  # How many days back do you need to go? 1 to weeks+1, *7
+  days_back <- (1:(weeks_to_replace+1))*7
+  # What are those dates?
+  dates_back <- lubridate::today() - days_back
+  ilinow <- get_nowcast_ili(dates=dates_back)
+  ilinow <- ilinow %>% dplyr::filter(location %in% ilidat$location)
+  message(paste0("Replacing weighted_ili with nowcast weighted_ili on dates: ", paste(dates_back, collapse=", ")))
+  res <-
+    ilidat %>%
+    dplyr::full_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
+    dplyr::mutate(week_start=MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+    dplyr::arrange(location, week_start) %>%
+    tidyr::fill(region_type, region, .direction="down") %>%
+    dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
+    dplyr::select(-weighted_ili_now)
+  # We expect to have one extra row per location in the result compared to the input.
+  if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
+  return(res)
+}
