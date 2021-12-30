@@ -234,3 +234,93 @@ get_cdc_hosp <- function(years=NULL) {
                   unique(d$epiweek[d$week_start==max(d$week_start)])))
   return(d)
 }
+
+
+#' @title Get ILI nowcast
+#' @description Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
+#' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
+#' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
+#' @return A tibble
+#' @references <https://delphi.cmu.edu/nowcast/>
+#' @examples
+#' \dontrun{
+#' # Defaults to the previous two weeks
+#' get_nowcast_ili()
+#'
+#' # Otherwise specify one or the other, not both
+#' get_nowcast_ili(epiyearweeks=c("202150", "202151"), dates=NULL)
+#' get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
+#'
+#' # Compare to ilinet
+#' library(dplyr)
+#' library(ggplot2)
+#' ilidat <- get_cdc_ili(years=2021)
+#' ilinow <- get_nowcast_ili()
+#' ilijoined <-
+#'   inner_join(ilidat,
+#'              ilinow %>% rename(weighted_ili_now=weighted_ili),
+#'              by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
+#'   select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
+#' ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
+#' ilijoined %>%
+#'   mutate(diff=weighted_ili_now-weighted_ili) %>%
+#'   arrange(desc(abs(diff)))
+#' }
+get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7)) {
+
+  # Check that you're not supplying both. If you are, error out.
+  if (!xor(is.null(epiyearweeks), is.null(dates))) {
+    stop("Either epiyearweeks or dates must be defined, but not both. Set one to NULL.")
+  }
+
+  # Base url to nowcast API
+  base_url <- "https://delphi.cmu.edu/epidata/nowcast/"
+
+  # Get the names of the states in lowercase
+  states <-
+    locations %>%
+    dplyr::filter(location %in% stringr::str_pad(1:56, width = 2, pad = 0)) %>%
+    dplyr::pull(abbreviation) %>%
+    tolower()
+  # paste together "nat", hhs regions, and states
+  locs <- c("nat", paste0("hhs",1:10), states)
+  # put that into a character vector separated by ,
+  locs <- paste(locs, collapse=",")
+
+  # If you supply dates instead of epiyearweeks, this will convert dates to epiyearweeks
+  if (!is.null(dates)) {
+    epiyearweeks <-
+      MMWRweek::MMWRweek(dates) %>%
+      dplyr::mutate(epiyearweeks=paste0(MMWRyear, MMWRweek)) %>%
+      dplyr::pull(epiyearweeks)
+  }
+  epiyearweeks <- paste(epiyearweeks, collapse=",")
+
+  # Construct the API URL. E.g.,
+  # https://delphi.cmu.edu/epidata/nowcast/?locations=nat,hhs1,tx,va&epiweeks=201242,202151
+  api_url <- paste0(base_url, "?", "locations=", locs, "&epiweeks=", epiyearweeks)
+
+  # message(api_url)
+
+  # Read in the raw json
+  resjson <- jsonlite::read_json(api_url, simplifyVector = TRUE)
+
+  # Parse the json. separate epiweek into epiyear/epiweek, then line up the names with our location data.
+  res <-
+    resjson$epidata %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(epiweek, into=c("epiyear", "epiweek"), sep=4, convert = TRUE) %>%
+    dplyr::mutate(location=toupper(location)) %>%
+    dplyr::mutate(location=gsub("NAT", "US", location)) %>%
+    dplyr::mutate(location=ifelse(grepl("HHS", location),
+                                  location %>% stringr::str_extract("\\d") %>% stringr::str_pad(width=2, pad=0) %>% paste0("HHS", .),
+                                  location)) %>%
+    dplyr::rename(abbreviation=location) %>%
+    dplyr::inner_join(locations, by="abbreviation") %>%
+    dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili=value, ili_std=std) %>%
+    dplyr::arrange(epiyear, epiweek, location)
+
+  return(res)
+}
+
+
