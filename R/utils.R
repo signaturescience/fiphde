@@ -1,40 +1,3 @@
-#' @title Make `tsibble`
-#' @description This function converts an input `tibble` with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
-#' @param df A `tibble` containing columns `epiyear` and `epiweek`.
-#' @param epiyear Unquoted variable name containing the MMWR epiyear.
-#' @param epiweek Unquoted variable name containing the MMWR epiweek.
-#' @param key Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
-#' @param chop (Deprecated)
-#' @return A `tsibble` containing additional columns `monday` indicating the date
-#'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
-#'   that indexes the `tsibble` in 1 week increments.
-#' @examples
-#' d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
-#'                     epiweek=c(52, 53, 1, 2),
-#'                     location="US",
-#'                     somedata=101:104)
-#' make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
-#' @export
-make_tsibble <- function(df, epiyear, epiweek, key=location, chop=deprecated()) {
-  # Deprecate the chop argument, and assign it back to itself for compatibility
-  if (lifecycle::is_present(chop)) {
-    lifecycle::deprecate_warn("0.0.0.9000", "fiphde::make_tsibble(chop)")
-    chop <- chop
-  }
-  # Continue with the normal make_tsibble function
-  out <- df %>%
-    # get the monday that starts the MMWRweek
-    dplyr::mutate(monday=MMWRweek::MMWRweek2Date(MMWRyear={{epiyear}},
-                                                 MMWRweek={{epiweek}},
-                                                 MMWRday=2),
-                  .after={{epiweek}}) %>%
-    # convert represent as yearweek (see package?tsibble)
-    dplyr::mutate(yweek=tsibble::yearweek(monday), .after="monday") %>%
-    # convert to tsibble
-    tsibble::as_tsibble(index=yweek, key={{key}})
-  return(out)
-}
-
 #' Get Monday
 #'
 #' @description
@@ -119,4 +82,52 @@ plot_forc <- function(.forecasts, .train, .test) {
 }
 
 
-
+#' @title Replace ILInet with nowcast data
+#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
+#' @param ilidat Data from [get_cdc_ili].
+#' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
+#' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
+#' @export
+#' @examples
+#' \dontrun{
+#' ilidat <- get_cdc_ili(years=2021)
+#' ilidat <-
+#'   ilidat %>%
+#'   dplyr::filter(location=="US" | abbreviation=="VA") %>%
+#'   dplyr::group_by(location) %>%
+#'   dplyr::slice_max(week_start, n=4) %>%
+#'   dplyr::select(location:weighted_ili)
+#' ilidat
+#' iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+#' iliaug
+#'
+#' # arrange for comparison
+#' ilidat <- ilidat %>% dplyr::arrange(location, week_start)
+#' iliaug <- iliaug %>% dplyr::arrange(location, week_start)
+#' # Compare US
+#' waldo::compare(ilidat %>% dplyr::filter(location=="US"),
+#'                iliaug %>% dplyr::filter(location=="US"))
+#' # Compare VA
+#' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
+#'                iliaug %>% dplyr::filter(location=="51"))
+#' }
+replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
+  # How many days back do you need to go? 1 to weeks+1, *7
+  days_back <- (1:(weeks_to_replace+1))*7
+  # What are those dates?
+  dates_back <- lubridate::today() - days_back
+  ilinow <- get_nowcast_ili(dates=dates_back)
+  ilinow <- ilinow %>% dplyr::filter(location %in% ilidat$location)
+  message(paste0("Replacing weighted_ili with nowcast weighted_ili on dates: ", paste(dates_back, collapse=", ")))
+  res <-
+    ilidat %>%
+    dplyr::full_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
+    dplyr::mutate(week_start=MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+    dplyr::arrange(location, week_start) %>%
+    tidyr::fill(region_type, region, .direction="down") %>%
+    dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
+    dplyr::select(-weighted_ili_now)
+  # We expect to have one extra row per location in the result compared to the input.
+  if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
+  return(res)
+}

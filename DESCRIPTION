@@ -47,7 +47,10 @@ Imports:
     ggplot2,
     yardstick,
     assertthat,
-    lifecycle
+    lifecycle,
+    stringr,
+    jsonlite,
+    stats
 Depends: 
     R (>= 2.10)
 Suggests: 
