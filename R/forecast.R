@@ -1,51 +1,94 @@
-#' @title Time series hospitalization forecasts
-#' @description Forecasts hospitalizations with time series methods
+#' @title Fit and forecast with time-series approaches.
+#' @description Fit and forecast with time-series approaches.
+#' @param prepped_hosp_tsibble fixme
+#' @param outcome fixme
+#' @param horizon fixme
+#' @param trim_date fixme
+#' @param constrained fixme
+#' @param param_space fixme
+#' @param covariates fixme
+#' @return A list of the time series fit, forecast, and model formulas
+#' @export
 #' @examples
 #' \dontrun{
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' h <- prep_hdgov_hosp(h_raw)
-#' prepped_hosp_tsibble <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
-#' prepped_hosp_tsibble <- prepped_hosp_tsibble %>% dplyr::filter(location=="US")
+#' ## save(h_raw, file="~/Downloads/h_raw.rd")
+#' ## load(file="~/Downloads/h_raw.rd")
+#' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+#'                                      epiyear = epiyear,
+#'                                      epiweek=epiweek,
+#'                                      key=location)
+#' prepped_hosp_tsibble <-
+#'   prepped_hosp_tsibble %>%
+#'   dplyr::filter(location %in% c("US", "51"))
+#' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+#'                                horizon=4L,
+#'                                outcome="flu.admits",
+#'                                constrained=TRUE,
+#'                                covariates=c("hosp_rank", "ili_rank"))
 #' }
-NULL
-# horizon=4L
-# trim_date="2021-01-01"
-# type="arima"
-# constrained=TRUE
-# param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0)
-# covariates=c("hosp_rank", "ili_rank")
-# outcome="flu.admits"
-#
-# if (!is.null(trim_date)) {
-#   message(sprintf("Trimming to %s", trim_date))
-#   prepped_hosp_tsibble <-
-#     prepped_hosp_tsibble %>%
-#     dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d"))
-# }
-#
-#
-# param_space <- lapply(param_space, deparse)
-# if (constrained) {
-#   .stepwise <- FALSE
-#   .approximation <- FALSE
-#   PDQ <- sprintf("PDQ(%s,%s,%s)", param_space$P,param_space$D,param_space$Q)
-#   pdq <- sprintf("pdq(%s,%s,%s)", param_space$p,param_space$d,param_space$q)
-#   arima_formula <- reformulate(c(PDQ, pdq, covariates), response=outcome)
-# } else {
-#   .stepwise <- TRUE
-#   .approximation <- TRUE
-#   if (!is.null(covariates)) {
-#     arima_formula <- reformulate(covariates, response=outcome)
-#   } else {
-#     arima_formula <- reformulate("0", response=outcome)
-#   }
-# }
-# ets_formula <- reformulate("season(method='N')", response=outcome)
-#
-# hosp_tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
-#                                 arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
-#                                 ets = fable::ETS(ets_formula))
+ts_fit_forecast <- function(prepped_hosp_tsibble,
+                            outcome="flu.admits",
+                            horizon=4L,
+                            trim_date="2021-10-25",
+                            constrained=TRUE,
+                            param_space=list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0),
+                            covariates=c("hosp_rank", "ili_rank")) {
 
+  if (!is.null(trim_date)) {
+    message(sprintf("Trimming to %s", trim_date))
+    prepped_hosp_tsibble <-
+      prepped_hosp_tsibble %>%
+      dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d"))
+  }
+
+
+  param_space <- lapply(param_space, deparse)
+  if (constrained) {
+    .stepwise <- FALSE
+    .approximation <- FALSE
+    PDQ <- sprintf("PDQ(%s,%s,%s)", param_space$P,param_space$D,param_space$Q)
+    pdq <- sprintf("pdq(%s,%s,%s)", param_space$p,param_space$d,param_space$q)
+    arima_formula <- stats::reformulate(c(PDQ, pdq, covariates), response=outcome)
+  } else {
+    .stepwise <- TRUE
+    .approximation <- TRUE
+    if (!is.null(covariates)) {
+      arima_formula <- stats::reformulate(covariates, response=outcome)
+    } else {
+      arima_formula <- stats::reformulate("0", response=outcome)
+    }
+  }
+  ets_formula <- stats::reformulate("season(method='N')", response=outcome)
+
+  message(paste0("ARIMA formula: ", Reduce(paste, deparse(arima_formula))))
+  message(paste0("ETS   formula: ", Reduce(paste, deparse(ets_formula))))
+
+  tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
+                             arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
+                             ets = fable::ETS(ets_formula))
+
+  # forecast
+  if (is.null(covariates)) {
+    tsfor <- fabletools::forecast(tsfit, h=horizon)
+  } else {
+    # This is a known issue. In order to forecast with covariates supplied in arguments,
+    # those covariates must be in the supplied tsibble, but you also need to figure out
+    # how to get those covariates into the new data tsibble you're creating below.
+    # This is easy with the historical severity, because it's by epiweek, not by epiweek/year,
+    # So we can just join this back to the historical severity data. But if we have other
+    # covariates, you'll have to figure out how to get them, via forecast or some other means.
+    new_data <-
+      tsibble::new_data(prepped_hosp_tsibble, n=horizon) %>%
+      dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
+      dplyr::inner_join(historical_severity, by="epiweek")
+    tsfor <- fabletools::forecast(tsfit, new_data=new_data)
+  }
+
+  return(tibble::lst(tsfit, tsfor, arima_formula, ets_formula))
+
+}
 
 #' @title Forecast ILI
 #' @description Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
@@ -74,6 +117,8 @@ NULL
 #'
 #' # Using data only from march 2020 forward, for US only
 #' ilidat_us <- ilidat %>% dplyr::filter(location=="US")
+#' # Replace most recent week with nowcast data, and nowcast last week
+#' ilidat_us <- ilidat_us %>% replace_ili_nowcast(weeks_to_replace=1)
 #' ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
 #' ilifor_us$ili_fit
 #' ilifor_us$arima_params
