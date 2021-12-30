@@ -313,7 +313,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7))
     dplyr::mutate(location=toupper(location)) %>%
     dplyr::mutate(location=gsub("NAT", "US", location)) %>%
     dplyr::mutate(location=ifelse(grepl("HHS", location),
-                                  location %>% stringr::str_extract("\\d") %>% stringr::str_pad(width=2, pad=0) %>% paste0("HHS", .),
+                                  location %>% stringr::str_extract("\\d+") %>% stringr::str_pad(width=2, pad=0) %>% paste0("HHS", .),
                                   location)) %>%
     dplyr::rename(abbreviation=location) %>%
     dplyr::inner_join(locations, by="abbreviation") %>%
