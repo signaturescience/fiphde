@@ -123,69 +123,130 @@ models <-
     negbin4 = trending::glm_nb_model(flu.admits ~ lag_1 + ili + ili_rank + hosp_rank + offset(flu.admits.cov))
   )
 
-forcres <- list()
+# forcres <- list()
+#
+# system.time({
+#
+#   for(i in 1:length(datl)) {
+#
+#     forcres[[i]] <-
+#       tryCatch({
+#         dat <- datl[[i]]
+#         message(unique(dat$abbreviation))
+#
+#         new_cov <-
+#           ilifor_st$ili_future %>%
+#           filter(location %in% unique(dat$location)) %>%
+#           left_join(fiphde:::historical_severity) %>%
+#           ## assume the coverage will be the average of the last 8 weeks of reporting
+#           bind_cols(.,tibble(flu.admits.cov = rep(mean(dat$flu.admits.cov,8), 4))) %>%
+#           select(-epiweek,-epiyear)
+#
+#         tmp_res <- glm_wrap(dat,
+#                             new_covariates = new_cov,
+#                             .models = models,
+#                             alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
+#
+#         approach <- paste0("GLM-", as.character(tmp_res$model$fit$fitted_model$family)[1],
+#                            "\n",
+#                            paste0(names(tmp_res$model$fit$fitted_model$coefficients), collapse = " + "))
+#
+#         future_dat <-
+#           new_cov %>%
+#           mutate(flu.admits = NA) %>%
+#           mutate(date = max(dat$date) + c(7,14,21,28)) %>%
+#           mutate(epiweek = lubridate::epiweek(date), epiyear = lubridate::epiyear(date))
+#
+#         p.hosp <- plot_forc(tmp_res$forecasts, dat, future_dat) +
+#           labs(caption = paste0(unique(dat$abbreviation), "\n", approach, "\n", max(dat$date))) +
+#           theme(plot.caption = element_text(hjust = 0))
+#
+#         print(p.hosp)
+#
+#         list(
+#           location = unique(dat$abbreviation),
+#           results = tmp_res,
+#           data = list(training = dat, testing = future_dat),
+#           plots = list(p.hosp = p.hosp),
+#           thru_week = max(dat$date),
+#           approach = approach)
+#
+#       },
+#       error = function(cond) {
+#         message("Skipping location due to error ... ")
+#         list(
+#           location = unique(dat$abbreviation),
+#           results = NA,
+#           data = NA,
+#           plots = NA,
+#           thru_week = NA,
+#           approach = NA)
+#       })
+#   }
+# })
 
+
+## use furrr mapping to speed up
+run_forc <- function(dat) {
+  tryCatch({
+    message(unique(dat$abbreviation))
+
+    new_cov <-
+      ilifor_st$ili_future %>%
+      filter(location %in% unique(dat$location)) %>%
+      left_join(fiphde:::historical_severity) %>%
+      ## assume the coverage will be the average of the last 8 weeks of reporting
+      bind_cols(.,tibble(flu.admits.cov = rep(mean(dat$flu.admits.cov,8), 4))) %>%
+      select(-epiweek,-epiyear)
+
+    tmp_res <- glm_wrap(dat,
+                        new_covariates = new_cov,
+                        .models = models,
+                        alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
+
+    approach <- paste0("GLM-", as.character(tmp_res$model$fit$fitted_model$family)[1],
+                       "\n",
+                       paste0(names(tmp_res$model$fit$fitted_model$coefficients), collapse = " + "))
+
+    future_dat <-
+      new_cov %>%
+      mutate(flu.admits = NA) %>%
+      mutate(date = max(dat$date) + c(7,14,21,28)) %>%
+      mutate(epiweek = lubridate::epiweek(date), epiyear = lubridate::epiyear(date))
+
+    p.hosp <- plot_forc(tmp_res$forecasts, dat, future_dat) +
+      labs(caption = paste0(unique(dat$abbreviation), "\n", approach, "\n", max(dat$date))) +
+      theme(plot.caption = element_text(hjust = 0))
+
+    list(
+      location = unique(dat$abbreviation),
+      results = tmp_res,
+      data = list(training = dat, testing = future_dat),
+      plots = list(p.hosp = p.hosp),
+      thru_week = max(dat$date),
+      approach = approach)
+
+  },
+  error = function(cond) {
+    message("Skipping location due to error ... ")
+    list(
+      location = unique(dat$abbreviation),
+      results = NA,
+      data = NA,
+      plots = NA,
+      thru_week = NA,
+      approach = NA)
+  })
+}
+
+library(furrr)
+
+plan(multisession, workers = 8)
 system.time({
-
-  for(i in 1:length(datl)) {
-
-    forcres[[i]] <-
-      tryCatch({
-        dat <- datl[[i]]
-        message(unique(dat$abbreviation))
-
-        new_cov <-
-          ilifor_st$ili_future %>%
-          filter(location %in% unique(dat$location)) %>%
-          left_join(fiphde:::historical_severity) %>%
-          ## assume the coverage will be the average of the last 8 weeks of reporting
-          bind_cols(.,tibble(flu.admits.cov = rep(mean(dat$flu.admits.cov,8), 4))) %>%
-          select(-epiweek,-epiyear)
-
-        tmp_res <- glm_wrap(dat,
-                            new_covariates = new_cov,
-                            .models = models,
-                            alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2)
-
-        approach <- paste0("GLM-", as.character(tmp_res$model$fit$fitted_model$family)[1],
-                           "\n",
-                           paste0(names(tmp_res$model$fit$fitted_model$coefficients), collapse = " + "))
-
-        future_dat <-
-          new_cov %>%
-          mutate(flu.admits = NA) %>%
-          mutate(date = max(dat$date) + c(7,14,21,28)) %>%
-          mutate(epiweek = lubridate::epiweek(date), epiyear = lubridate::epiyear(date))
-
-        p.hosp <- plot_forc(tmp_res$forecasts, dat, future_dat) +
-          labs(caption = paste0(unique(dat$abbreviation), "\n", approach, "\n", max(dat$date))) +
-          theme(plot.caption = element_text(hjust = 0))
-
-        print(p.hosp)
-
-        list(
-          location = unique(dat$abbreviation),
-          results = tmp_res,
-          data = list(training = dat, testing = future_dat),
-          plots = list(p.hosp = p.hosp),
-          thru_week = max(dat$date),
-          approach = approach)
-
-      },
-      error = function(cond) {
-        message("Skipping location due to error ... ")
-        list(
-          location = unique(dat$abbreviation),
-          results = NA,
-          data = NA,
-          plots = NA,
-          thru_week = NA,
-          approach = NA)
-      })
-  }
+forcres <- future_map(datl, ~run_forc(.x))
 })
 
-pdf("~/Downloads/glm_states_ahead.pdf", width=11.5, height=8)
+pdf("~/Downloads/glm_states_ahead_v2.pdf", width=11.5, height=8)
 for(i in 1:length(forcres)) {
 
   if(!is.na(forcres[[i]]$plots)) {
@@ -195,3 +256,4 @@ for(i in 1:length(forcres)) {
   }
 }
 dev.off()
+save(forcres, file = "~/Downloads/fiphde-temp-glm-states-forcres-v2.rda")
