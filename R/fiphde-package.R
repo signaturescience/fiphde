@@ -81,5 +81,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "MMWRyear",
                                                         "MMWRweek",
                                                         "std",
+                                                        "dates_to_replace",
+                                                        "region",
+                                                        "weighted_ili_now",
                                                         "."))
 

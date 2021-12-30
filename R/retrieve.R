@@ -257,9 +257,7 @@ get_cdc_hosp <- function(years=NULL) {
 #' ilidat <- get_cdc_ili(years=2021)
 #' ilinow <- get_nowcast_ili()
 #' ilijoined <-
-#'   inner_join(ilidat,
-#'              ilinow %>% rename(weighted_ili_now=weighted_ili),
-#'              by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
+#'   inner_join(ilidat, ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
 #'   select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
 #' ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
 #' ilijoined %>%
@@ -317,7 +315,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7))
                                   location)) %>%
     dplyr::rename(abbreviation=location) %>%
     dplyr::inner_join(locations, by="abbreviation") %>%
-    dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili=value, ili_std=std) %>%
+    dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili_now=value) %>%
     dplyr::arrange(epiyear, epiweek, location)
 
   return(res)
