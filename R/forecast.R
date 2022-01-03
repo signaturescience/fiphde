@@ -1,13 +1,18 @@
 #' @title Fit and forecast with time-series approaches.
 #' @description Fit and forecast with time-series approaches.
-#' @param prepped_hosp_tsibble fixme
-#' @param outcome fixme
-#' @param horizon fixme
-#' @param trim_date fixme
-#' @param constrained fixme
-#' @param param_space fixme
-#' @param covariates fixme
-#' @return A list of the time series fit, forecast, and model formulas
+#' @param prepped_hosp_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
+#' @param outcome The outcome variable to model (default `"flu.admits"`).
+#' @param horizon Number of weeks ahead
+#' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
+#' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
+#' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
+#' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
+#' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
+#' @return A list of the time series fit, time series forecast, and model formulas.
+#' - `tsfit`: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
+#' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
+#' - `arima_formula`: A formula object: the ARIMA model formula used.
+#' - `ets_formula`: A formula object: the nonseasonal exponential smoothing model formula used.
 #' @export
 #' @examples
 #' \dontrun{
@@ -31,10 +36,11 @@
 ts_fit_forecast <- function(prepped_hosp_tsibble,
                             outcome="flu.admits",
                             horizon=4L,
-                            trim_date="2021-10-25",
+                            trim_date="2021-01-01",
                             constrained=TRUE,
                             param_space=list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0),
-                            covariates=c("hosp_rank", "ili_rank")) {
+                            covariates=c("hosp_rank", "ili_rank"),
+                            ensemble=TRUE) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -68,6 +74,13 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
   tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
                              arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
                              ets = fable::ETS(ets_formula))
+
+  # Ensemble the ARIMA and ETS models
+  if (ensemble) {
+    tsfit <-
+      tsfit %>%
+      dplyr::mutate(ensemble=(arima+ets)/2)
+  }
 
   # forecast
   if (is.null(covariates)) {
