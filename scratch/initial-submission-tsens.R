@@ -91,15 +91,18 @@ pf2 <- function(.data, submission, location="US", pi = TRUE) {
 ## arima
 pf2(prepped_hosp, formatted_list$arima, location = "US")
 pf2(prepped_hosp, formatted_list$arima, location = "06")
+pf2(prepped_hosp, formatted_list$arima, location = "15")
 pf2(prepped_hosp, formatted_list$arima, location = "51")
 
 ## ets
 pf2(prepped_hosp, formatted_list$ets, location = "US")
 pf2(prepped_hosp, formatted_list$ets, location = "06")
+pf2(prepped_hosp, formatted_list$ets, location = "15")
 pf2(prepped_hosp, formatted_list$ets, location = "51")
 
 ## ensemble
 pf2(prepped_hosp, formatted_list$ensemble, location = "US")
 pf2(prepped_hosp, formatted_list$ensemble, location = "06")
+pf2(prepped_hosp, formatted_list$ensemble, location = "15")
 pf2(prepped_hosp, formatted_list$ensemble, location = "51")
 
