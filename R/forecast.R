@@ -369,7 +369,7 @@ ts_format_for_submission <- function (tsfor) {
     dplyr::select(.model:type) %>%
     dplyr::arrange(.model, location, type, quantile, yweek) %>%
     ## processing to get horizon N
-    dplyr::group_by(.model, yweek) %>%
+    dplyr::group_by(yweek) %>%
     dplyr::mutate(N=dplyr::cur_group_id()) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(target=sprintf("%d wk ahead inc flu hosp", N)) %>%
