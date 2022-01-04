@@ -381,7 +381,9 @@ ts_format_for_submission <- function (tsfor) {
     # split by the type of model
     split(.$.model) %>%
     # remove the .model variable from each list item
-    purrr::map(dplyr::select, -.model)
+    purrr::map(dplyr::select, -.model) %>%
+    ## round up for counts of people
+    purrr::map(~dplyr::mutate(., value = ceiling(value)))
 
   # Bound at zero
   submission_list <-
