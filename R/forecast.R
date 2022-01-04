@@ -383,7 +383,9 @@ ts_format_for_submission <- function (tsfor) {
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model) %>%
     ## round up for counts of people
-    purrr::map(~dplyr::mutate(., value = ceiling(value)))
+    purrr::map(~dplyr::mutate(., value = ceiling(value))) %>%
+    ## fix duplicating quantile rows
+    purrr::map(dplyr::distinct)
 
   # Bound at zero
   submission_list <-
