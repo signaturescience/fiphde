@@ -383,6 +383,11 @@ ts_format_for_submission <- function (tsfor) {
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model)
 
+  # Bound at zero
+  submission_list <-
+    submission_list %>%
+    purrr::map(~dplyr::mutate(., value=ifelse(value<0, 0, value)))
+
   return(submission_list)
 
 }
