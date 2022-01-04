@@ -84,5 +84,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "dates_to_replace",
                                                         "region",
                                                         "weighted_ili_now",
+                                                        "ets",
+                                                        ".model",
+                                                        "key",
+                                                        "N",
+                                                        "forecast_date",
+                                                        "target",
+                                                        "target_end_date",
+                                                        "type",
                                                         "."))
 

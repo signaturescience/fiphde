@@ -8,29 +8,38 @@ ts_fit_forecast(
   prepped_hosp_tsibble,
   outcome = "flu.admits",
   horizon = 4L,
-  trim_date = "2021-10-25",
+  trim_date = "2021-01-01",
   constrained = TRUE,
   param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0),
-  covariates = c("hosp_rank", "ili_rank")
+  covariates = c("hosp_rank", "ili_rank"),
+  ensemble = TRUE
 )
 }
 \arguments{
-\item{prepped_hosp_tsibble}{fixme}
+\item{prepped_hosp_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
 
-\item{outcome}{fixme}
+\item{outcome}{The outcome variable to model (default \code{"flu.admits"}).}
 
-\item{horizon}{fixme}
+\item{horizon}{Number of weeks ahead}
 
-\item{trim_date}{fixme}
+\item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
 
-\item{constrained}{fixme}
+\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
 
-\item{param_space}{fixme}
+\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
 
-\item{covariates}{fixme}
+\item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
+
+\item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
 }
 \value{
-A list of the time series fit, forecast, and model formulas
+A list of the time series fit, time series forecast, and model formulas.
+\itemize{
+\item \code{tsfit}: A \code{mdl_df} class "mable" with one row for each location, columns for arima and ets models.
+\item \code{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
+\item \code{arima_formula}: A formula object: the ARIMA model formula used.
+\item \code{ets_formula}: A formula object: the nonseasonal exponential smoothing model formula used.
+}
 }
 \description{
 Fit and forecast with time-series approaches.
