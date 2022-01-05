@@ -50,7 +50,8 @@ Imports:
     lifecycle,
     stringr,
     jsonlite,
-    stats
+    stats,
+    scales
 Depends: 
     R (>= 2.10)
 Suggests: 

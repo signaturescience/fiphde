@@ -131,3 +131,78 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
   if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
   return(res)
 }
+
+#' Plot forecasts
+#'
+#' This function serves as a plotting mechanism for prepped forecast submission data. Using truth data supplied, the plots show the historical trajectory of weekly flu hospitalizations along with the point estimates for forecasts. Optionally, the user can include 95% prediction interval as well. Plots include trajectories of weekly flu hospitalizations faceted by location.
+#'
+#' @param .data 	Historical truth data for all locations and outcomes in submission targets
+#' @param submission Formatted submission
+#' @param location  Vector specifying locations to filter to; 'US' by default.
+#' @param pi Logical as to whether or not the plot should include 95% prediction interval; default is `TRUE`
+#'
+#' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
+#' @export
+#'
+#' @md
+#'
+#'
+plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
+
+  ## pretty sure we need to add an intermediary variable for the filter below
+  ## otherwise the condition will interpret as the column name not the vector ... i think?
+  loc <- location
+
+  # Check that the specified location is in the data and submission.
+  stopifnot("Specified location is not in recorded data" = loc %in% unique(.data$location))
+  stopifnot("Specified location is not in forecast data" = loc %in% unique(submission$location))
+
+  # Grab the real data
+  real <-
+    .data %>%
+    tibble::as_tibble() %>%
+    dplyr::filter(location %in% loc) %>%
+    dplyr::select(location, date=monday,point=flu.admits) %>%
+    dplyr::mutate(type="recorded")
+
+  # Grab the forecasted data
+  forecasted <-
+    submission %>%
+    dplyr::filter(type=="point" | dplyr::near(quantile, 0.025) | dplyr::near(quantile, 0.975)) %>%
+    dplyr::filter(location %in% loc) %>%
+    dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+    dplyr::select(-type) %>%
+    tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
+    dplyr::select(location, date=target_end_date,quantile, value) %>%
+    tidyr::spread(quantile, value) %>%
+    dplyr::mutate(type="forecast")
+
+  # Bind them
+  bound <-
+    dplyr::bind_rows(real, forecasted) %>%
+    dplyr::arrange(date, location) %>%
+    dplyr::left_join(dplyr::select(locations, location, location_name), by = "location") %>%
+    dplyr::select(-location) %>%
+    dplyr::rename(location = location_name)
+
+  # Plot
+  p <-
+    bound %>%
+    ggplot2::ggplot(ggplot2::aes(date, point)) +
+    ggplot2::geom_point(ggplot2::aes(col=type)) +
+    ggplot2::geom_line(ggplot2::aes(col=type)) +
+    ggplot2::scale_y_continuous(labels = scales::number_format(big.mark = ",")) +
+    ggplot2::facet_wrap(~location, scales="free", ncol = 3) +
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = "Date", y = NULL) +
+    ggplot2::theme(legend.position = "Bottom", legend.title = ggplot2::element_blank())
+
+  if(pi) {
+    p <-
+      p +
+      ggplot2::geom_ribbon(ggplot2::aes(fill = type, ymin = `0.025`, ymax = `0.975`),
+                           alpha = 0.5, color="lightpink", data=dplyr::filter(bound, type == "forecast"))
+  }
+
+  return(p)
+}
