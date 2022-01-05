@@ -11,7 +11,7 @@ iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
 ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
 
-hosp <- get_hdgov_hosp(maxdate="2021-12-29")
+hosp <- get_hdgov_hosp(maxdate="2022-01-04")
 
 ## data list by location
 datl <-
@@ -182,3 +182,16 @@ us_glm_prepped <- subform(res$forecasts, "US")
 
 bind_rows(us_glm_prepped,state_glm_prepped) %>%
   write_csv(., paste0("submission/SigSci-CREG/", lubridate::today(), "-SigSci-CREG.csv"))
+
+
+submission <- read_csv(paste0("submission/SigSci-CREG/", lubridate::today(), "-SigSci-CREG.csv"))
+
+bound_truth <-
+  do.call("rbind", datl) %>%
+  bind_rows(., dat_us)
+
+
+plot_forecast(bound_truth, submission, location = "US")
+plot_forecast(bound_truth, submission, location = "06")
+plot_forecast(bound_truth, submission, location = "15")
+plot_forecast(bound_truth, submission, location = "51")
