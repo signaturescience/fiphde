@@ -144,8 +144,59 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
 #'
-#' @md
+#' @examples
+#' \dontrun{
+#' # Get some data
+#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' ## save(h_raw, file="~/Downloads/h_raw.rd")
+#' ## load(file="~/Downloads/h_raw.rd")
 #'
+#' # Prep all the data
+#' prepped_hosp_all <- prep_hdgov_hosp(h_raw)
+#'
+#' # What are the last four weeks of recorded data?
+#' last4 <-
+#'   prepped_hosp_all %>%
+#'   distinct(week_start) %>%
+#'   arrange(week_start) %>%
+#'   tail(4)
+#'
+#' #remove those
+#' prepped_hosp <-
+#'   prepped_hosp %>%
+#'   anti_join(last4, by="week_start")
+#'
+#' # Make a tsibble
+#' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+#'                                      epiyear = epiyear,
+#'                                      epiweek=epiweek,
+#'                                      key=location)
+#' # Limit to just one state and US
+#' prepped_hosp_tsibble <-
+#'   prepped_hosp_tsibble %>%
+#'   dplyr::filter(location %in% c("US", "51"))
+#'
+#' # Fit models and forecasts
+#' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+#'                                horizon=4L,
+#'                                outcome="flu.admits",
+#'                                constrained=TRUE,
+#'                                trim_date=NULL,
+#'                                covariates=c("hosp_rank", "ili_rank"))
+#'
+#' # Format for submission
+#' hosp_formatted <- ts_format_for_submission(hosp_fitfor$tsfor)
+#'
+#' # Plot with current and all data
+#' plot_forecast(prepped_hosp, hosp_formatted$ensemble)
+#' plot_forecast(prepped_hosp_all, hosp_formatted$ensemble)
+#' plot_forecast(prepped_hosp, hosp_formatted$ensemble, location=c("US", "51"))
+#' plot_forecast(prepped_hosp_all, hosp_formatted$ensemble, location=c("US", "51"))
+#' plot_forecast(prepped_hosp, hosp_formatted$ets)
+#' plot_forecast(prepped_hosp_all, hosp_formatted$ets)
+#' plot_forecast(prepped_hosp, hosp_formatted$arima)
+#' plot_forecast(prepped_hosp_all, hosp_formatted$arima)
+#' }
 #'
 plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
 
