@@ -213,7 +213,7 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
     .data %>%
     tibble::as_tibble() %>%
     dplyr::filter(location %in% loc) %>%
-    dplyr::select(location, date=monday,point=flu.admits) %>%
+    dplyr::select(location, date=week_end,point=flu.admits) %>%
     dplyr::mutate(type="recorded")
 
   # Grab the forecasted data
