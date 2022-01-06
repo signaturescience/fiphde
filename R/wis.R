@@ -30,7 +30,7 @@ weighted_interval_score <- function(quantile, value, actual_value) {
   #
   # Finally, the multiplication by 2 is because alpha_k = 2*quantile_k
   #
-  med <- value[find_quantile_match(quantile, 0.5)]
+  med <- value[dplyr::near(quantile, 0.5)]
 
   if (length(med) > 1L) return(NA)
 
@@ -40,16 +40,6 @@ weighted_interval_score <- function(quantile, value, actual_value) {
     na.rm = TRUE))
 
   return(wis)
-}
-
-#' @title Find quantile that matches value
-#' @description Unexported utility function to find quantile that matches a value. See [weighted_interval_score].
-#' @param quantiles vector of quantile
-#' @param val_to_match quantile to match
-#' @param tol tolerance
-#' @return a logical vector indicating `TRUE` for the `val_to_match` in `quantiles`.
-find_quantile_match <- function(quantiles, val_to_match, tol=1e-8){
-  return(abs(quantiles - val_to_match) < tol  & !is.na(quantiles))
 }
 
 #' @title Score function parameter checker
