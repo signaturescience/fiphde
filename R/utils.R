@@ -25,24 +25,6 @@ is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
 
-#' Calculate WIS score
-#'
-#' Helper function to calculate weighted interval score (WIS) for prepped forecasts
-#'
-#' @param .forecasts Tibble with prepped foreacsts
-#' @param .test Tibble with test data including observed value for flu admissions stored in "flu.admits" column
-#'
-#' @return Tibble with the WIS for each combination of epiweek and epiyear
-#' @export
-#'
-wis_score <- function(.forecasts, .test) {
-  .forecasts %>%
-    dplyr::left_join(.test) %>%
-    dplyr::select(epiweek,epiyear,quantile,value,flu.admits) %>%
-    dplyr::group_by(epiweek, epiyear) %>%
-    dplyr::summarise(wis = fiphde::weighted_interval_score(quantile = quantile, value = value, actual_value = flu.admits))
-}
-
 #' @title Replace ILInet with nowcast data
 #' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
 #' @param ilidat Data from [get_cdc_ili].

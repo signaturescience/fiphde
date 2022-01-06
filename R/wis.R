@@ -42,10 +42,24 @@ weighted_interval_score <- function(quantile, value, actual_value) {
   return(wis)
 }
 
+#' @title Find quantile that matches value
+#' @description Unexported utility function to find quantile that matches a value. See [weighted_interval_score].
+#' @param quantiles vector of quantile
+#' @param val_to_match quantile to match
+#' @param tol tolerance
+#' @return a logical vector indicating `TRUE` for the `val_to_match` in `quantiles`.
 find_quantile_match <- function(quantiles, val_to_match, tol=1e-8){
   return(abs(quantiles - val_to_match) < tol  & !is.na(quantiles))
 }
 
+#' @title Score function parameter checker
+#' @description Unexported utility function to check parameters of a score function. See [weighted_interval_score].
+#' @param quantiles vector of forecasted quantiles
+#' @param values vector of forecasted values
+#' @param actual_value Actual value.
+#' @param id name of the score function, e.g. "weighted_interval_score".
+#' @param id
+#' @return Nothing. Called for side effects.
 score_func_param_checker <- function(quantiles, values, actual_value, id = ""){
   id_str = paste0(id, ": ")
   if (length(actual_value) > 1) {
@@ -65,3 +79,22 @@ score_func_param_checker <- function(quantiles, values, actual_value, id = ""){
                           msg = paste0(id_str,
                                        "quantiles must be unique."))
 }
+
+#' Calculate WIS score
+#'
+#' Helper function to calculate weighted interval score (WIS) for prepped forecasts
+#'
+#' @param .forecasts Tibble with prepped foreacsts
+#' @param .test Tibble with test data including observed value for flu admissions stored in "flu.admits" column
+#'
+#' @return Tibble with the WIS for each combination of epiweek and epiyear
+#' @export
+#'
+wis_score <- function(.forecasts, .test) {
+  .forecasts %>%
+    dplyr::left_join(.test) %>%
+    dplyr::select(epiweek,epiyear,quantile,value,flu.admits) %>%
+    dplyr::group_by(epiweek, epiyear) %>%
+    dplyr::summarise(wis = fiphde::weighted_interval_score(quantile = quantile, value = value, actual_value = flu.admits))
+}
+
