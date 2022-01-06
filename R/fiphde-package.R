@@ -1,12 +1,6 @@
 #' @keywords internal
 "_PACKAGE"
 
-## usethis namespace: start
-#' @importFrom lifecycle deprecated
-## usethis namespace: end
-NULL
-
-
 ## quiets concerns of R CMD check re: the non-bound global variables
 if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "previous_day_admission_influenza_confirmed",
@@ -84,5 +78,14 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "dates_to_replace",
                                                         "region",
                                                         "weighted_ili_now",
+                                                        "ets",
+                                                        ".model",
+                                                        "key",
+                                                        "N",
+                                                        "forecast_date",
+                                                        "target",
+                                                        "target_end_date",
+                                                        "type",
+                                                        "point",
                                                         "."))
 

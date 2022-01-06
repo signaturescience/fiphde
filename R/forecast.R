@@ -1,13 +1,18 @@
 #' @title Fit and forecast with time-series approaches.
 #' @description Fit and forecast with time-series approaches.
-#' @param prepped_hosp_tsibble fixme
-#' @param outcome fixme
-#' @param horizon fixme
-#' @param trim_date fixme
-#' @param constrained fixme
-#' @param param_space fixme
-#' @param covariates fixme
-#' @return A list of the time series fit, forecast, and model formulas
+#' @param prepped_hosp_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
+#' @param outcome The outcome variable to model (default `"flu.admits"`).
+#' @param horizon Number of weeks ahead
+#' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
+#' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
+#' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
+#' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
+#' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
+#' @return A list of the time series fit, time series forecast, and model formulas.
+#' - `tsfit`: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
+#' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
+#' - `arima_formula`: A formula object: the ARIMA model formula used.
+#' - `ets_formula`: A formula object: the nonseasonal exponential smoothing model formula used.
 #' @export
 #' @examples
 #' \dontrun{
@@ -31,10 +36,11 @@
 ts_fit_forecast <- function(prepped_hosp_tsibble,
                             outcome="flu.admits",
                             horizon=4L,
-                            trim_date="2021-10-25",
+                            trim_date="2021-01-01",
                             constrained=TRUE,
                             param_space=list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0),
-                            covariates=c("hosp_rank", "ili_rank")) {
+                            covariates=c("hosp_rank", "ili_rank"),
+                            ensemble=TRUE) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -68,6 +74,13 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
   tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
                              arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
                              ets = fable::ETS(ets_formula))
+
+  # Ensemble the ARIMA and ETS models
+  if (ensemble) {
+    tsfit <-
+      tsfit %>%
+      dplyr::mutate(ensemble=(arima+ets)/2)
+  }
 
   # forecast
   if (is.null(covariates)) {
@@ -280,4 +293,105 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
   # Create results
   res <- tibble::lst(ilidat, ilidat_tsibble, ili_fit, ili_forecast, ili_future, ili_bound, arima_params, locstats, removed)
   return(res)
+}
+
+
+#' @title Format time series forecast
+#' @description Format time series forecast for submission.
+#' @details Uses quantiles `c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)` in the built-in `fiphde:::q`, using an accessory table `fiphde:::quidk`. See `data-raw/generate-sysdata.R` for details.
+#' @param tsfor The forecast from [ts_fit_forecast].
+#' @return A named list of tibbles, one for each model, formatted for submission.
+#' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
+#' @export
+#' @examples
+#' \dontrun{
+#' # Get raw data from healthdata.gov
+#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' ## save(h_raw, file="~/Downloads/h_raw.rd")
+#' ## load(file="~/Downloads/h_raw.rd")
+#'
+#' # Prep, and make a tsibble
+#' prepped_hosp <- prep_hdgov_hosp(h_raw, statesonly=TRUE)
+#' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+#'                                      epiyear = epiyear,
+#'                                      epiweek=epiweek,
+#'                                      key=location)
+#' # Limit to only Virginia and US
+#' prepped_hosp_tsibble <-
+#'   prepped_hosp_tsibble %>%
+#'   dplyr::filter(location %in% c("US", "51"))
+#'
+#' # Fit a model
+#' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+#'                                horizon=4L,
+#'                                outcome="flu.admits",
+#'                                constrained=TRUE,
+#'                                covariates=c("hosp_rank", "ili_rank"))
+#'
+#' # format for submission
+#' formatted_list <- ts_format_for_submission(hosp_fitfor$tsfor)
+#' formatted_list
+#' }
+ts_format_for_submission <- function (tsfor) {
+  # Make the 0.5 quantile the means (point estimates). The quidk doesn't contain a
+  # median hilo. You'll bind this to the other quantiles in the step below.
+  q5 <-
+    tsfor %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile=0.5, value=.mean, type="quantile") %>%
+    dplyr::arrange(.model, yweek)
+
+  # Get the point estimates
+  point_estimates <-
+    tsfor %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(quantile=NA_real_, .after=yweek) %>%
+    dplyr::mutate(type="point") %>%
+    dplyr::rename(value=.mean) %>%
+    dplyr::select(.model, yweek, location, quantile, value, type) %>%
+    dplyr::arrange(.model, yweek)
+
+  # Create quantile table from distribution column in the forecast
+  quantiles <-
+    tsfor %>%
+    fabletools::hilo(as.double(sort(unique(quidk$interval)))) %>%
+    fabletools::unpack_hilo(dplyr::ends_with("%")) %>%
+    tidyr::gather(key, value, dplyr::contains("%")) %>%
+    dplyr::inner_join(quidk, by="key") %>%
+    tibble::as_tibble() %>%
+    dplyr::transmute(.model, yweek, location, quantile, value, type="quantile") %>%
+    dplyr::arrange(.model, yweek, quantile)
+
+  # bind them all together
+  submission_list <-
+    list(quantiles, point_estimates, quantiles) %>%
+    purrr::reduce(dplyr::bind_rows) %>%
+    dplyr::select(.model:type) %>%
+    dplyr::arrange(.model, location, type, quantile, yweek) %>%
+    ## processing to get horizon N
+    dplyr::group_by(yweek) %>%
+    dplyr::mutate(N=dplyr::cur_group_id()) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(target=sprintf("%d wk ahead inc flu hosp", N)) %>%
+    dplyr::select(-N) %>%
+    # Fix dates: as_date(yweek) returns the MONDAY that starts that week. add 5 days to get the Saturday date.
+    dplyr::mutate(target_end_date=lubridate::as_date(yweek)+lubridate::days(5)) %>%
+    dplyr::mutate(forecast_date=lubridate::today()) %>%
+    dplyr::select(.model, forecast_date, target, target_end_date, location, type, quantile, value) %>%
+    # split by the type of model
+    split(.$.model) %>%
+    # remove the .model variable from each list item
+    purrr::map(dplyr::select, -.model) %>%
+    ## round up for counts of people
+    purrr::map(~dplyr::mutate(., value = ceiling(value))) %>%
+    ## fix duplicating quantile rows
+    purrr::map(dplyr::distinct)
+
+  # Bound at zero
+  submission_list <-
+    submission_list %>%
+    purrr::map(~dplyr::mutate(., value=ifelse(value<0, 0, value)))
+
+  return(submission_list)
+
 }
