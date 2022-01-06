@@ -48,7 +48,6 @@ weighted_interval_score <- function(quantile, value, actual_value) {
 #' @param values vector of forecasted values
 #' @param actual_value Actual value.
 #' @param id name of the score function, e.g. "weighted_interval_score".
-#' @param id
 #' @return Nothing. Called for side effects.
 score_func_param_checker <- function(quantiles, values, actual_value, id = "") {
   id_str = paste0(id, ": ")
