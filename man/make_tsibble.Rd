@@ -4,7 +4,7 @@
 \alias{make_tsibble}
 \title{Make \code{tsibble}}
 \usage{
-make_tsibble(df, epiyear, epiweek, key = location, chop = deprecated())
+make_tsibble(df, epiyear, epiweek, key = location)
 }
 \arguments{
 \item{df}{A \code{tibble} containing columns \code{epiyear} and \code{epiweek}.}
@@ -14,8 +14,6 @@ make_tsibble(df, epiyear, epiweek, key = location, chop = deprecated())
 \item{epiweek}{Unquoted variable name containing the MMWR epiweek.}
 
 \item{key}{Unquoted variable name containing the name of the column to be the tsibble key. See \link[tsibble:as-tsibble]{tsibble::as_tsibble}.}
-
-\item{chop}{(Deprecated)}
 }
 \value{
 A \code{tsibble} containing additional columns \code{monday} indicating the date
