@@ -50,25 +50,25 @@ weighted_interval_score <- function(quantile, value, actual_value) {
 #' @param id name of the score function, e.g. "weighted_interval_score".
 #' @param id
 #' @return Nothing. Called for side effects.
-score_func_param_checker <- function(quantiles, values, actual_value, id = ""){
+score_func_param_checker <- function(quantiles, values, actual_value, id = "") {
   id_str = paste0(id, ": ")
   if (length(actual_value) > 1) {
-    assertthat::assert_that(length(actual_value) == length(values),
-                            msg = paste0(id_str,
-                                         "actual_value must be a scalar or the same length",
-                                         " as values"))
+    if (length(actual_value) != length(values)) {
+      stop(paste0(id_str, "actual_value must be a scalar or the same length as values"))
+    }
     actual_value = unique(actual_value)
   }
-  assertthat::assert_that(length(actual_value) == 1,
-                          msg = paste0(id_str,
-                                       "actual_value must have exactly 1 unique value"))
-  assertthat::assert_that(length(quantiles) == length(values),
-                          msg = paste0(id_str,
-                                       "quantiles and values must be of the same length"))
-  assertthat::assert_that(!any(duplicated(quantiles)),
-                          msg = paste0(id_str,
-                                       "quantiles must be unique."))
+  if (length(actual_value) != 1) {
+    stop(paste0(id_str, "actual_value must have exactly 1 unique value"))
+  }
+  if (length(quantiles)!=length(values)) {
+    stop(paste0(id_str, "quantiles and values must be of the same length"))
+  }
+  if (any(duplicated(quantiles))) {
+    stop(paste0(id_str, "quantiles must be unique."))
+  }
 }
+
 
 #' Calculate WIS score
 #'
