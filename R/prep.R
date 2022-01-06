@@ -105,7 +105,6 @@ prep_hdgov_hosp <- function(hdgov_hosp,
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.
 #' @param key Unquoted variable name containing the name of the column to be the tsibble key. See [tsibble::as_tsibble].
-#' @param chop (Deprecated)
 #' @return A `tsibble` containing additional columns `monday` indicating the date
 #'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
 #'   that indexes the `tsibble` in 1 week increments.
@@ -116,13 +115,7 @@ prep_hdgov_hosp <- function(hdgov_hosp,
 #'                     somedata=101:104)
 #' make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
 #' @export
-make_tsibble <- function(df, epiyear, epiweek, key=location, chop=deprecated()) {
-  # Deprecate the chop argument, and assign it back to itself for compatibility
-  if (lifecycle::is_present(chop)) {
-    lifecycle::deprecate_warn("0.0.0.9000", "fiphde::make_tsibble(chop)")
-    chop <- chop
-  }
-  # Continue with the normal make_tsibble function
+make_tsibble <- function(df, epiyear, epiweek, key=location) {
   out <- df %>%
     # get the monday that starts the MMWRweek
     dplyr::mutate(monday=MMWRweek::MMWRweek2Date(MMWRyear={{epiyear}},
