@@ -2,6 +2,7 @@
 
 export("%>%")
 export(forecast_ili)
+export(format_for_submission)
 export(get_cdc_ili)
 export(get_cdc_vax)
 export(get_hdgov_hosp)
