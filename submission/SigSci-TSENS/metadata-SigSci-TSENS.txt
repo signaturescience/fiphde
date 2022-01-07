@@ -1,6 +1,6 @@
 team_name: Signature Science
 model_name: Time series modeling
-model_abbr: SigSci-TS
+model_abbr: SigSci-TSENS
 model_contributors: VP Nagraj (Signature Science), Stephen D. Turner (Signature Science), Chris Hulme-Lowe (Signature Science), Shakeel Jessa (Signature Science)
 website_url: http://www.signaturescience.com/
 license: cc-by-4.0
