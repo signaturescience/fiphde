@@ -10,7 +10,6 @@
 #' @export
 #'
 #' @examples
-#' @examples
 #' \dontrun{
 #' # Get raw data from healthdata.gov
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
@@ -101,13 +100,6 @@ format_for_submission <- function(.forecasts, method = "ts") {
 #' formatted_list
 #' }
 ts_format_for_submission <- function (tsfor) {
-  # Make the 0.5 quantile the means (point estimates). The quidk doesn't contain a
-  # median hilo. You'll bind this to the other quantiles in the step below.
-  q5 <-
-    tsfor %>%
-    tibble::as_tibble() %>%
-    dplyr::transmute(.model, yweek, location, quantile=0.5, value=.mean, type="quantile") %>%
-    dplyr::arrange(.model, yweek)
 
   # Get the point estimates
   point_estimates <-
@@ -128,11 +120,13 @@ ts_format_for_submission <- function (tsfor) {
     dplyr::inner_join(quidk, by="key") %>%
     tibble::as_tibble() %>%
     dplyr::transmute(.model, yweek, location, quantile, value, type="quantile") %>%
-    dplyr::arrange(.model, yweek, quantile)
+    dplyr::arrange(.model, yweek, quantile) %>%
+    # .5 quantile comes through twice in the quidk
+    dplyr::distinct()
 
   # bind them all together
   submission_list <-
-    list(quantiles, point_estimates, quantiles) %>%
+    list(point_estimates, quantiles) %>%
     purrr::reduce(dplyr::bind_rows) %>%
     dplyr::select(.model:type) %>%
     dplyr::arrange(.model, location, type, quantile, yweek) %>%
@@ -151,9 +145,9 @@ ts_format_for_submission <- function (tsfor) {
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model) %>%
     ## round up for counts of people
-    purrr::map(~dplyr::mutate(., value = ceiling(value))) %>%
+    purrr::map(~dplyr::mutate(., value = ceiling(value)))
     ## fix duplicating quantile rows
-    purrr::map(dplyr::distinct)
+    # purrr::map(dplyr::distinct)
 
   # Bound at zero
   submission_list <-
