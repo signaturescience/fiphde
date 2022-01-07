@@ -2,7 +2,9 @@
 title: "Historical Severity Statistics"
 author: "SAJ"
 date: "1/7/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -26,8 +28,8 @@ hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv",
 # visualize data to get oriented
 hosp %>% 
   filter(age_label == "Overall") %>% 
-  filter(year %>% between(2010, 2019)) %>%
-  mutate("counts" = as.numeric(rate)*100000) %>%
+  filter(year %>% between(2010, 2021)) %>%
+  mutate("counts" = as.numeric(weeklyrate)*3330) %>%
   dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
   rename(EpiWeek = year_wk_num) %>%
   ggplot(aes(x = sort(wk_start), y = as.numeric(counts))) + 
@@ -39,8 +41,8 @@ hosp %>%
 hospStats <-
   hosp %>% 
     filter(age_label == "Overall") %>% 
-    filter(year %>% between(2010, 2019)) %>%
-    mutate("counts" = as.numeric(rate)*100000) %>%
+    filter(year %>% between(2010, 2021)) %>%
+    mutate("counts" = as.numeric(weeklyrate)*3300) %>%
     dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
     rename(EpiWeek = year_wk_num) %>%
     group_by(EpiWeek) %>%
