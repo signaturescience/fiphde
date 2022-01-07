@@ -46,8 +46,6 @@ Imports:
     trendeval,
     ggplot2,
     yardstick,
-    assertthat,
-    lifecycle,
     stringr,
     jsonlite,
     stats,

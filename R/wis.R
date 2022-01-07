@@ -30,7 +30,7 @@ weighted_interval_score <- function(quantile, value, actual_value) {
   #
   # Finally, the multiplication by 2 is because alpha_k = 2*quantile_k
   #
-  med <- value[find_quantile_match(quantile, 0.5)]
+  med <- value[dplyr::near(quantile, 0.5)]
 
   if (length(med) > 1L) return(NA)
 
@@ -42,16 +42,6 @@ weighted_interval_score <- function(quantile, value, actual_value) {
   return(wis)
 }
 
-#' @title Find quantile that matches value
-#' @description Unexported utility function to find quantile that matches a value. See [weighted_interval_score].
-#' @param quantiles vector of quantile
-#' @param val_to_match quantile to match
-#' @param tol tolerance
-#' @return a logical vector indicating `TRUE` for the `val_to_match` in `quantiles`.
-find_quantile_match <- function(quantiles, val_to_match, tol=1e-8){
-  return(abs(quantiles - val_to_match) < tol  & !is.na(quantiles))
-}
-
 #' @title Score function parameter checker
 #' @description Unexported utility function to check parameters of a score function. See [weighted_interval_score].
 #' @param quantiles vector of forecasted quantiles
@@ -59,25 +49,25 @@ find_quantile_match <- function(quantiles, val_to_match, tol=1e-8){
 #' @param actual_value Actual value.
 #' @param id name of the score function, e.g. "weighted_interval_score".
 #' @return Nothing. Called for side effects.
-score_func_param_checker <- function(quantiles, values, actual_value, id = ""){
+score_func_param_checker <- function(quantiles, values, actual_value, id = "") {
   id_str = paste0(id, ": ")
   if (length(actual_value) > 1) {
-    assertthat::assert_that(length(actual_value) == length(values),
-                            msg = paste0(id_str,
-                                         "actual_value must be a scalar or the same length",
-                                         " as values"))
+    if (length(actual_value) != length(values)) {
+      stop(paste0(id_str, "actual_value must be a scalar or the same length as values"))
+    }
     actual_value = unique(actual_value)
   }
-  assertthat::assert_that(length(actual_value) == 1,
-                          msg = paste0(id_str,
-                                       "actual_value must have exactly 1 unique value"))
-  assertthat::assert_that(length(quantiles) == length(values),
-                          msg = paste0(id_str,
-                                       "quantiles and values must be of the same length"))
-  assertthat::assert_that(!any(duplicated(quantiles)),
-                          msg = paste0(id_str,
-                                       "quantiles must be unique."))
+  if (length(actual_value) != 1) {
+    stop(paste0(id_str, "actual_value must have exactly 1 unique value"))
+  }
+  if (length(quantiles)!=length(values)) {
+    stop(paste0(id_str, "quantiles and values must be of the same length"))
+  }
+  if (any(duplicated(quantiles))) {
+    stop(paste0(id_str, "quantiles must be unique."))
+  }
 }
+
 
 #' Calculate WIS score
 #'
