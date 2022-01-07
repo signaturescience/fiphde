@@ -58,7 +58,6 @@ find_quantile_match <- function(quantiles, val_to_match, tol=1e-8){
 #' @param values vector of forecasted values
 #' @param actual_value Actual value.
 #' @param id name of the score function, e.g. "weighted_interval_score".
-#' @param id
 #' @return Nothing. Called for side effects.
 score_func_param_checker <- function(quantiles, values, actual_value, id = ""){
   id_str = paste0(id, ": ")
