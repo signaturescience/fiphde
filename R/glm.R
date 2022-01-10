@@ -84,7 +84,7 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
   ## run the predict method on the fitted model
   ## use the given alpha
   fit %>%
-    stats::predict(new_data, alpha = alpha) %>%
+    stats::predict(new_data, alpha = alpha, simulate_pi = FALSE, uncertain = TRUE) %>%
     ## get just the prediction interval bounds ...
     ## index (time column must be named index) ...
     dplyr::select(epiyear, epiweek, lower_pi, upper_pi) %>%
@@ -138,7 +138,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
   # ## take the fit object provided and use predict
   point_estimates <-
     fit %>%
-    stats::predict(new_data) %>%
+    stats::predict(new_data, simulate_pi = FALSE) %>%
     dplyr::select(epiweek, epiyear, estimate) %>%
     dplyr::mutate(estimate = round(estimate)) %>%
     dplyr::mutate(quantile = NA) %>%
