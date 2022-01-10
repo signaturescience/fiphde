@@ -36,6 +36,7 @@ datl <-
   mutate(iliopt = tologili) %>%
   mutate(ili = ifelse(iliopt, log(ili), ili)) %>%
   select(-iliopt) %>%
+  mutate(flu.admits.cov=log(flu.admits.cov)) %>%
   group_split(., location)
 
 models <-
@@ -140,6 +141,7 @@ dat_us <-
   ## NOTE: we *need* to add a column with the logical so eval doesnt recycle ili
   mutate(iliopt = tologili) %>%
   mutate(ili = ifelse(iliopt, log(ili), ili)) %>%
+  mutate(flu.admits.cov=log(flu.admits.cov)) %>%
   select(-iliopt)
 
 models <-
