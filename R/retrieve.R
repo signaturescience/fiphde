@@ -1,17 +1,13 @@
 #' @title Get hospitalization data
 #' @description Retrieves hospitalization data from the healthdata.gov endpoint with optional filtering on fields, and return the results into a nice tibble.
 #' @param endpoint URL to healthdata.gov endpoint (see references)..
-#' @param state A two-letter state abbreviation.
-#' @param limitrows Limit API query to at most this number of results. Default is `NULL` (no limit).
-#' @param mindate Minimum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is _previous_ day's flu/covid admissions.
-#' @param maxdate Maximum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is _previous_ day's flu/covid admissions.
 #' @param limitcols Limit the columns returned to the subjectively defined important ones?
 #' @param app_token App token from healthdata.gov. If `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
 #' @return A tibble
 #' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
 #' @examples
 #' \dontrun{
-#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=TRUE)
+#' get_hdgov_hosp(limitcols=TRUE)
 #' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
 #' get_hdgov_hosp(state="VA")
 #' get_hdgov_hosp(state="VA", mindate="2021-10-01")
@@ -19,51 +15,26 @@
 #' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
 #' }
 #' @export
-get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.json",
-                               state=NULL, limitrows=NULL, mindate=NULL, maxdate=NULL,
-                               limitcols=FALSE, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
+get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/rows.csv",
+                           app_token=Sys.getenv("HEALTHDATA_APP_TOKEN"),
+                           limitcols=FALSE) {
 
-  # If limiting to a state, construct the state limit query string
-  state <- if (!is.null(state) && is.character(state)) state <- paste0("state=", state)
+  api_url <- endpoint
 
-  # Construct the "where" filter for dates depending on what's defined in the call
-  datequery <-
-    dplyr::case_when(
-      # both min and max are defined, use between
-      !is.null(mindate) & !is.null(maxdate) ~ paste0("$where=date between '", mindate, "T00:00:00.000' and '", maxdate, "T00:00:00.000'"),
-      # Only min is defined, use >=
-      !is.null(mindate) &  is.null(maxdate) ~ paste0("$where=date>='", mindate, "T00:00:00.000'"),
-      # Only max is defined, use <=
-      is.null(mindate)  & !is.null(maxdate) ~ paste0("$where=date<='", maxdate, "T00:00:00.000'"),
-      # Neither defined, use NA_character (can't return NULL)
-      is.null(mindate)  &  is.null(maxdate) ~ NA_character_
-    )
-  # Replace NA with NULL
-  if (is.na(datequery)) datequery <- NULL
+  if (!is.null(app_token) && is.character(app_token) && app_token!="") {
+    api_url <- paste0(api_url, "?$$app_token=", app_token)
+  }
 
-  # Limit the rows of the output?
-  limitrows <- if (!is.null(limitrows) && is.numeric(limitrows)) paste0("$limit=", round(limitrows))
-
-  # Construct the API url filter string
-  filterstring <- paste(state, datequery, limitrows, sep="&")
-  # Multiple NULLs would result in multiple &s in the string. Turn >=2 &s to a single &
-  filterstring <- gsub("&+", "&", filterstring)
-  # Remove trailing &
-  filterstring <- gsub("&+$", "", filterstring)
-  # Remove leading &
-  filterstring <- gsub("^&+", "", filterstring)
-
-  # Construct API URL
-  api_url <- paste(endpoint, filterstring, sep="?")
-
-  # Get the data and make it a tibble, and fix the date
-  d <- suppressWarnings(RSocrata::read.socrata(api_url, app_token)) %>%
-    tibble::as_tibble() %>%
-    dplyr::mutate(date=lubridate::as_date(date)) %>%
-    dplyr::arrange(date)
+  # Get the data
+  d <- readr::read_csv(api_url, progress=FALSE, show_col_types = FALSE)
 
   # Make everything except state and date numeric
-  d <- d %>% dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
+  d <-
+    d %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(date=lubridate::as_date(date)) %>%
+    dplyr::arrange(date, state) %>%
+    dplyr::mutate(dplyr::across(.cols=-c(state, date), as.numeric))
 
   # Simplify column names for columns you care most about, and relocate to the front of the tibble
   d <- d %>%
@@ -101,8 +72,6 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
 #' @title Get vaccination data
 #' @description Get vaccination data from cdc.gov endpoint.
 #' @param endpoint URL to cdc.gov endpoint. See references.
-#' @param limitrows Limit API query to at most this number of results. Default is `NULL` (no limit).
-#' @param season Limit to a season. Format: 20xx-20yy. E.g., season="2017-2018" or season="2020-2021"
 #' @param app_token App token from healthdata.gov. If it's `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
 #' @return A tibble
 #' @references API documentation: <https://dev.socrata.com/foundry/data.cdc.gov/k87d-gv3u>.
@@ -112,40 +81,32 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/resource/g62h-syeh.j
 #' d
 #' library(ggplot2)
 #' d %>%
-#'   ggplot(aes(date, cumulative_flu_doses)) +
+#'   ggplot(aes(date, cumulative_flu_doses_distributed)) +
 #'   geom_line() +
 #'   facet_wrap(~season, scale="free_x") +
 #'   theme_bw()
 #' rm(d)
 #' }
 #' @export
-get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
-                             season=NULL, limitrows=NULL, app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
+get_cdc_vax <- function(endpoint="https://data.cdc.gov/api/views/k87d-gv3u/rows.csv",
+                        app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
 
-  # If limiting to a state, construct the state limit query string
-  season <- if (!is.null(season) && is.character(season)) season <- paste0("season=", season)
+  api_url <- endpoint
 
-  # Limit the rows of the output?
-  limitrows <- if (!is.null(limitrows) && is.numeric(limitrows)) paste0("$limit=", round(limitrows))
+  if (!is.null(app_token) && is.character(app_token) && app_token!="") {
+    api_url <- paste0(api_url, "?$$app_token=", app_token)
+  }
 
-  # Construct the API url filter string
-  filterstring <- paste(season, limitrows, sep="&")
-  # Multiple NULLs would result in multiple &s in the string. Turn >=2 &s to a single &
-  filterstring <- gsub("&+", "&", filterstring)
-  # Remove trailing &
-  filterstring <- gsub("&+$", "", filterstring)
-  # Remove leading &
-  filterstring <- gsub("^&+", "", filterstring)
+  # Get the data
+  d <- readr::read_csv(api_url, progress=FALSE, show_col_types = FALSE)
 
-  # Construct API URL
-  api_url <- paste(endpoint, filterstring, sep="?")
-
-  # # Get the data and make it a tibble, and fix the date
-  d <- suppressWarnings(RSocrata::read.socrata(api_url, app_token)) %>%
+  # Make it a tibble, and fix the date
+  d <-
+    d %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(current_through=lubridate::as_date(current_through)) %>%
+    purrr::set_names(tolower) %>%
     dplyr::mutate(week=as.numeric(week)) %>%
-    dplyr::mutate(cumulative_flu_doses=as.numeric(cumulative_flu_doses)) %>%
+    dplyr::mutate(cumulative_flu_doses_distributed=as.numeric(cumulative_flu_doses_distributed)) %>%
     # Separate the season (20xx-20yy) into two different years
     tidyr::separate(season, into=c("y1", "y2"), sep="-", remove=FALSE) %>%
     # If it's July-December, it's 20xx, else it's 20yy
@@ -159,7 +120,7 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/resource/k87d-gv3u.json",
     # Get the epiweek and year
     dplyr::mutate(epiyear=lubridate::epiyear(date), epiweek=lubridate::epiweek(date)) %>%
     # Reorder columns keeping only the useful ones
-    dplyr::select(season, year, month, month_number, month_calendar_number, week, epiyear, epiweek, date, cumulative_flu_doses, imputed_value)
+    dplyr::select(season, year, month, month_number, month_calendar_number, week, epiyear, epiweek, date, cumulative_flu_doses_distributed, imputed_value)
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
   return(d)

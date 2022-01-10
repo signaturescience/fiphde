@@ -5,18 +5,12 @@
 \title{Get vaccination data}
 \usage{
 get_cdc_vax(
-  endpoint = "https://data.cdc.gov/resource/k87d-gv3u.json",
-  season = NULL,
-  limitrows = NULL,
+  endpoint = "https://data.cdc.gov/api/views/k87d-gv3u/rows.csv",
   app_token = Sys.getenv("HEALTHDATA_APP_TOKEN")
 )
 }
 \arguments{
 \item{endpoint}{URL to cdc.gov endpoint. See references.}
-
-\item{season}{Limit to a season. Format: 20xx-20yy. E.g., season="2017-2018" or season="2020-2021"}
-
-\item{limitrows}{Limit API query to at most this number of results. Default is \code{NULL} (no limit).}
 
 \item{app_token}{App token from healthdata.gov. If it's \code{NULL} you might get rate limited. Add an entry to your \verb{~/.Renviron} with \code{HEALTHDATA_APP_TOKEN="tokenhere"} that you got from \url{https://healthdata.gov/profile/edit/developer_settings}.}
 }
@@ -32,7 +26,7 @@ d <- get_cdc_vax()
 d
 library(ggplot2)
 d \%>\%
-  ggplot(aes(date, cumulative_flu_doses)) +
+  ggplot(aes(date, cumulative_flu_doses_distributed)) +
   geom_line() +
   facet_wrap(~season, scale="free_x") +
   theme_bw()

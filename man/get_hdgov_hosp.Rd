@@ -5,29 +5,17 @@
 \title{Get hospitalization data}
 \usage{
 get_hdgov_hosp(
-  endpoint = "https://healthdata.gov/resource/g62h-syeh.json",
-  state = NULL,
-  limitrows = NULL,
-  mindate = NULL,
-  maxdate = NULL,
-  limitcols = FALSE,
-  app_token = Sys.getenv("HEALTHDATA_APP_TOKEN")
+  endpoint = "https://healthdata.gov/api/views/g62h-syeh/rows.csv",
+  app_token = Sys.getenv("HEALTHDATA_APP_TOKEN"),
+  limitcols = FALSE
 )
 }
 \arguments{
 \item{endpoint}{URL to healthdata.gov endpoint (see references)..}
 
-\item{state}{A two-letter state abbreviation.}
-
-\item{limitrows}{Limit API query to at most this number of results. Default is \code{NULL} (no limit).}
-
-\item{mindate}{Minimum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is \emph{previous} day's flu/covid admissions.}
-
-\item{maxdate}{Maximum date of results returned (ISO 8601 format: YYYY-MM-DD). See examples. Note that after retrieving the data, dates will be shifted back one day because the admissions data is \emph{previous} day's flu/covid admissions.}
+\item{app_token}{App token from healthdata.gov. If \code{NULL} you might get rate limited. Add an entry to your \verb{~/.Renviron} with \code{HEALTHDATA_APP_TOKEN="tokenhere"} that you got from \url{https://healthdata.gov/profile/edit/developer_settings}.}
 
 \item{limitcols}{Limit the columns returned to the subjectively defined important ones?}
-
-\item{app_token}{App token from healthdata.gov. If \code{NULL} you might get rate limited. Add an entry to your \verb{~/.Renviron} with \code{HEALTHDATA_APP_TOKEN="tokenhere"} that you got from \url{https://healthdata.gov/profile/edit/developer_settings}.}
 }
 \value{
 A tibble
@@ -37,7 +25,7 @@ Retrieves hospitalization data from the healthdata.gov endpoint with optional fi
 }
 \examples{
 \dontrun{
-get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=TRUE)
+get_hdgov_hosp(limitcols=TRUE)
 get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
 get_hdgov_hosp(state="VA")
 get_hdgov_hosp(state="VA", mindate="2021-10-01")
