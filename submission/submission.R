@@ -148,13 +148,13 @@ models <-
   list(
     poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
     poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "poisson"),
-    poisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "poisson"),
+    #poisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "poisson"),
     quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
     quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    quasipoisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "quasipoisson"),
+    #quasipoisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "quasipoisson"),
     negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
-    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov)),
-    negbin3 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + ili_rank + offset(flu.admits.cov))
+    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov))
+    #negbin3 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + ili_rank + offset(flu.admits.cov))
   )
 
 new_cov <-
@@ -250,8 +250,8 @@ formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 ## force to monday (required to validate a forecast created on a day other than sunday or monday)
 formatted_list$arima$forecast_date <- this_monday()
 validate_forecast(formatted_list$arima)
-formatted_list$arima %>%
-  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.csv"))
+# formatted_list$arima %>%
+#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.csv"))
 
 pdf(paste0("~/Downloads/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$arima$location)) {
@@ -264,8 +264,8 @@ dev.off()
 ## force to monday (required to validate a forecast created on a day other than sunday or monday)
 formatted_list$ets$forecast_date <- this_monday()
 validate_forecast(formatted_list$ets)
-formatted_list$ets %>%
-  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.csv"))
+# formatted_list$ets %>%
+#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.csv"))
 
 pdf(paste0("~/Downloads/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ets$location)) {
@@ -279,7 +279,7 @@ dev.off()
 formatted_list$ensemble$forecast_date <- this_monday()
 validate_forecast(formatted_list$ensemble)
 formatted_list$ensemble %>%
-  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ensemble.csv"))
+  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.csv"))
 
 pdf(paste0("~/Downloads/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ensemble$location)) {
