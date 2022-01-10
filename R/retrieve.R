@@ -290,7 +290,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7))
   if (!is.null(dates)) {
     epiyearweeks <-
       MMWRweek::MMWRweek(dates) %>%
-      dplyr::mutate(epiyearweeks=paste0(MMWRyear, MMWRweek)) %>%
+      dplyr::mutate(epiyearweeks=paste0(MMWRyear, stringr::str_pad(MMWRweek, width = 2, pad = "0", side = "left")) )%>%
       dplyr::pull(epiyearweeks)
   }
   epiyearweeks <- paste(epiyearweeks, collapse=",")
