@@ -54,6 +54,8 @@ format_for_submission <- function(.forecasts, method = "ts") {
       dplyr::mutate(forecast_date = lubridate::today()) %>%
       dplyr::mutate(type = ifelse(is.na(quantile), "point", "quantile")) %>%
       dplyr::mutate(quantile = round(quantile,3)) %>%
+      dplyr::mutate(quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right")) %>%
+      dplyr::mutate(value = as.character(value)) %>%
       dplyr::select(forecast_date,target,target_end_date,location,type,quantile,value) %>%
       ## call to distinct to get rid of duplicated 0.5 quantile
       ## BETTER WAY TO DO THIS ??
@@ -145,7 +147,9 @@ ts_format_for_submission <- function (tsfor) {
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model) %>%
     ## round up for counts of people
-    purrr::map(~dplyr::mutate(., value = ceiling(value)))
+    purrr::map(~dplyr::mutate(., value = ceiling(value))) %>%
+    purrr::map(~dplyr::mutate(., quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right"))) %>%
+    purrr::map(~dplyr::mutate(., value = as.character(value)))
     ## fix duplicating quantile rows
     # purrr::map(dplyr::distinct)
 
@@ -260,8 +264,8 @@ validate_forecast <- function(subdat) {
   ## quantiles must be in valid quantile
   req_quants <-
     unlist(fsconfig$target_groups[[1]]$quantiles) %>%
-    round(., 3) %>%
     sort() %>%
+    stringr::str_pad(.,width = 5, pad = "0", side = "right") %>%
     paste0(., collapse = ",")
 
   tst_quants <-
