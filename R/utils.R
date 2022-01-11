@@ -193,12 +193,13 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
   # Grab the forecasted data
   forecasted <-
     submission %>%
-    dplyr::filter(type=="point" | dplyr::near(quantile, 0.025) | dplyr::near(quantile, 0.975)) %>%
+    dplyr::filter(type=="point" | quantile == "0.025" | quantile == "0.975") %>%
     dplyr::filter(location %in% loc) %>%
     dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
     dplyr::select(-type) %>%
     tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
     dplyr::select(location, date=target_end_date,quantile, value) %>%
+    dplyr::mutate(value = as.numeric(value)) %>%
     tidyr::spread(quantile, value) %>%
     dplyr::mutate(type="forecast")
 
