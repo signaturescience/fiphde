@@ -71,7 +71,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
     dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
   # We expect to have one extra row per location in the result compared to the input.
-  if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
+  # if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
   return(res)
 }
 
