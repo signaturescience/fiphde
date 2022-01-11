@@ -4,12 +4,18 @@
 \alias{get_nowcast_ili}
 \title{Get ILI nowcast}
 \usage{
-get_nowcast_ili(epiyearweeks = NULL, dates = lubridate::today() - c(14, 7))
+get_nowcast_ili(
+  epiyearweeks = NULL,
+  dates = lubridate::today() - c(14, 7),
+  location = NULL
+)
 }
 \arguments{
 \item{epiyearweeks}{A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates}
 
 \item{dates}{A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.}
+
+\item{location}{A vector of locations to retrieve. Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
 }
 \value{
 A tibble
@@ -19,12 +25,17 @@ Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
 }
 \examples{
 \dontrun{
-# Defaults to the previous two weeks
+# Defaults to the previous two weeks for all states
 get_nowcast_ili()
 
 # Otherwise specify one or the other, not both
 get_nowcast_ili(epiyearweeks=c("202150", "202151"), dates=NULL)
 get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
+
+# Get just one state for the last years worth of data (back 52 weeks to 1 week)
+get_nowcast_ili(epiyearweeks=NULL,
+                dates=lubridate::today()-seq(52*7, 7, -7),
+                location="FL")
 
 # Compare to ilinet
 library(dplyr)
