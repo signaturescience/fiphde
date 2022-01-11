@@ -7,7 +7,7 @@
 get_nowcast_ili(
   epiyearweeks = NULL,
   dates = lubridate::today() - c(14, 7),
-  location = NULL
+  state = NULL
 )
 }
 \arguments{
@@ -35,7 +35,7 @@ get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
 # Get just one state for the last years worth of data (back 52 weeks to 1 week)
 get_nowcast_ili(epiyearweeks=NULL,
                 dates=lubridate::today()-seq(52*7, 7, -7),
-                location="FL")
+                state="FL")
 
 # Compare to ilinet
 library(dplyr)
