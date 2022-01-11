@@ -14,6 +14,7 @@ tologili <- TRUE
 # so, 2019 = the 2019-2020 flu season. If you only get 2020-2021, you're getting the
 # 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
 ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
@@ -26,9 +27,8 @@ datl <-
   mutate(lag_1 = lag(flu.admits, 1)) %>%
   filter(!is.na(lag_1)) %>%
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
-  ## states only (not US or DC) and FL doesnt have ILI data
-  ## TODO: add nowcast ILI data for FL so we can forecast?
-  filter(!abbreviation %in% c("US","FL","DC")) %>%
+  ## states only (not US or DC)
+  filter(!abbreviation %in% c("US","DC")) %>%
   left_join(ilifor_st$ilidat, by = c("epiyear", "location", "epiweek")) %>%
   ## optionally log tranform ILI ???
   ## see above
