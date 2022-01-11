@@ -15,7 +15,7 @@ get_nowcast_ili(
 
 \item{dates}{A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.}
 
-\item{location}{A vector of locations to retrieve. Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
+\item{state}{A vector of states to retrieve (two-letter abbreviation). Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
 }
 \value{
 A tibble
