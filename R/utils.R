@@ -25,6 +25,37 @@ is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
 
+#' @title Replace all ILInet data with nowcast data for a state
+#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for all dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
+#' @details This only replaces instances of `weighted_ili` in the specified `state` where `weighted_ili` is `NA`. _Most_ ILI data from FL is missing, but not all.
+#' @param ilidat Data from [get_cdc_ili].
+#' @param state Two-letter state abbreviation to replace completely
+#' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
+#' @seealso [replace_ili_nowcast]
+#' @examples
+#' \dontrun{
+#' ilidat <- get_cdc_ili(years=2020)
+#' ilidat <-
+#'   ilidat %>%
+#'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
+#'   dplyr::group_by(location) %>%
+#'   dplyr::slice_max(week_start, n=4) %>%
+#'   dplyr::select(location:weighted_ili) %>%
+#'   dplyr::arrange(location, epiyear, epiweek)
+#' ilidat
+#' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' }
+#' @export
+state_replace_ili_nowcast_all <- function(ilidat, state) {
+  dates <- sort(unique(ilidat$week_start))
+  ilinow <- get_nowcast_ili(dates=dates, state=state)
+  res <- ilidat %>%
+    dplyr::left_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
+    dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili) & abbreviation==state, weighted_ili_now, weighted_ili)) %>%
+    dplyr::select(-weighted_ili_now)
+  return(res)
+}
+
 #' @title Replace ILInet with nowcast data
 #' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
 #' @param ilidat Data from [get_cdc_ili].
@@ -71,7 +102,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
     dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
   # We expect to have one extra row per location in the result compared to the input.
-  if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
+  # if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
   return(res)
 }
 
@@ -162,12 +193,13 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
   # Grab the forecasted data
   forecasted <-
     submission %>%
-    dplyr::filter(type=="point" | dplyr::near(quantile, 0.025) | dplyr::near(quantile, 0.975)) %>%
+    dplyr::filter(type=="point" | quantile == "0.025" | quantile == "0.975") %>%
     dplyr::filter(location %in% loc) %>%
     dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
     dplyr::select(-type) %>%
     tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
     dplyr::select(location, date=target_end_date,quantile, value) %>%
+    dplyr::mutate(value = as.numeric(value)) %>%
     tidyr::spread(quantile, value) %>%
     dplyr::mutate(type="forecast")
 

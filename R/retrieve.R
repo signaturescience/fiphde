@@ -201,16 +201,22 @@ get_cdc_hosp <- function(years=NULL) {
 #' @description Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
 #' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
+#' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
 #' @return A tibble
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
-#' # Defaults to the previous two weeks
+#' # Defaults to the previous two weeks for all states
 #' get_nowcast_ili()
 #'
 #' # Otherwise specify one or the other, not both
 #' get_nowcast_ili(epiyearweeks=c("202150", "202151"), dates=NULL)
 #' get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
+#'
+#' # Get just one state for the last years worth of data (back 52 weeks to 1 week)
+#' get_nowcast_ili(epiyearweeks=NULL,
+#'                 dates=lubridate::today()-seq(52*7, 7, -7),
+#'                 state="FL")
 #'
 #' # Compare to ilinet
 #' library(dplyr)
@@ -226,7 +232,7 @@ get_cdc_hosp <- function(years=NULL) {
 #'   arrange(desc(abs(diff)))
 #' }
 #' @export
-get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7)) {
+get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL) {
 
   # Check that you're not supplying both. If you are, error out.
   if (!xor(is.null(epiyearweeks), is.null(dates))) {
@@ -236,14 +242,22 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7))
   # Base url to nowcast API
   base_url <- "https://delphi.cmu.edu/epidata/nowcast/"
 
-  # Get the names of the states in lowercase
-  states <-
-    locations %>%
-    dplyr::filter(location %in% stringr::str_pad(1:56, width = 2, pad = 0)) %>%
-    dplyr::pull(abbreviation) %>%
-    tolower()
-  # paste together "nat", hhs regions, and states
-  locs <- c("nat", paste0("hhs",1:10), states)
+  # If location is NULL, use all states, national, and hhs regions by default
+  if (is.null(state)) {
+    # Get the names of the states in lowercase
+    states <-
+      locations %>%
+      dplyr::filter(location %in% stringr::str_pad(1:56, width = 2, pad = 0)) %>%
+      dplyr::pull(abbreviation) %>%
+      tolower()
+    # paste together "nat", hhs regions, and states
+    locs <- c("nat", paste0("hhs",1:10), states)
+  } else {
+    # if state is specified, use it
+    locs <- state
+  }
+  # Make them all lowercase
+  locs <- tolower(locs)
   # put that into a character vector separated by ,
   locs <- paste(locs, collapse=",")
 
