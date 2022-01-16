@@ -2,13 +2,22 @@ library(tidyverse)
 library(fiphde)
 library(furrr)
 
-
 ################################################################################
 ## SigSci-CREG
 
 ## first an option
 ## do we want to log-transform ILI ???
 tologili <- TRUE
+## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
+## if this is set to TRUE it will expect ...
+## the hospitalization data will be reported for the entire last week
+## BUT this will break the code if we try to run on a sunday
+## last week
+if(as.POSIXlt(lubridate::today())$wday == 0) {
+  ri <- FALSE
+} else {
+  ri <-  TRUE
+}
 # Get data
 # the years argument for cdcfluview::ilinet gets the *season* corresponding to the year.
 # so, 2019 = the 2019-2020 flu season. If you only get 2020-2021, you're getting the
@@ -23,7 +32,7 @@ hosp <- get_hdgov_hosp(limitcols = TRUE)
 
 ## data list by location
 datl <-
-  prep_hdgov_hosp(hosp, min_per_week = 0) %>%
+  prep_hdgov_hosp(hosp, min_per_week = 0, remove_incomplete = ri) %>%
   mutate(lag_1 = lag(flu.admits, 1)) %>%
   filter(!is.na(lag_1)) %>%
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
@@ -130,7 +139,7 @@ ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
 
 ## data list by location
 dat_us <-
-  prep_hdgov_hosp(hosp, min_per_week = 0) %>%
+  prep_hdgov_hosp(hosp, min_per_week = 0, remove_incomplete = ri) %>%
   mutate(lag_1 = lag(flu.admits, 1)) %>%
   filter(!is.na(lag_1)) %>%
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
@@ -215,7 +224,7 @@ bound_truth <-
   do.call("rbind", datl) %>%
   bind_rows(., dat_us)
 
-pdf(paste0("~/Downloads/SigSci-CREG-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-CREG/artifacts/plots/SigSci-CREG-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(all_prepped$location)) {
   p <- plot_forecast(bound_truth, all_prepped, location = loc)
   print(p)
@@ -229,7 +238,7 @@ dev.off()
 ## NOTE: uses hosp from above but preps slightly differently
 prepped_hosp <-
   hosp %>%
-  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0) %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = ri) %>%
   dplyr::filter(abbreviation != "DC")
 
 prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
@@ -253,7 +262,7 @@ validate_forecast(formatted_list$arima)
 # formatted_list$arima %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.csv"))
 
-pdf(paste0("~/Downloads/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$arima$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$arima, location = loc)
   print(p)
@@ -267,7 +276,7 @@ validate_forecast(formatted_list$ets)
 # formatted_list$ets %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.csv"))
 
-pdf(paste0("~/Downloads/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ets$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ets, location = loc)
   print(p)
@@ -281,7 +290,7 @@ validate_forecast(formatted_list$ensemble)
 formatted_list$ensemble %>%
   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.csv"))
 
-pdf(paste0("~/Downloads/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ensemble$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ensemble, location = loc)
   print(p)
@@ -311,5 +320,5 @@ glm_model_info <-
   map_df("model") %>%
   mutate(forecast_date = this_monday())
 
-save(glm_forcres, glm_model_info, file = paste0("~/Downloads/SigSci-CREG-model-info-", this_monday(), ".rda"))
-save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("~/Downloads/SigSci-TSENS-model-info-", this_monday(), ".rda"))
+save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/SigSci-CREG-model-info-", this_monday(), ".rda"))
+save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("submission/SigSci-TSENS/artifacts/params/SigSci-TSENS-model-info-", this_monday(), ".rda"))
