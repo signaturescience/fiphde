@@ -10,5 +10,5 @@ this_monday()
 Date for the Monday of the current week. For more details see \link[lubridate]{floor_date}.
 }
 \description{
-This function is a helper to get the date for the Monday of the current week.
+This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
 }
