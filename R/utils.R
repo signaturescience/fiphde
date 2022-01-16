@@ -2,16 +2,16 @@
 #'
 #' @description
 #'
-#' This function is a helper to get the date for the Monday of the current week.
+#' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
 #'
 #' @return Date for the Monday of the current week. For more details see \link[lubridate]{floor_date}.
 #' @export
 #' @md
 #'
 this_monday <- function() {
-  lubridate::floor_date(lubridate::today(), "weeks", week_start = 1)
+  tmp <- MMWRweek::MMWRweek(lubridate::today())
+  MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 2)
 }
-
 #' Check Monday
 #'
 #' @description
