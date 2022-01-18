@@ -8,6 +8,9 @@ library(furrr)
 ## first an option
 ## do we want to log-transform ILI ???
 tologili <- TRUE
+## another options for the number of cores to use in parallelization
+## defaults to 4 cores
+n_workers <- 4
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
 ## if this is set to TRUE it will expect ...
 ## the hospitalization data will be reported for the entire last week
@@ -123,7 +126,7 @@ run_forc <- function(dat) {
   })
 }
 
-plan(multisession, workers = 10)
+plan(multisession, workers = n_workers)
 system.time({
   forcres <- future_map(datl, ~run_forc(.x))
 })
