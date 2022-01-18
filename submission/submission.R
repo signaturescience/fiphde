@@ -1,4 +1,7 @@
-library(tidyverse)
+library(dplyr)
+library(purrr)
+library(readr)
+library(ggplot2)
 library(fiphde)
 library(furrr)
 
