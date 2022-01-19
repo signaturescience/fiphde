@@ -52,6 +52,23 @@ quidk
 
 # Historical severity -----------------------------------------------------
 
+# Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
+hospstats <-
+  hosp %>%
+  filter(age_label == "Overall") %>%
+  filter(year %>% between(2010, 2021)) %>%
+  mutate("counts" = as.numeric(weeklyrate)*3300) %>%
+  dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
+  rename(epiweek = year_wk_num) %>%
+  group_by(epiweek) %>%
+  summarise(min = min(counts),
+            lowhinge = IQR(counts, 0.25),
+            med = median(counts),
+            uprhinge = IQR(counts, 0.75),
+            max = max(counts),
+            mean = mean(counts))
+hospstats
+
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
 ili <- cdcfluview::ilinet(region="national")
 ili
@@ -118,4 +135,4 @@ historical_severity %>%
 
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations, q, quidk, historical_severity, hospstats, internal = TRUE, overwrite = TRUE)
