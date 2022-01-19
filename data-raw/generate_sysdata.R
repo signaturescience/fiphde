@@ -53,6 +53,8 @@ quidk
 # Historical severity -----------------------------------------------------
 
 # Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
+hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+hosp
 hospstats <-
   hosp %>%
   filter(age_label == "Overall") %>%
@@ -82,8 +84,8 @@ ilisum <-
 ilisum
 
 # Get historical hospitalization data (2010-2019), summarize by epiweek
-hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
-hosp
+#hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+#hosp
 hospsum <-
   hosp %>%
   filter(year %>% between(2010, 2019)) %>%
