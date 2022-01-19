@@ -1,4 +1,7 @@
-library(tidyverse)
+library(dplyr)
+library(purrr)
+library(readr)
+library(ggplot2)
 library(fiphde)
 library(furrr)
 
@@ -8,6 +11,9 @@ library(furrr)
 ## first an option
 ## do we want to log-transform ILI ???
 tologili <- TRUE
+## another options for the number of cores to use in parallelization
+## defaults to 4 cores
+n_workers <- 4
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
 ## if this is set to TRUE it will expect ...
 ## the hospitalization data will be reported for the entire last week
@@ -123,7 +129,7 @@ run_forc <- function(dat) {
   })
 }
 
-plan(multisession, workers = 10)
+plan(multisession, workers = n_workers)
 system.time({
   forcres <- future_map(datl, ~run_forc(.x))
 })
@@ -218,7 +224,7 @@ all_prepped$forecast_date <- this_monday()
 validate_forecast(all_prepped)
 
 all_prepped %>%
-  write_csv(., paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.csv"))
+  write_csv(., paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.candidate.csv"))
 
 bound_truth <-
   do.call("rbind", datl) %>%
@@ -260,7 +266,7 @@ formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 formatted_list$arima$forecast_date <- this_monday()
 validate_forecast(formatted_list$arima)
 # formatted_list$arima %>%
-#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.csv"))
+#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.candidate.csv"))
 
 pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$arima$location)) {
@@ -274,7 +280,7 @@ dev.off()
 formatted_list$ets$forecast_date <- this_monday()
 validate_forecast(formatted_list$ets)
 # formatted_list$ets %>%
-#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.csv"))
+#   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.candidate.csv"))
 
 pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ets$location)) {
@@ -288,7 +294,7 @@ dev.off()
 formatted_list$ensemble$forecast_date <- this_monday()
 validate_forecast(formatted_list$ensemble)
 formatted_list$ensemble %>%
-  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.csv"))
+  write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.csv"))
 
 pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ensemble$location)) {
