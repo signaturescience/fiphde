@@ -230,7 +230,7 @@ bound_truth <-
   do.call("rbind", datl) %>%
   bind_rows(., dat_us)
 
-pdf(paste0("submission/SigSci-CREG/artifacts/plots/SigSci-CREG-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-CREG/artifacts/plots/", this_monday(), "SigSci-CREG.pdf"), width=11.5, height=8)
 for(loc in unique(all_prepped$location)) {
   p <- plot_forecast(bound_truth, all_prepped, location = loc)
   print(p)
@@ -268,7 +268,7 @@ validate_forecast(formatted_list$arima)
 # formatted_list$arima %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "SigSci-TSENS-ARIMA.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$arima$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$arima, location = loc)
   print(p)
@@ -282,7 +282,7 @@ validate_forecast(formatted_list$ets)
 # formatted_list$ets %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "SigSci-TSENS-ETS.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ets$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ets, location = loc)
   print(p)
@@ -296,7 +296,7 @@ validate_forecast(formatted_list$ensemble)
 formatted_list$ensemble %>%
   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "SigSci-TSENS-ensemble.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ensemble$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ensemble, location = loc)
   print(p)
@@ -326,5 +326,5 @@ glm_model_info <-
   map_df("model") %>%
   mutate(forecast_date = this_monday())
 
-save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/SigSci-CREG-model-info-", this_monday(), ".rda"))
-save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("submission/SigSci-TSENS/artifacts/params/SigSci-TSENS-model-info-", this_monday(), ".rda"))
+save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
+save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "SigSci-TSENS-model-info.rda"))
