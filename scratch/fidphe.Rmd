@@ -1,12 +1,27 @@
 ---
-title: "readme"
-author: "SAJ"
+title: "fiphde: Basic Usage"
+subtitle: "*F*orecasting *I*nfluenza in Support of *P*ublic *H*ealth *De*cision Making"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+First, load the `fiphde` package and other ancillary packages.
+
+```{r, message = FALSE, warning = FALSE}
+library(fiphde)
+library(dplyr)
+library(purrr)
+library(readr)
+library(ggplot2)
+library(furrr)
+```
+
+# Get data
+
+First, let's retrieve Influenza-like Illness (ILI) data from [CDC FluView](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html). Note that `years` argument gets the *flu season* corresponding to the year. If you only get 2020-2021, you're getting the 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 
 ```{r}
 
