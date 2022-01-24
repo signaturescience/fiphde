@@ -14,6 +14,8 @@ tologili <- TRUE
 ## another options for the number of cores to use in parallelization
 ## defaults to 4 cores
 n_workers <- 4
+## Alternatively, use almost all of the cores you have (-2)
+## n_workers <- max(1, parallel::detectCores()-2)
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
 ## if this is set to TRUE it will expect ...
 ## the hospitalization data will be reported for the entire last week
