@@ -232,3 +232,34 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
 
   return(p)
 }
+
+#' @title Minimum non-zero
+#' @description Get the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return The minimum non-zero positive value from `x`.
+#' @seealso [mnz_replace]
+#' @export
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+mnz <- function(x) {
+  if (!is.numeric(x)) stop("x must be a numeric vector")
+  return(min(x[which(x>0)]))
+}
+
+#' @title Minimum non-zero replacement
+#' @description Replace zeros and negative values with the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+#' mnz_replace(x)
+#' tibble::tibble(x) %>% dplyr::mutate(x2=mnz_replace(x))
+#' @export
+mnz_replace <- function(x) {
+  x[which(x<=0)] <- mnz(x)
+  return(x)
+}
