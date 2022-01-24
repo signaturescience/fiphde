@@ -38,6 +38,16 @@ ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
 
 hosp <- get_hdgov_hosp(limitcols = TRUE)
 
+# If using log(ili), make all the zeros be the minimum nonzero value
+if (tologili) {
+  ilidat    <- ilidat    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilidat_st <- ilidat_st %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilifor_st$ilidat     <- ilifor_st$ilidat     %>% mutate(ili=mnz_replace(ili))
+  ilifor_st$ili_future <- ilifor_st$ili_future %>% mutate(ili=mnz_replace(ili))
+  ilifor_st$ili_bound  <- ilifor_st$ili_bound  %>% mutate(ili=mnz_replace(ili))
+}
+
 ## data list by location
 datl <-
   prep_hdgov_hosp(hosp, min_per_week = 0, remove_incomplete = ri) %>%
@@ -144,6 +154,15 @@ system.time({
 ## use ilidat from above
 ilidat_us <- iliaug %>% dplyr::filter(location=="US")
 ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+
+# If using log(ili), make all the zeros be the minimum nonzero value
+if (tologili) {
+  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilidat_us <- ilidat_us %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilifor_us$ilidat     <- ilifor_us$ilidat     %>% mutate(ili=mnz_replace(ili))
+  ilifor_us$ili_future <- ilifor_us$ili_future %>% mutate(ili=mnz_replace(ili))
+  ilifor_us$ili_bound  <- ilifor_us$ili_bound  %>% mutate(ili=mnz_replace(ili))
+}
 
 ## data list by location
 dat_us <-
