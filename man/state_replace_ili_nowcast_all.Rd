@@ -4,12 +4,14 @@
 \alias{state_replace_ili_nowcast_all}
 \title{Replace all ILInet data with nowcast data for a state}
 \usage{
-state_replace_ili_nowcast_all(ilidat, state)
+state_replace_ili_nowcast_all(ilidat, state, ...)
 }
 \arguments{
 \item{ilidat}{Data from \link{get_cdc_ili}.}
 
 \item{state}{Two-letter state abbreviation to replace completely}
+
+\item{...}{Other arguments passed to \link{get_nowcast_ili}, e.g. \code{boundatzero}, which is \code{TRUE} by default.}
 }
 \value{
 The same as the \code{ilidat} input, but with \code{state}'s data from \link{get_cdc_ili} replaced by nowcast data from \link{get_nowcast_ili}.
@@ -32,6 +34,18 @@ ilidat <-
   dplyr::arrange(location, epiyear, epiweek)
 ilidat
 state_replace_ili_nowcast_all(ilidat, state="FL")
+# Example with Florida, which has a negative value for nowcasted ILI
+ilidat <- get_cdc_ili(years=2019)
+ilidat <- ilidat \%>\%
+  dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") \%>\%
+  dplyr::filter(epiyear==2020 & epiweek \%in\% c(20, 21, 22)) \%>\%
+  dplyr::select(location:weighted_ili) \%>\%
+  dplyr::arrange(location, epiyear, epiweek)
+ilidat
+# defaults to bound at zero
+state_replace_ili_nowcast_all(ilidat, state="FL")
+# show results when you don't bound at zero
+state_replace_ili_nowcast_all(ilidat, state="FL", boundatzero=FALSE)
 }
 }
 \seealso{
