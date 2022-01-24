@@ -180,15 +180,18 @@ library(furrr)</code></pre>
 <h1>Get data</h1>
 <p>First, let’s retrieve Influenza-like Illness (ILI) data from <a href="https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html">CDC FluView</a>. Note that <code>years</code> argument gets the <em>flu season</em> corresponding to the year. If you only get 2020-2021, you’re getting the 2020-2021 and 2021-2022 flu season, meaning that you will <em>NOT</em> capture early 2020 data.</p>
 <pre class="r"><code>ilidat &lt;- get_cdc_ili(region=c(&quot;national&quot;,&quot;state&quot;), years=2019:lubridate::year(lubridate::today()))</code></pre>
-<pre><code>## Latest week_start / year / epiweek available:
-## 2022-01-09 / 2022 / 2</code></pre>
 <p>Some states have missing ILI data so we pull from <a href="https://delphi.cmu.edu/nowcast/">CMU Delphi NowCast</a> instead.</p>
-<pre class="r"><code>ilidat &lt;- state_replace_ili_nowcast_all(ilidat, state=&quot;FL&quot;)
+<pre class="r"><code># Replace FluView data with NowCast data for Florida only
+ilidat &lt;- state_replace_ili_nowcast_all(ilidat, state=&quot;FL&quot;)
+
+## Pull NowCast data for all states for a specified date
 iliaug &lt;- replace_ili_nowcast(ilidat, weeks_to_replace=1)</code></pre>
-<pre><code>## Replacing weighted_ili with nowcast weighted_ili on dates: 2022-01-17, 2022-01-10</code></pre>
+</div>
+<div id="fit-arima-model" class="section level1">
+<h1>Fit ARIMA model</h1>
+<p>Now that the data has been gathered we being model fitting. We use <code>forecast_ili</code> we fit a <code>fable::ARIMA</code> model with parameters optimized automatically.</p>
 <pre class="r"><code>ilidat_st &lt;- iliaug %&gt;% dplyr::filter(region_type==&quot;States&quot;)
 ilifor_st &lt;- forecast_ili(ilidat_st, horizon=4L, trim_date=&quot;2020-03-01&quot;)</code></pre>
-<pre><code>## Fitting nonseasonal constrained ARIMA model...</code></pre>
 </div>
 
 
