@@ -4,12 +4,14 @@
 \alias{state_replace_ili_nowcast_all}
 \title{Replace all ILInet data with nowcast data for a state}
 \usage{
-state_replace_ili_nowcast_all(ilidat, state, ...)
+state_replace_ili_nowcast_all(ilidat, state, impute = TRUE, ...)
 }
 \arguments{
 \item{ilidat}{Data from \link{get_cdc_ili}.}
 
 \item{state}{Two-letter state abbreviation to replace completely}
+
+\item{impute}{Logical; try to mean impute missing values using the immediately preceding and following values. See examples.}
 
 \item{...}{Other arguments passed to \link{get_nowcast_ili}, e.g. \code{boundatzero}, which is \code{TRUE} by default.}
 }
@@ -46,6 +48,14 @@ ilidat
 state_replace_ili_nowcast_all(ilidat, state="FL")
 # show results when you don't bound at zero
 state_replace_ili_nowcast_all(ilidat, state="FL", boundatzero=FALSE)
+# example with missing data in florida
+ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+ilidat <- ilidat \%>\%
+  dplyr::filter(abbreviation=="FL") \%>\%
+  dplyr::filter(week_start>="2020-12-13" & week_start<="2021-01-10")
+ilidat
+state_replace_ili_nowcast_all(ilidat, state="FL")
+state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
 }
 }
 \seealso{
