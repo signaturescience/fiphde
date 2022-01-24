@@ -24,5 +24,19 @@ library(furrr)
 First, let's retrieve Influenza-like Illness (ILI) data from [CDC FluView](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html). Note that `years` argument gets the *flu season* corresponding to the year. If you only get 2020-2021, you're getting the 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 
 ```{r}
+ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+```
 
+Some states have missing ILI data so we pull from [CMU Delphi NowCast](https://delphi.cmu.edu/nowcast/) instead.
+
+```{r}
+ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
+
+## Pull NowCast data for all states for a specified date
+iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+```
+
+```{r}
+ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
+ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
 ```
