@@ -284,6 +284,9 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
     dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
     dplyr::select(location, epiyear, epiweek, ili=.mean)
 
+  # bound future cases at zero
+  ili_future$ili[ili_future$ili<0] <- 0
+
   # bind the historical data to the new data
   ili_bound <- dplyr::bind_rows(ilidat %>% dplyr::mutate(forecasted=FALSE),
                                 ili_future %>% dplyr::mutate(forecasted=TRUE)) %>%

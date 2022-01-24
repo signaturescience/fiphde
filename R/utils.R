@@ -30,6 +30,8 @@ is_monday <- function() {
 #' @details This only replaces instances of `weighted_ili` in the specified `state` where `weighted_ili` is `NA`. _Most_ ILI data from FL is missing, but not all.
 #' @param ilidat Data from [get_cdc_ili].
 #' @param state Two-letter state abbreviation to replace completely
+#' @param impute Logical; try to mean impute missing values using the immediately preceding and following values. See examples.
+#' @param ... Other arguments passed to [get_nowcast_ili], e.g. `boundatzero`, which is `TRUE` by default.
 #' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
 #' @seealso [replace_ili_nowcast]
 #' @examples
@@ -44,15 +46,42 @@ is_monday <- function() {
 #'   dplyr::arrange(location, epiyear, epiweek)
 #' ilidat
 #' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' # Example with Florida, which has a negative value for nowcasted ILI
+#' ilidat <- get_cdc_ili(years=2019)
+#' ilidat <- ilidat %>%
+#'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
+#'   dplyr::filter(epiyear==2020 & epiweek %in% c(20, 21, 22)) %>%
+#'   dplyr::select(location:weighted_ili) %>%
+#'   dplyr::arrange(location, epiyear, epiweek)
+#' ilidat
+#' # defaults to bound at zero
+#' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' # show results when you don't bound at zero
+#' state_replace_ili_nowcast_all(ilidat, state="FL", boundatzero=FALSE)
+#' # example with missing data in florida
+#' ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+#' ilidat <- ilidat %>%
+#'   dplyr::filter(abbreviation=="FL") %>%
+#'   dplyr::filter(week_start>="2020-12-13" & week_start<="2021-01-10")
+#' ilidat
+#' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
 #' }
 #' @export
-state_replace_ili_nowcast_all <- function(ilidat, state) {
+state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
   dates <- sort(unique(ilidat$week_start))
-  ilinow <- get_nowcast_ili(dates=dates, state=state)
+  ilinow <- get_nowcast_ili(dates=dates, state=state, ...)
   res <- ilidat %>%
     dplyr::left_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
     dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili) & abbreviation==state, weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
+  # Quick fix for FL 2020:53: mean impute a missing value using the immediately preceding and following values
+  if (impute) {
+    res <- res %>%
+      dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili),
+                                        yes = (dplyr::lead(weighted_ili) + dplyr::lag(weighted_ili))/2,
+                                        no  = weighted_ili))
+  }
   return(res)
 }
 
@@ -231,4 +260,35 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
   }
 
   return(p)
+}
+
+#' @title Minimum non-zero
+#' @description Get the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return The minimum non-zero positive value from `x`.
+#' @seealso [mnz_replace]
+#' @export
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+mnz <- function(x) {
+  if (!is.numeric(x)) stop("x must be a numeric vector")
+  return(min(x[which(x>0)]))
+}
+
+#' @title Minimum non-zero replacement
+#' @description Replace zeros and negative values with the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+#' mnz_replace(x)
+#' tibble::tibble(x) %>% dplyr::mutate(x2=mnz_replace(x))
+#' @export
+mnz_replace <- function(x) {
+  x[which(x<=0)] <- mnz(x)
+  return(x)
 }
