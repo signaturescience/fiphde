@@ -26,6 +26,12 @@ if(as.POSIXlt(lubridate::today())$wday == 0) {
 } else {
   ri <-  TRUE
 }
+## if there are lots of warnings we want to print them in the pipeline script
+## especially non-interactively (i.e. when the automated instance runs the script)
+if(!interactive()) {
+  message("setting option for max number of warnings printed to be 10000 ... ")
+  options(nwarnings = 10000)
+}
 # Get data
 # the years argument for cdcfluview::ilinet gets the *season* corresponding to the year.
 # so, 2019 = the 2019-2020 flu season. If you only get 2020-2021, you're getting the
@@ -145,6 +151,9 @@ plan(multisession, workers = n_workers)
 system.time({
   forcres <- future_map(datl, ~run_forc(.x))
 })
+
+## view any warnings
+warnings()
 
 ## see below (after national forecasting) for formatting of state forecasts
 
