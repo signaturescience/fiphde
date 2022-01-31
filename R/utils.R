@@ -161,14 +161,14 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' # What are the last four weeks of recorded data?
 #' last4 <-
 #'   prepped_hosp_all %>%
-#'   distinct(week_start) %>%
-#'   arrange(week_start) %>%
+#'   dplyr::distinct(week_start) %>%
+#'   dplyr::arrange(week_start) %>%
 #'   tail(4)
 #'
 #' #remove those
 #' prepped_hosp <-
-#'   prepped_hosp %>%
-#'   anti_join(last4, by="week_start")
+#'   prepped_hosp_all %>%
+#'   dplyr::anti_join(last4, by="week_start")
 #'
 #' # Make a tsibble
 #' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
@@ -200,8 +200,25 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp_all, hosp_formatted$ets)
 #' plot_forecast(prepped_hosp, hosp_formatted$arima)
 #' plot_forecast(prepped_hosp_all, hosp_formatted$arima)
-#' }
 #'
+#' # Demonstrating multiple models
+#' prepped_hosp <-
+#'   h_raw %>%
+#'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+#'   dplyr::filter(abbreviation != "DC")
+#'
+#' tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
+#' creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+#' combo_20220110 <- dplyr::bind_rows(
+#'   dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
+#'   dplyr::mutate(creg_20220110, model = "SigSci-CREG")
+#' )
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24")
+#' plot_forecast(prepped_hosp, tsens_20220110, location = "24")
+#' plot_forecast(prepped_hosp, combo_20220110, location = c("34","36"))
+#' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+#' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+#' }
 plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = NULL) {
 
   if(!is.null(.model)) {
