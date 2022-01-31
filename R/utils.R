@@ -208,6 +208,8 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = 
     submission$model <- .model
   }
 
+  if (!("model" %in% colnames(submission))) submission$model <- "Forecast"
+
   ## pretty sure we need to add an intermediary variable for the filter below
   ## otherwise the condition will interpret as the column name not the vector ... i think?
   loc <- location
