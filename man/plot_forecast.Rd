@@ -4,7 +4,7 @@
 \alias{plot_forecast}
 \title{Plot forecasts}
 \usage{
-plot_forecast(.data, submission, location = "US", pi = TRUE)
+plot_forecast(.data, submission, location = "US", pi = TRUE, .model = NULL)
 }
 \arguments{
 \item{.data}{Historical truth data for all locations and outcomes in submission targets}
@@ -14,6 +14,8 @@ plot_forecast(.data, submission, location = "US", pi = TRUE)
 \item{location}{Vector specifying locations to filter to; 'US' by default.}
 
 \item{pi}{Logical as to whether or not the plot should include 95\% prediction interval; default is \code{TRUE}}
+
+\item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location

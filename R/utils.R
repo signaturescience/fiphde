@@ -143,6 +143,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' @param submission Formatted submission
 #' @param location  Vector specifying locations to filter to; 'US' by default.
 #' @param pi Logical as to whether or not the plot should include 95% prediction interval; default is `TRUE`
+#' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
@@ -201,7 +202,11 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp_all, hosp_formatted$arima)
 #' }
 #'
-plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
+plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = NULL) {
+
+  if(!is.null(.model)) {
+    submission$model <- .model
+  }
 
   ## pretty sure we need to add an intermediary variable for the filter below
   ## otherwise the condition will interpret as the column name not the vector ... i think?
@@ -217,20 +222,20 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
     tibble::as_tibble() %>%
     dplyr::filter(location %in% loc) %>%
     dplyr::select(location, date=week_end,point=flu.admits) %>%
-    dplyr::mutate(type="recorded")
+    dplyr::mutate(model="Observed")
 
   # Grab the forecasted data
   forecasted <-
     submission %>%
+    dplyr::group_by(model) %>%
     dplyr::filter(type=="point" | quantile == "0.025" | quantile == "0.975") %>%
     dplyr::filter(location %in% loc) %>%
     dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
     dplyr::select(-type) %>%
     tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
-    dplyr::select(location, date=target_end_date,quantile, value) %>%
+    dplyr::select(location, date=target_end_date,quantile, value, model) %>%
     dplyr::mutate(value = as.numeric(value)) %>%
-    tidyr::spread(quantile, value) %>%
-    dplyr::mutate(type="forecast")
+    tidyr::spread(quantile, value)
 
   # Bind them
   bound <-
@@ -244,19 +249,19 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
   p <-
     bound %>%
     ggplot2::ggplot(ggplot2::aes(date, point)) +
-    ggplot2::geom_point(ggplot2::aes(col=type)) +
-    ggplot2::geom_line(ggplot2::aes(col=type)) +
+    ggplot2::geom_point(ggplot2::aes(col=model)) +
+    ggplot2::geom_line(ggplot2::aes(col=model)) +
     ggplot2::scale_y_continuous(labels = scales::number_format(big.mark = ",")) +
     ggplot2::facet_wrap(~location, scales="free", ncol = 3) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = "Date", y = NULL) +
-    ggplot2::theme(legend.position = "Bottom", legend.title = ggplot2::element_blank())
+    ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank())
 
   if(pi) {
     p <-
       p +
-      ggplot2::geom_ribbon(ggplot2::aes(fill = type, ymin = `0.025`, ymax = `0.975`),
-                           alpha = 0.5, color="lightpink", data=dplyr::filter(bound, type == "forecast"))
+      ggplot2::geom_ribbon(ggplot2::aes(fill = model, ymin = `0.025`, ymax = `0.975`),
+                           alpha = 0.5)
   }
 
   return(p)
