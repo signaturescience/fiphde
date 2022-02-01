@@ -93,5 +93,11 @@ plot_forecast(prepped_hosp, tsens_20220110, location = "24")
 plot_forecast(prepped_hosp, combo_20220110, location = c("34","36"))
 plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
 plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+
+## demonstrating different prediction interval widths
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.5)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.9)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
 }
 }
