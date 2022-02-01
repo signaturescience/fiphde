@@ -142,7 +142,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' @param .data 	Historical truth data for all locations and outcomes in submission targets
 #' @param submission Formatted submission
 #' @param location  Vector specifying locations to filter to; 'US' by default.
-#' @param pi Logical as to whether or not the plot should include 95% prediction interval; default is `TRUE`
+#' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
@@ -219,7 +219,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
 #' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
 #' }
-plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = NULL) {
+plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL) {
 
   if(!is.null(.model)) {
     submission$model <- .model
@@ -243,17 +243,48 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = 
     dplyr::select(location, date=week_end,point=flu.admits) %>%
     dplyr::mutate(model="Observed")
 
+  ## get appropriate boundaries based on specified width of PI
+  ## default is 0.95 ...
+  ## which would estrict to q0.025 (lower) and q0.975 (upper)
+  if(!is.null(pi)) {
+    lower_bound <-
+      round(0.5 - (pi/2),3) %>%
+      as.character(.) %>%
+      stringr::str_pad(.,width = 5, pad = "0", side = "right")
+
+    upper_bound <-
+      round(0.5 + (pi/2),3) %>%
+      as.character(.) %>%
+      stringr::str_pad(.,width = 5, pad = "0", side = "right")
+
+    tmp_forecasted <-
+      submission %>%
+      ## force all quantile representations to be 0.150 vs 0.15 (for example) formatting
+      dplyr::mutate(quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right")) %>%
+      dplyr::group_by(model) %>%
+      dplyr::filter(type=="point" | quantile == lower_bound | quantile == upper_bound)
+
+    ## get number of models to control alpha for PI below
+    n_models <- dplyr::n_groups(tmp_forecasted)
+  } else {
+    tmp_forecasted <-
+      submission %>%
+      dplyr::group_by(model) %>%
+      dplyr::filter(type == "point")
+  }
+
   # Grab the forecasted data
   forecasted <-
-    submission %>%
-    dplyr::group_by(model) %>%
-    dplyr::filter(type=="point" | quantile == "0.025" | quantile == "0.975") %>%
+    tmp_forecasted %>%
     dplyr::filter(location %in% loc) %>%
     dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
     dplyr::select(-type) %>%
     tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
     dplyr::select(location, date=target_end_date,quantile, value, model) %>%
     dplyr::mutate(value = as.numeric(value)) %>%
+    dplyr::mutate(quantile = ifelse(quantile == lower_bound, "lower",
+                                    ifelse(quantile == upper_bound, "upper",
+                                           quantile))) %>%
     tidyr::spread(quantile, value)
 
   # Bind them
@@ -276,11 +307,15 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE, .model = 
     ggplot2::labs(x = "Date", y = NULL) +
     ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank())
 
-  if(pi) {
+  if(!is.null(pi)) {
+
+    ## NOTE: alpha is controlled by the number of models plotted
+    ## if only 1 model is plotted set to 0.5 so the ribbon isnt solid
+    pi_alpha <- ifelse(n_models > 1, 1/n_models, 0.5)
     p <-
       p +
-      ggplot2::geom_ribbon(ggplot2::aes(fill = model, ymin = `0.025`, ymax = `0.975`),
-                           alpha = 0.5)
+      ggplot2::geom_ribbon(ggplot2::aes(fill = model, ymin = lower, ymax = upper),
+                           alpha = pi_alpha)
   }
 
   return(p)

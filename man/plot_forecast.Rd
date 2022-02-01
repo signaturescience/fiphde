@@ -4,7 +4,7 @@
 \alias{plot_forecast}
 \title{Plot forecasts}
 \usage{
-plot_forecast(.data, submission, location = "US", pi = TRUE, .model = NULL)
+plot_forecast(.data, submission, location = "US", pi = 0.95, .model = NULL)
 }
 \arguments{
 \item{.data}{Historical truth data for all locations and outcomes in submission targets}
@@ -13,7 +13,7 @@ plot_forecast(.data, submission, location = "US", pi = TRUE, .model = NULL)
 
 \item{location}{Vector specifying locations to filter to; 'US' by default.}
 
-\item{pi}{Logical as to whether or not the plot should include 95\% prediction interval; default is \code{TRUE}}
+\item{pi}{Width of prediction interval to plot; default is \code{0.95} for 95\% PI; if set to \code{NULL} the PI will not be plotted}
 
 \item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
 }
