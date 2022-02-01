@@ -218,6 +218,12 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp, combo_20220110, location = c("34","36"))
 #' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
 #' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+#'
+#' ## demonstrating different prediction interval widths
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.5)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.9)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
 #' }
 plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL) {
 
@@ -264,28 +270,37 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
       dplyr::group_by(model) %>%
       dplyr::filter(type=="point" | quantile == lower_bound | quantile == upper_bound)
 
+    # Grab the forecasted data
+    forecasted <-
+      tmp_forecasted %>%
+      dplyr::filter(location %in% loc) %>%
+      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::select(-type) %>%
+      tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
+      dplyr::select(location, date=target_end_date,quantile, value, model) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::mutate(quantile = ifelse(quantile == lower_bound, "lower",
+                                      ifelse(quantile == upper_bound, "upper",
+                                             quantile))) %>%
+      tidyr::spread(quantile, value)
+
     ## get number of models to control alpha for PI below
     n_models <- dplyr::n_groups(tmp_forecasted)
   } else {
-    tmp_forecasted <-
+
+    # Grab the forecasted data
+    forecasted <-
       submission %>%
       dplyr::group_by(model) %>%
-      dplyr::filter(type == "point")
+      dplyr::filter(type == "point") %>%
+      dplyr::filter(location %in% loc) %>%
+      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::select(-type) %>%
+      tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
+      dplyr::select(location, date=target_end_date,quantile, value, model) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      tidyr::spread(quantile, value)
   }
-
-  # Grab the forecasted data
-  forecasted <-
-    tmp_forecasted %>%
-    dplyr::filter(location %in% loc) %>%
-    dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
-    dplyr::select(-type) %>%
-    tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
-    dplyr::select(location, date=target_end_date,quantile, value, model) %>%
-    dplyr::mutate(value = as.numeric(value)) %>%
-    dplyr::mutate(quantile = ifelse(quantile == lower_bound, "lower",
-                                    ifelse(quantile == upper_bound, "upper",
-                                           quantile))) %>%
-    tidyr::spread(quantile, value)
 
   # Bind them
   bound <-
