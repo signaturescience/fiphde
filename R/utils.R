@@ -231,6 +231,11 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
     submission$model <- .model
   }
 
+  validpi <- sort(unique(round(abs(2*(q-0.5)),2)))[-1]
+  if (!is.null(pi) && !(pi %in% validpi)) {
+    stop(paste("pi must be NULL or one of:", paste(validpi, collapse=" ")))
+  }
+
   if (!("model" %in% colnames(submission))) submission$model <- "Forecast"
 
   ## pretty sure we need to add an intermediary variable for the filter below
