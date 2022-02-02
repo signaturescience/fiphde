@@ -335,6 +335,23 @@ dev.off()
 
 
 ################################################################################
+## create a PDF with all models plotted together
+combo_sub <-
+  bind_rows(
+    mutate(all_prepped, model = "SigSci-CREG"),
+    mutate(formatted_list$ensemble, model = "SigSci-TSENS"),
+    mutate(formatted_list$ets, model = "SigSci-TSENS (ETS)"),
+    mutate(formatted_list$arima, model = "SigSci-TSENS (ARIMA)")
+  )
+
+pdf(paste0("submission/", this_monday(), "-all-models.pdf"), width=11.5, height=8)
+for(loc in unique(combo_sub$location)) {
+  p <- plot_forecast(bound_truth, combo_sub, location = loc)
+  print(p)
+}
+dev.off()
+
+################################################################################
 ## save model formulas / arima params / objects for posterity
 
 ili_params <-
