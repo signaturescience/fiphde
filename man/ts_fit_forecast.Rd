@@ -9,6 +9,7 @@ ts_fit_forecast(
   outcome = "flu.admits",
   horizon = 4L,
   trim_date = "2021-01-01",
+  models = c("arima", "ets"),
   constrained = TRUE,
   param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0),
   covariates = c("hosp_rank", "ili_rank"),
@@ -23,6 +24,8 @@ ts_fit_forecast(
 \item{horizon}{Number of weeks ahead}
 
 \item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
+
+\item{models}{Which kind of models do you want to fit? Choices are \code{arima} (ARIMA), \code{ets} (exponential smoothing), and/or \code{nnetar} (neural net). Default is \code{c("arima", "ets")}.}
 
 \item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
 
