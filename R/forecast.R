@@ -4,6 +4,7 @@
 #' @param outcome The outcome variable to model (default `"flu.admits"`).
 #' @param horizon Number of weeks ahead
 #' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
+#' @param models Which kind of models do you want to fit? Choices are `arima` (ARIMA), `ets` (exponential smoothing), and/or `nnetar` (neural net). Default is `c("arima", "ets")`.
 #' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
 #' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
 #' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
@@ -37,6 +38,7 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
                             outcome="flu.admits",
                             horizon=4L,
                             trim_date="2021-01-01",
+                            models=c("arima", "ets"),
                             constrained=TRUE,
                             param_space=list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0),
                             covariates=c("hosp_rank", "ili_rank"),
@@ -49,7 +51,7 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
       dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d"))
   }
 
-
+  # Create the ARIMA model formula
   param_space <- lapply(param_space, deparse)
   if (constrained) {
     .stepwise <- FALSE
@@ -66,16 +68,48 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
       arima_formula <- stats::reformulate("0", response=outcome)
     }
   }
+
+  # Create the ETS model formula
+  # fixme: need to allow for seasonality with another function argument
   ets_formula <- stats::reformulate("season(method='N')", response=outcome)
 
-  message(paste0("ARIMA formula: ", Reduce(paste, deparse(arima_formula))))
-  message(paste0("ETS   formula: ", Reduce(paste, deparse(ets_formula))))
+  # Create the NNETAR formula
+  # fixme: make this a function argument
+  nnetar_formula <- stats::reformulate("AR(P=1)", response=outcome)
 
-  tsfit <- fabletools::model(.data = prepped_hosp_tsibble,
-                             arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise),
-                             ets = fable::ETS(ets_formula))
+
+  # Create a list to hold model objects. Each model has a location column and a column for that model
+  tsfit <- list()
+
+  # If "arima" is in the models you specify, fit an arima model
+  if ("arima" %in% models) {
+    message(paste0("ARIMA  formula: ", Reduce(paste, deparse(arima_formula))))
+    tsfit$arima <- fabletools::model(.data = prepped_hosp_tsibble,
+                                     arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise))
+  }
+
+  # If "ets" is in the models you specify, fit an ETS model
+  if ("ets" %in% models) {
+    message(paste0("ETS    formula: ", Reduce(paste, deparse(ets_formula))))
+    tsfit$ets   <- fabletools::model(.data = prepped_hosp_tsibble,
+                                     ets = fable::ETS(ets_formula))
+  }
+
+  if ("nnetar" %in% models) {
+    message(paste0("NNETAR formula: ", Reduce(paste, deparse(nnetar_formula))))
+    tsfit$nnetar <- fabletools::model(.data = prepped_hosp_tsibble,
+                                      nnetar = fable::NNETAR(nnetar_formula))
+  }
+
+  # equivalent to:
+  # tsfit[[1]] %>% inner_join(tsfit[[2]]) %>% inner_join(tsfit[[3]]) %>% inner_join(tsfit[[4]])...
+  # this may need to be a full_join, if some locations that don't fit don't come through at all.
+  # e.g. if an ARIMA model doesn't fit for one location but the ETS does, you still want the ETS model for that location.
+  tsfit <- purrr::reduce(tsfit, dplyr::inner_join, by="location")
+
 
   # Ensemble the ARIMA and ETS models
+  # Hard-coded for now - can always ensemble other models if/when we add them.
   if (ensemble) {
     tsfit <-
       tsfit %>%
