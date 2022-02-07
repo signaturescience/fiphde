@@ -145,14 +145,17 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
     dplyr::mutate(target_end_date=lubridate::as_date(yweek)+lubridate::days(5)) %>%
     dplyr::mutate(forecast_date=lubridate::today()) %>%
     dplyr::select(.model, forecast_date, target, target_end_date, location, type, quantile, value) %>%
+    ## round up for counts of people if using .counts=TRUE
+    ## ifelse tries to recycle .counts or something weird here, so make a new column and get rid of it
+    dplyr::mutate(.counts=.counts) %>%
+    dplyr::mutate(value = ifelse(.counts, ceiling(value), value)) %>%
+    dplyr::select(-.counts) %>%
+    dplyr::mutate(quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right")) %>%
+    dplyr::mutate(value = as.character(value)) %>%
     # split by the type of model
     split(.$.model) %>%
     # remove the .model variable from each list item
-    purrr::map(dplyr::select, -.model) %>%
-    ## round up for counts of people if using .counts=TRUE
-    purrr::map(~dplyr::mutate(., value = ifelse(.counts, ceiling(value), value))) %>%
-    purrr::map(~dplyr::mutate(., quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right"))) %>%
-    purrr::map(~dplyr::mutate(., value = as.character(value)))
+    purrr::map(dplyr::select, -.model)
     ## fix duplicating quantile rows
     # purrr::map(dplyr::distinct)
 
