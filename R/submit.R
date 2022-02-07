@@ -4,6 +4,7 @@
 #'
 #' @param .forecasts Forecasts to be formatted for submission; if method is "ts" this should be forecasts from [ts_fit_forecast]; otherwise this must be a `tibble` with forecast output (e.g. output from [glm_forecast]) with a colum designating "location"
 #' @param method Method for forecasting; default is "ts" which will trigger the use of [ts_format_for_submission] internally
+#' @param .target Name of the target in the forecast. Default is `"wk ahead inc flu hosp"`.
 #'
 #' @return A named list of tibbles, one for each model, formatted for submission.
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
@@ -38,7 +39,7 @@
 #' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 #' formatted_list
 #' }
-format_for_submission <- function(.forecasts, method = "ts") {
+format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead inc flu hosp") {
 
   if(method == "ts") {
     res <- ts_format_for_submission(.forecasts)
@@ -49,7 +50,7 @@ format_for_submission <- function(.forecasts, method = "ts") {
       dplyr::group_by(epiyear,epiweek) %>%
       dplyr::mutate(horizon = dplyr::cur_group_id()) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(target = paste0(horizon, " wk ahead inc flu hosp")) %>%
+      dplyr::mutate(target = paste(horizon, .target)) %>%
       dplyr::mutate(target_end_date = MMWRweek::MMWRweek2Date(epiyear,epiweek,7)) %>%
       dplyr::mutate(forecast_date = lubridate::today()) %>%
       dplyr::mutate(type = ifelse(is.na(quantile), "point", "quantile")) %>%
@@ -71,6 +72,8 @@ format_for_submission <- function(.forecasts, method = "ts") {
 #' @description Format time series forecast for submission.
 #' @details Uses quantiles `c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)` in the built-in `fiphde:::q`, using an accessory table `fiphde:::quidk`. See `data-raw/generate-sysdata.R` for details.
 #' @param tsfor The forecast from [ts_fit_forecast].
+#' @param .target Name of the target in the forecast. Default is `"wk ahead inc flu hosp"`.
+#' @param .counts Logical. Default `TRUE` indicates that the target outcome is a count, and should be rounded off at an integer.
 #' @return A named list of tibbles, one for each model, formatted for submission.
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
 #' @export
@@ -101,7 +104,7 @@ format_for_submission <- function(.forecasts, method = "ts") {
 #' formatted_list <- ts_format_for_submission(hosp_fitfor$tsfor)
 #' formatted_list
 #' }
-ts_format_for_submission <- function (tsfor) {
+ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .counts=TRUE) {
 
   # Get the point estimates
   point_estimates <-
@@ -136,7 +139,7 @@ ts_format_for_submission <- function (tsfor) {
     dplyr::group_by(yweek) %>%
     dplyr::mutate(N=dplyr::cur_group_id()) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(target=sprintf("%d wk ahead inc flu hosp", N)) %>%
+    dplyr::mutate(target = paste(N, .target)) %>%
     dplyr::select(-N) %>%
     # Fix dates: as_date(yweek) returns the MONDAY that starts that week. add 5 days to get the Saturday date.
     dplyr::mutate(target_end_date=lubridate::as_date(yweek)+lubridate::days(5)) %>%
@@ -146,8 +149,8 @@ ts_format_for_submission <- function (tsfor) {
     split(.$.model) %>%
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model) %>%
-    ## round up for counts of people
-    purrr::map(~dplyr::mutate(., value = ceiling(value))) %>%
+    ## round up for counts of people if using .counts=TRUE
+    purrr::map(~dplyr::mutate(., value = ifelse(.counts, ceiling(value), value))) %>%
     purrr::map(~dplyr::mutate(., quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right"))) %>%
     purrr::map(~dplyr::mutate(., value = as.character(value)))
     ## fix duplicating quantile rows
