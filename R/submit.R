@@ -145,6 +145,8 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
     dplyr::mutate(target_end_date=lubridate::as_date(yweek)+lubridate::days(5)) %>%
     dplyr::mutate(forecast_date=lubridate::today()) %>%
     dplyr::select(.model, forecast_date, target, target_end_date, location, type, quantile, value) %>%
+    # Bound at zero
+    dplyr::mutate(value=ifelse(value<0, 0, value)) %>%
     ## round up for counts of people if using .counts=TRUE
     ## ifelse tries to recycle .counts or something weird here, so make a new column and get rid of it
     dplyr::mutate(.counts=.counts) %>%
@@ -158,11 +160,6 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
     purrr::map(dplyr::select, -.model)
     ## fix duplicating quantile rows
     # purrr::map(dplyr::distinct)
-
-  # Bound at zero
-  submission_list <-
-    submission_list %>%
-    purrr::map(~dplyr::mutate(., value=ifelse(value<0, 0, value)))
 
   return(submission_list)
 
