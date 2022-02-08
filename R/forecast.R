@@ -1,12 +1,13 @@
 #' @title Fit and forecast with time-series approaches.
 #' @description Fit and forecast with time-series approaches.
-#' @param prepped_hosp_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
+#' @param prepped_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
 #' @param outcome The outcome variable to model (default `"flu.admits"`).
 #' @param horizon Number of weeks ahead
 #' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
 #' @param models Which kind of models do you want to fit? Choices are `arima` (ARIMA), `ets` (exponential smoothing), and/or `nnetar` (neural net). Default is `c("arima", "ets")`.
-#' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
-#' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
+#' @param params A list of lists, which needs better documentation.
+# #' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
+# #' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
 #' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
 #' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
 #' @return A list of the time series fit, time series forecast, and model formulas.
@@ -14,6 +15,7 @@
 #' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
 #' - `arima_formula`: A formula object: the ARIMA model formula used.
 #' - `ets_formula`: A formula object: the nonseasonal exponential smoothing model formula used.
+#' - `nnetar_formula`: A formula object: autoregressive feedforward neural network model formula used.
 #' @export
 #' @examples
 #' \dontrun{
@@ -21,43 +23,47 @@
 #' ## save(h_raw, file="~/Downloads/h_raw.rd")
 #' ## load(file="~/Downloads/h_raw.rd")
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
-#' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+#' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                      epiyear = epiyear,
 #'                                      epiweek=epiweek,
 #'                                      key=location)
-#' prepped_hosp_tsibble <-
-#'   prepped_hosp_tsibble %>%
+#' prepped_tsibble <-
+#'   prepped_tsibble %>%
 #'   dplyr::filter(location %in% c("US", "51"))
-#' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
 #'                                constrained=TRUE,
 #'                                covariates=c("hosp_rank", "ili_rank"))
 #' }
-ts_fit_forecast <- function(prepped_hosp_tsibble,
+ts_fit_forecast <- function(prepped_tsibble,
                             outcome="flu.admits",
                             horizon=4L,
                             trim_date="2021-01-01",
                             models=c("arima", "ets"),
-                            constrained=TRUE,
-                            param_space=list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0),
+                            params=list(
+                              arima=list(param_space=list(P=0, D=0, Q=0, p=1:2, d=0:2, q=0),
+                                         constrained=TRUE),
+                              ets=list(NULL),
+                              nnetar=list(NULL)
+                            ),
                             covariates=c("hosp_rank", "ili_rank"),
                             ensemble=TRUE) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
-    prepped_hosp_tsibble <-
-      prepped_hosp_tsibble %>%
+    prepped_tsibble <-
+      prepped_tsibble %>%
       dplyr::filter(week_start > as.Date(trim_date, format = "%Y-%m-%d"))
   }
 
   # Create the ARIMA model formula
-  param_space <- lapply(param_space, deparse)
-  if (constrained) {
+  params$arima$paramdeparse <- lapply(params$arima$param_space, deparse)
+  if (params$arima$constrained) {
     .stepwise <- FALSE
     .approximation <- FALSE
-    PDQ <- sprintf("PDQ(%s,%s,%s)", param_space$P,param_space$D,param_space$Q)
-    pdq <- sprintf("pdq(%s,%s,%s)", param_space$p,param_space$d,param_space$q)
+    PDQ <- sprintf("PDQ(%s,%s,%s)", params$arima$paramdeparse$P,params$arima$paramdeparse$D,params$arima$paramdeparse$Q)
+    pdq <- sprintf("pdq(%s,%s,%s)", params$arima$paramdeparse$p,params$arima$paramdeparse$d,params$arima$paramdeparse$q)
     arima_formula <- stats::reformulate(c(PDQ, pdq, covariates), response=outcome)
   } else {
     .stepwise <- TRUE
@@ -70,11 +76,11 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
   }
 
   # Create the ETS model formula
-  # fixme: need to allow for seasonality with another function argument
+  # fixme: create the formula based on the param list in the function arguments
   ets_formula <- stats::reformulate("season(method='N')", response=outcome)
 
   # Create the NNETAR formula
-  # fixme: make this a function argument
+  # fixme: create the formula based on the param list in the function arguments
   nnetar_formula <- stats::reformulate("AR(P=1)", response=outcome)
 
 
@@ -84,20 +90,20 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
   # If "arima" is in the models you specify, fit an arima model
   if ("arima" %in% models) {
     message(paste0("ARIMA  formula: ", Reduce(paste, deparse(arima_formula))))
-    tsfit$arima <- fabletools::model(.data = prepped_hosp_tsibble,
+    tsfit$arima <- fabletools::model(.data = prepped_tsibble,
                                      arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise))
   }
 
   # If "ets" is in the models you specify, fit an ETS model
   if ("ets" %in% models) {
     message(paste0("ETS    formula: ", Reduce(paste, deparse(ets_formula))))
-    tsfit$ets   <- fabletools::model(.data = prepped_hosp_tsibble,
+    tsfit$ets   <- fabletools::model(.data = prepped_tsibble,
                                      ets = fable::ETS(ets_formula))
   }
 
   if ("nnetar" %in% models) {
     message(paste0("NNETAR formula: ", Reduce(paste, deparse(nnetar_formula))))
-    tsfit$nnetar <- fabletools::model(.data = prepped_hosp_tsibble,
+    tsfit$nnetar <- fabletools::model(.data = prepped_tsibble,
                                       nnetar = fable::NNETAR(nnetar_formula))
   }
 
@@ -110,6 +116,7 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
 
   # Ensemble the ARIMA and ETS models
   # Hard-coded for now - can always ensemble other models if/when we add them.
+  # fixme: this could be more flexible
   if (ensemble) {
     tsfit <-
       tsfit %>%
@@ -127,7 +134,7 @@ ts_fit_forecast <- function(prepped_hosp_tsibble,
     # So we can just join this back to the historical severity data. But if we have other
     # covariates, you'll have to figure out how to get them, via forecast or some other means.
     new_data <-
-      tsibble::new_data(prepped_hosp_tsibble, n=horizon) %>%
+      tsibble::new_data(prepped_tsibble, n=horizon) %>%
       dplyr::mutate(epiweek=lubridate::epiweek(yweek)) %>%
       dplyr::inner_join(historical_severity, by="epiweek")
     tsfor <- fabletools::forecast(tsfit, new_data=new_data)

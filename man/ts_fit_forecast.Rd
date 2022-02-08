@@ -5,19 +5,19 @@
 \title{Fit and forecast with time-series approaches.}
 \usage{
 ts_fit_forecast(
-  prepped_hosp_tsibble,
+  prepped_tsibble,
   outcome = "flu.admits",
   horizon = 4L,
   trim_date = "2021-01-01",
   models = c("arima", "ets"),
-  constrained = TRUE,
-  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0),
+  params = list(arima = list(param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2,
+    q = 0), constrained = TRUE), ets = list(NULL), nnetar = list(NULL)),
   covariates = c("hosp_rank", "ili_rank"),
   ensemble = TRUE
 )
 }
 \arguments{
-\item{prepped_hosp_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
+\item{prepped_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
 
 \item{outcome}{The outcome variable to model (default \code{"flu.admits"}).}
 
@@ -27,9 +27,7 @@ ts_fit_forecast(
 
 \item{models}{Which kind of models do you want to fit? Choices are \code{arima} (ARIMA), \code{ets} (exponential smoothing), and/or \code{nnetar} (neural net). Default is \code{c("arima", "ets")}.}
 
-\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
-
-\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
+\item{params}{A list of lists, which needs better documentation.}
 
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
@@ -42,6 +40,7 @@ A list of the time series fit, time series forecast, and model formulas.
 \item \code{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
 \item \code{arima_formula}: A formula object: the ARIMA model formula used.
 \item \code{ets_formula}: A formula object: the nonseasonal exponential smoothing model formula used.
+\item \code{nnetar_formula}: A formula object: autoregressive feedforward neural network model formula used.
 }
 }
 \description{
@@ -53,14 +52,14 @@ h_raw <- get_hdgov_hosp(limitcols=TRUE)
 ## save(h_raw, file="~/Downloads/h_raw.rd")
 ## load(file="~/Downloads/h_raw.rd")
 prepped_hosp <- prep_hdgov_hosp(h_raw)
-prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+prepped_tsibble <- make_tsibble(prepped_hosp,
                                      epiyear = epiyear,
                                      epiweek=epiweek,
                                      key=location)
-prepped_hosp_tsibble <-
-  prepped_hosp_tsibble \%>\%
+prepped_tsibble <-
+  prepped_tsibble \%>\%
   dplyr::filter(location \%in\% c("US", "51"))
-hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
                                constrained=TRUE,
