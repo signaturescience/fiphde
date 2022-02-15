@@ -9,11 +9,12 @@ ts_fit_forecast(
   outcome = "flu.admits",
   horizon = 4L,
   trim_date = "2021-01-01",
-  models = c("arima", "ets"),
-  params = list(arima = list(param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2,
-    q = 0), constrained = TRUE), ets = list(NULL), nnetar = list(NULL)),
+  models = list(arima = "pdq(0, 1, 0:2)", ets =
+    "season(method=c(\\"N\\",\\"A\\",\\"M\\"), period=\\"3 months\\")", nnetar =
+    "AR(P=1)"),
   covariates = c("hosp_rank", "ili_rank"),
-  ensemble = TRUE
+  ensemble = TRUE,
+  ...
 )
 }
 \arguments{
@@ -25,13 +26,13 @@ ts_fit_forecast(
 
 \item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
 
-\item{models}{Which kind of models do you want to fit? Choices are \code{arima} (ARIMA), \code{ets} (exponential smoothing), and/or \code{nnetar} (neural net). Default is \code{c("arima", "ets")}.}
-
-\item{params}{A list of lists, which needs better documentation.}
+\item{models}{FIXME}
 
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
 \item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
+
+\item{...}{FIXME}
 }
 \value{
 A list of the time series fit, time series forecast, and model formulas.
@@ -62,7 +63,14 @@ prepped_tsibble <-
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               constrained=TRUE,
-                               covariates=c("hosp_rank", "ili_rank"))
+                               stepwise=FALSE,
+                               approximation=FALSE)
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               models=list(arima="pdq(0, 1, 0:2)",
+                                           ets="season(method='N')"),
+                               stepwise=FALSE,
+                               approximation=FALSE)
 }
 }
