@@ -9,7 +9,7 @@ ts_fit_forecast(
   outcome = "flu.admits",
   horizon = 4L,
   trim_date = "2021-01-01",
-  models = list(arima = "pdq(0, 1, 0:2)", ets =
+  models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
     "season(method=c(\\"N\\",\\"A\\",\\"M\\"), period=\\"3 months\\")", nnetar =
     "AR(P=1)"),
   covariates = c("hosp_rank", "ili_rank"),
@@ -68,8 +68,8 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               models=list(arima="pdq(0, 1, 0:2)",
-                                           ets="season(method='N')"),
+                               models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
+                                           ets='season(method=c("N","A","M"), period="3 months")'),
                                stepwise=FALSE,
                                approximation=FALSE)
 }
