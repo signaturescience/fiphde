@@ -41,14 +41,21 @@ ts_fit_forecast <- function(prepped_tsibble,
                             horizon=4L,
                             trim_date="2021-01-01",
                             models=c("arima", "ets"),
-                            params=list(
-                              arima=list(param_space=list(P=0, D=0, Q=0, p=1:2, d=0:2, q=0),
-                                         constrained=TRUE),
-                              ets=list(NULL),
-                              nnetar=list(NULL)
-                            ),
+                            params=NULL,
                             covariates=c("hosp_rank", "ili_rank"),
                             ensemble=TRUE) {
+
+  if(is.null(params$arima)) {
+    params$arima <- list(constrained=TRUE,
+                         param_space=list(p=0, d=1, q=0:2))
+  }
+  if(is.null(params$ets)) {
+    params$ets <- list(season=TRUE)
+  }
+  if(is.null(params$nnetar)) {
+    params$nnetar <- list(P=1)
+    params$nnetar <- list(formula=list(P=1, period=NULL))
+  }
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -60,14 +67,14 @@ ts_fit_forecast <- function(prepped_tsibble,
   # Create the ARIMA model formula
   params$arima$paramdeparse <- lapply(params$arima$param_space, deparse)
   if (params$arima$constrained) {
-    .stepwise <- FALSE
-    .approximation <- FALSE
+    params$arima$stepwise <- FALSE
+    params$arima$approximation <- FALSE
     PDQ <- sprintf("PDQ(%s,%s,%s)", params$arima$paramdeparse$P,params$arima$paramdeparse$D,params$arima$paramdeparse$Q)
     pdq <- sprintf("pdq(%s,%s,%s)", params$arima$paramdeparse$p,params$arima$paramdeparse$d,params$arima$paramdeparse$q)
     arima_formula <- stats::reformulate(c(PDQ, pdq, covariates), response=outcome)
   } else {
-    .stepwise <- TRUE
-    .approximation <- TRUE
+    params$arima$stepwise <- TRUE
+    params$arima$approximation <- TRUE
     if (!is.null(covariates)) {
       arima_formula <- stats::reformulate(covariates, response=outcome)
     } else {
@@ -76,12 +83,22 @@ ts_fit_forecast <- function(prepped_tsibble,
   }
 
   # Create the ETS model formula
-  # fixme: create the formula based on the param list in the function arguments
-  ets_formula <- stats::reformulate("season(method='N')", response=outcome)
+  # if seasonal=FALSE, specify a nonseasonal model
+  if (!params$ets$season) {
+    ets_formula <- stats::reformulate("season(method='N')", response=outcome)
+  } else {
+    ets_formula <- stats::reformulate("season(method=c('N', 'A', 'M'))", response=outcome)
+  }
 
   # Create the NNETAR formula
   # fixme: create the formula based on the param list in the function arguments
-  nnetar_formula <- stats::reformulate("AR(P=1)", response=outcome)
+  if (is.null(params$nnetar$formula$period)) {
+    nnetar_formula <- stats::reformulate(sprintf("AR(P=%s)", params$nnetar$formula$P),
+                                         response=outcome)
+  } else {
+    nnetar_formula <- stats::reformulate(sprintf("AR(P=%s, period='%s')", params$nnetar$formula$P, params$nnetar$formula$period),
+                                         response=outcome)
+  }
 
 
   # Create a list to hold model objects. Each model has a location column and a column for that model
@@ -91,7 +108,9 @@ ts_fit_forecast <- function(prepped_tsibble,
   if ("arima" %in% models) {
     message(paste0("ARIMA  formula: ", Reduce(paste, deparse(arima_formula))))
     tsfit$arima <- fabletools::model(.data = prepped_tsibble,
-                                     arima = fable::ARIMA(arima_formula, stepwise=.stepwise, approximation=.stepwise))
+                                     arima = fable::ARIMA(arima_formula,
+                                                          stepwise=params$arima$stepwise,
+                                                          approximation=params$arima$stepwise))
   }
 
   # If "ets" is in the models you specify, fit an ETS model
