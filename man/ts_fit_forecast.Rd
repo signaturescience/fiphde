@@ -5,19 +5,18 @@
 \title{Fit and forecast with time-series approaches.}
 \usage{
 ts_fit_forecast(
-  prepped_hosp_tsibble,
+  prepped_tsibble,
   outcome = "flu.admits",
   horizon = 4L,
   trim_date = "2021-01-01",
-  models = c("arima", "ets"),
-  constrained = TRUE,
-  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0),
+  models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
+    "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
   ensemble = TRUE
 )
 }
 \arguments{
-\item{prepped_hosp_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
+\item{prepped_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
 
 \item{outcome}{The outcome variable to model (default \code{"flu.admits"}).}
 
@@ -25,11 +24,14 @@ ts_fit_forecast(
 
 \item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
 
-\item{models}{Which kind of models do you want to fit? Choices are \code{arima} (ARIMA), \code{ets} (exponential smoothing), and/or \code{nnetar} (neural net). Default is \code{c("arima", "ets")}.}
-
-\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
-
-\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
+\item{models}{A list of right hand side formula contents for models you want to run. See the examples.
+\itemize{
+\item Defaults to \code{list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)}
+\item Setting the type of model to \code{NULL} turns the model off.
+\item To run an unconstrained ARIMA: \code{list(arima='PDQ() + pdq()')}. See also \link[fable:ARIMA]{fable::ARIMA}.
+\item To run a seasonal exponential smoothing: \code{list(ets='season(method=c("A", "M", "N"), period="3 months")')}. See also \link[fable:ETS]{fable::ETS}.
+\item To run an autoregressive neural net with P=1: \code{list(nnetar="AR(P=1)")}. See also \link[fable:NNETAR]{fable::NNETAR}.
+}}
 
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
@@ -40,8 +42,7 @@ A list of the time series fit, time series forecast, and model formulas.
 \itemize{
 \item \code{tsfit}: A \code{mdl_df} class "mable" with one row for each location, columns for arima and ets models.
 \item \code{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
-\item \code{arima_formula}: A formula object: the ARIMA model formula used.
-\item \code{ets_formula}: A formula object: the nonseasonal exponential smoothing model formula used.
+\item \code{formulas}: A list of ARIMA, ETS, and/or NNETAR formulas
 }
 }
 \description{
@@ -53,17 +54,25 @@ h_raw <- get_hdgov_hosp(limitcols=TRUE)
 ## save(h_raw, file="~/Downloads/h_raw.rd")
 ## load(file="~/Downloads/h_raw.rd")
 prepped_hosp <- prep_hdgov_hosp(h_raw)
-prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+prepped_tsibble <- make_tsibble(prepped_hosp,
                                      epiyear = epiyear,
                                      epiweek=epiweek,
                                      key=location)
-prepped_hosp_tsibble <-
-  prepped_hosp_tsibble \%>\%
+prepped_tsibble <-
+  prepped_tsibble \%>\%
   dplyr::filter(location \%in\% c("US", "51"))
-hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+# Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               constrained=TRUE,
                                covariates=c("hosp_rank", "ili_rank"))
+# Run an unconstrained ARIMA, seasonal ETS, and NNETAR AR P=1
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               covariates=c("hosp_rank", "ili_rank"),
+                               models=list(arima='PDQ() + pdq()',
+                                           ets='season(method=c("A", "M", "N"), period="3 months")',
+                                           nnetar="AR(P=1)"))
 }
 }
