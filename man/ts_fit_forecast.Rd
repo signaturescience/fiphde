@@ -10,11 +10,9 @@ ts_fit_forecast(
   horizon = 4L,
   trim_date = "2021-01-01",
   models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
-    "season(method=c(\\"N\\",\\"A\\",\\"M\\"), period=\\"3 months\\")", nnetar =
-    "AR(P=1)"),
+    "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
-  ensemble = TRUE,
-  ...
+  ensemble = TRUE
 )
 }
 \arguments{
@@ -26,22 +24,25 @@ ts_fit_forecast(
 
 \item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
 
-\item{models}{FIXME}
+\item{models}{A list of right hand side formula contents for models you want to run. See the examples.
+\itemize{
+\item Defaults to \code{list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)}
+\item Setting the type of model to \code{NULL} turns the model off.
+\item To run an unconstrained ARIMA: \code{list(arima='PDQ() + pdq()')}. See also \link[fable:ARIMA]{fable::ARIMA}.
+\item To run a seasonal exponential smoothing: \code{list(ets='season(method=c("A", "M", "N"), period="3 months")')}. See also \link[fable:ETS]{fable::ETS}.
+\item To run an autoregressive neural net with P=1: \code{list(nnetar="AR(P=1)")}. See also \link[fable:NNETAR]{fable::NNETAR}.
+}}
 
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
 \item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
-
-\item{...}{FIXME}
 }
 \value{
 A list of the time series fit, time series forecast, and model formulas.
 \itemize{
 \item \code{tsfit}: A \code{mdl_df} class "mable" with one row for each location, columns for arima and ets models.
 \item \code{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
-\item \code{arima_formula}: A formula object: the ARIMA model formula used.
-\item \code{ets_formula}: A formula object: the nonseasonal exponential smoothing model formula used.
-\item \code{nnetar_formula}: A formula object: autoregressive feedforward neural network model formula used.
+\item \code{formulas}: A list of ARIMA, ETS, and/or NNETAR formulas
 }
 }
 \description{
@@ -60,17 +61,18 @@ prepped_tsibble <- make_tsibble(prepped_hosp,
 prepped_tsibble <-
   prepped_tsibble \%>\%
   dplyr::filter(location \%in\% c("US", "51"))
+# Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               stepwise=FALSE,
-                               approximation=FALSE)
+                               covariates=c("hosp_rank", "ili_rank"))
+# Run an unconstrained ARIMA, seasonal ETS, and NNETAR AR P=1
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
-                                           ets='season(method=c("N","A","M"), period="3 months")'),
-                               stepwise=FALSE,
-                               approximation=FALSE)
+                               covariates=c("hosp_rank", "ili_rank"),
+                               models=list(arima='PDQ() + pdq()',
+                                           ets='season(method=c("A", "M", "N"), period="3 months")',
+                                           nnetar="AR(P=1)"))
 }
 }
