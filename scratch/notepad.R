@@ -16,6 +16,13 @@ data_dir <- "C:/Users/sjessa/OneDrive - Signature Science, LLC/Documents/FIPDHE/
 fps <- rev(list.files(data_dir, pattern = "*.csv$",
                       recursive = TRUE, full.names = TRUE))
 
+# read in ground truth data
+prepped_hosp <-
+  get_hdgov_hosp(limitcols = TRUE) %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+  dplyr::filter(abbreviation != "DC")
+
+# bind all dfs together with filename as key
 read_forc <- function(fp) {
   tmp <- read_csv(fp)
   tmp %>%
@@ -25,20 +32,13 @@ read_forc <- function(fp) {
 
 sub_forecasts <- map_df(fps, read_forc)
 
-# inspect each cvs for debugging
-# a <- read_csv(fps[1])
-# b <- read_csv(fps[2])
-# c <- read_csv(fps[3])
-# d <- read_csv(fps[4])
-
-# bind all dfs together with filename as key
-all_forecasts <- read_csv(fps, id = "filename") %>%
-#  dplyr::mutate(filename = ))
-  dplyr::mutate(filename = str_extract(filename, "([^/]+$)"))
+# all_forecasts <- read_csv(fps, id = "filename") %>%
+# #  dplyr::mutate(filename = ))
+#   dplyr::mutate(filename = str_extract(filename, "([^/]+$)"))
 
 #test_forecasts <- purrr::map_df(fps, read_csv)
 
-unique(all_forecasts$filename)
+#unique(all_forecasts$filename)
 dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 
 sub_loc <- "04"
