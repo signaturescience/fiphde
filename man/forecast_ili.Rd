@@ -20,6 +20,8 @@ forecast_ili(
 \item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
 
 \item{models}{The list of model parameters passed to \link{ts_fit_forecast}. Defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}. See help for \link{ts_fit_forecast}.}
+
+\item{...}{further arguments passed to \link{ts_fit_forecast} (which are then passed to \link[fable:ARIMA]{fable::ARIMA}.}
 }
 \value{
 A named list containing:

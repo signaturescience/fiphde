@@ -5,6 +5,7 @@
 #' @param horizon Number of weeks ahead
 #' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
 #' @param models A list of right hand side formula contents for models you want to run. See the examples.
+#' @param ... Further arguments that are passed to [fable::ARIMA].
 #' - Defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`
 #' - Setting the type of model to `NULL` turns the model off.
 #' - To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')`. See also [fable::ARIMA].
@@ -141,6 +142,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
 #' @param trim_date Earliest start date you want to use for ILI data. Default `NULL` doesn't trim.
 #' @param models The list of model parameters passed to [ts_fit_forecast]. Defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`. See help for [ts_fit_forecast].
+#' @param ... further arguments passed to [ts_fit_forecast] (which are then passed to [fable::ARIMA].
 #' @return A named list containing:
 #' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
 #' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.
