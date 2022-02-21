@@ -322,7 +322,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
     ggplot2::geom_point(ggplot2::aes(col=model)) +
     ggplot2::geom_line(ggplot2::aes(col=model)) +
     ggplot2::scale_y_continuous(labels = scales::number_format(big.mark = ",")) +
-    ggplot2::facet_wrap(~location, scales="free", ncol = 3) +
+    ggplot2::facet_wrap(~location, scales="free", ncol = 1) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = "Date", y = NULL) +
     ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank())
