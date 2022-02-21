@@ -232,8 +232,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", constrained=TRUE,
-                         models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
@@ -283,6 +282,17 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
   # extract the fit
   ili_fit <- ili_fit_for$tsfit
 
+  # Get arima params if fitting an arima model
+  if ("arima" %in% names(models)) {
+    arima_params <-
+      ili_fit %>%
+      dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
+      tidyr::unnest_wider(col=x) %>%
+      dplyr::select(-arima)
+  } else {
+    arima_params <- NULL
+  }
+
   # if (type=="arima") {
   #   # Defaults to constrained, non-seasonal model.
   #   if (constrained) {
@@ -302,12 +312,12 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
   #                                                       approximation=NULL))
   #   }
   #
-  #   # Get arima params if fitting an arima model
-  #   arima_params <-
-  #     ili_fit %>%
-  #     dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
-  #     tidyr::unnest_wider(col=x) %>%
-  #     dplyr::select(-arima)
+    # # Get arima params if fitting an arima model
+    # arima_params <-
+    #   ili_fit %>%
+    #   dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
+    #   tidyr::unnest_wider(col=x) %>%
+    #   dplyr::select(-arima)
   #
   # } else if (type=="ets") {
   #   ili_fit <- fabletools::model(ilidat_tsibble, ets=fable::ETS(ili ~ season(method="N")))
