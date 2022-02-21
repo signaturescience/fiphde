@@ -140,9 +140,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' @param ilidat Data returned from [get_cdc_ili].
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
 #' @param trim_date Earliest start date you want to use for ILI data. Default `NULL` doesn't trim.
-#' @param type Either "arima" or "ets" to fit a [fable::ARIMA] or [fable::ETS] model. If using "ets", the `constrained` and `param_space` arguments are ignored.
-#' @param constrained Should the model be constrained to a non-seasonal model? If `TRUE` the parameter space defined in "param_space" argument will be used. See [fable::ARIMA].
-#' @param param_space Named list for ARIMA parameter space constraint; only used if "constrained == `TRUE`"; default is `list(P=0,D=0,Q=0,p=1:2,d=0:2,0)`, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).
+#' @param models The list of model parameters passed to [ts_fit_forecast]. Defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`. See help for [ts_fit_forecast].
 #' @return A named list containing:
 #' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
 #' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.

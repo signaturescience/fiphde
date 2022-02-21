@@ -18,11 +18,7 @@ forecast_ili(
 
 \item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
 
-\item{type}{Either "arima" or "ets" to fit a \link[fable:ARIMA]{fable::ARIMA} or \link[fable:ETS]{fable::ETS} model. If using "ets", the \code{constrained} and \code{param_space} arguments are ignored.}
-
-\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
-
-\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
+\item{models}{The list of model parameters passed to \link{ts_fit_forecast}. Defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}. See help for \link{ts_fit_forecast}.}
 }
 \value{
 A named list containing:
