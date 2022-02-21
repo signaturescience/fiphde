@@ -66,7 +66,14 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
                                covariates=c("hosp_rank", "ili_rank"))
-# Run an unconstrained ARIMA, seasonal ETS, and NNETAR AR P=1
+# Run an unconstrained ARIMA, seasonal ETS, no NNETAR
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               covariates=c("hosp_rank", "ili_rank"),
+                               models=list(arima='PDQ() + pdq()',
+                                           ets='season(method=c("A", "M", "N"), period="3 months")',
+                                           nnetar=NULL))
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
