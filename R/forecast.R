@@ -59,7 +59,7 @@ ts_fit_forecast <- function(prepped_tsibble,
                                         ets='season(method="N")',
                                         nnetar=NULL),
                             covariates=c("hosp_rank", "ili_rank"),
-                            ensemble=TRUE) {
+                            ensemble=TRUE, ...) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -79,7 +79,7 @@ ts_fit_forecast <- function(prepped_tsibble,
     formulas$arima <- stats::reformulate(c(models$arima, covariates), response=outcome)
     message(paste0("ARIMA  formula: ", Reduce(paste, deparse(formulas$arima))))
     tsfit$arima <- fabletools::model(.data = prepped_tsibble,
-                                     arima = fable::ARIMA(formulas$arima))
+                                     arima = fable::ARIMA(formulas$arima, ...))
   }
 
   # If "ets" is in the models you specify, fit an ETS model
@@ -220,7 +220,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"), ...) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
@@ -265,7 +265,8 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
                                  models=models,
                                  trim_date=NULL,
                                  covariates=NULL,
-                                 ensemble=FALSE)
+                                 ensemble=FALSE,
+                                 ...)
 
   # extract the fit
   ili_fit <- ili_fit_for$tsfit

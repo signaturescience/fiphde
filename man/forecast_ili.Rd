@@ -8,7 +8,8 @@ forecast_ili(
   ilidat,
   horizon = 4L,
   trim_date = NULL,
-  models = list(arima = "PDQ(0,0,0)+pdq(1:2,0:2,0)")
+  models = list(arima = "PDQ(0,0,0)+pdq(1:2,0:2,0)"),
+  ...
 )
 }
 \arguments{

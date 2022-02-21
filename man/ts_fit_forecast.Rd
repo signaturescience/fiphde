@@ -12,7 +12,8 @@ ts_fit_forecast(
   models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
     "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
-  ensemble = TRUE
+  ensemble = TRUE,
+  ...
 )
 }
 \arguments{
