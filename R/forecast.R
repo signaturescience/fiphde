@@ -180,7 +180,8 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'
 #' # At the state level
 #' ilidat_st <- ilidat %>% dplyr::filter(region_type=="States")
-#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01", type="ets")
+#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
+#'                           models=list(ets="season(method='N')"))
 #' ilifor_st$ili_fit
 #' ilifor_st$arima_params
 #' ilifor_st$ili_forecast
@@ -210,17 +211,6 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' library(dplyr)
 #' library(ggplot2)
 #' theme_set(theme_classic())
-#' ilifor_hhs$ili_bound %>%
-#'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-08-01") %>%
-#'   ggplot(aes(date, ili, col=forecasted)) +
-#'   geom_line(lwd=.3) +
-#'   geom_point(aes(col=forecasted), size=.7) +
-#'   facet_wrap(~abbreviation, scale="free_y")
-#'
-#' ## hhs using exponential smoothing model
-#' ilidat_hhs <- ilidat %>% dplyr::filter(region_type=="HHS Regions")
-#' ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, type="ets", trim_date="2019-01-01")
 #' ilifor_hhs$ili_bound %>%
 #'   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) %>%
 #'   filter(date>"2021-08-01") %>%
