@@ -10,7 +10,7 @@ forecast_ili(
   trim_date = NULL,
   type = "arima",
   constrained = TRUE,
-  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0)
+  models = list(arima = "PDQ(0,0,0)+pdq(1:2,0:2,0)")
 )
 }
 \arguments{

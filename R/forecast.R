@@ -232,7 +232,8 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", constrained=TRUE, param_space = list(P=0,D=0,Q=0,p=1:2,d=0:2,q=0)) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", constrained=TRUE,
+                         models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
@@ -271,42 +272,53 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, type="arima", const
     ilidat %>%
     make_tsibble(epiyear = epiyear, epiweek = epiweek, key=location)
 
-  if (type=="arima") {
-    # Defaults to constrained, non-seasonal model.
-    if (constrained) {
-      # Nonseasonal fit: PDQ(0, 0, 0)
-      # Nonseasonal components unrestricted: pdq(0:5,0:5,0:5)
-      message("Fitting nonseasonal constrained ARIMA model...")
-      ili_fit <- fabletools::model(ilidat_tsibble,
-                                   arima = fable::ARIMA(ili ~ PDQ(param_space$P,param_space$D,param_space$Q) + pdq(param_space$p,param_space$d, param_space$q),
-                                                        stepwise=FALSE,
-                                                        approximation=FALSE))
-    } else {
-      # If unconstrained, need to set stepwise=TRUE and approxmiation=NULL to speed up.
-      message("Fitting unconstrained ARIMA model...")
-      ili_fit <- fabletools::model(ilidat_tsibble,
-                                   arima = fable::ARIMA(ili,
-                                                        stepwise=TRUE,
-                                                        approximation=NULL))
-    }
+  ili_fit_for <- ts_fit_forecast(ilidat_tsibble,
+                                 outcome="ili",
+                                 horizon=horizon,
+                                 models=models,
+                                 trim_date=NULL,
+                                 covariates=NULL,
+                                 ensemble=FALSE)
 
-    # Get arima params if fitting an arima model
-    arima_params <-
-      ili_fit %>%
-      dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
-      tidyr::unnest_wider(col=x) %>%
-      dplyr::select(-arima)
+  # extract the fit
+  ili_fit <- ili_fit_for$tsfit
 
-  } else if (type=="ets") {
-    ili_fit <- fabletools::model(ilidat_tsibble, ets=fable::ETS(ili ~ season(method="N")))
-    arima_params <- NULL
-  } else {
-    stop("type must be arima or ets")
-  }
+  # if (type=="arima") {
+  #   # Defaults to constrained, non-seasonal model.
+  #   if (constrained) {
+  #     # Nonseasonal fit: PDQ(0, 0, 0)
+  #     # Nonseasonal components unrestricted: pdq(0:5,0:5,0:5)
+  #     message("Fitting nonseasonal constrained ARIMA model...")
+  #     ili_fit <- fabletools::model(ilidat_tsibble,
+  #                                  arima = fable::ARIMA(ili ~ PDQ(param_space$P,param_space$D,param_space$Q) + pdq(param_space$p,param_space$d, param_space$q),
+  #                                                       stepwise=FALSE,
+  #                                                       approximation=FALSE))
+  #   } else {
+  #     # If unconstrained, need to set stepwise=TRUE and approxmiation=NULL to speed up.
+  #     message("Fitting unconstrained ARIMA model...")
+  #     ili_fit <- fabletools::model(ilidat_tsibble,
+  #                                  arima = fable::ARIMA(ili,
+  #                                                       stepwise=TRUE,
+  #                                                       approximation=NULL))
+  #   }
+  #
+  #   # Get arima params if fitting an arima model
+  #   arima_params <-
+  #     ili_fit %>%
+  #     dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
+  #     tidyr::unnest_wider(col=x) %>%
+  #     dplyr::select(-arima)
+  #
+  # } else if (type=="ets") {
+  #   ili_fit <- fabletools::model(ilidat_tsibble, ets=fable::ETS(ili ~ season(method="N")))
+  #   arima_params <- NULL
+  # } else {
+  #   stop("type must be arima or ets")
+  # }
 
 
   # Get the forecast
-  ili_forecast <- fabletools::forecast(ili_fit, h=horizon)
+  ili_forecast <- ili_fit_for$tsfor
 
   # Get the next #horizon weeks in a tibble
   ili_future <- ili_forecast %>%
