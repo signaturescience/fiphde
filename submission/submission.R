@@ -40,7 +40,7 @@ ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(l
 ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
+ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
 hosp <- get_hdgov_hosp(limitcols = TRUE)
 
@@ -162,7 +162,7 @@ warnings()
 
 ## use ilidat from above
 ilidat_us <- iliaug %>% dplyr::filter(location=="US")
-ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
 # If using log(ili), make all the zeros be the minimum nonzero value
 if (tologili) {
