@@ -1,14 +1,8 @@
 # library(focustools)
-#
-# ## get data at the national scale from jhu source
-# usac <-  get_cases(source="jhu",  granularity = "national")
-# usad <- get_deaths(source="jhu",  granularity = "national")
-#
-# ## use the focustools helper to prep the tsibble format
-# usa <-
-#   dplyr::inner_join(usac, usad, by = c("location", "epiyear", "epiweek")) %>%
-#   make_tsibble(chop=TRUE)
-
+library(shiny)
+library(shinyWidgets)
+library(tidyverse)
+library(fiphde)
 
 ## Test input multiple data frames
 # get forecast csv names
@@ -32,13 +26,6 @@ read_forc <- function(fp) {
 
 sub_forecasts <- map_df(fps, read_forc)
 
-# all_forecasts <- read_csv(fps, id = "filename") %>%
-# #  dplyr::mutate(filename = ))
-#   dplyr::mutate(filename = str_extract(filename, "([^/]+$)"))
-
-#test_forecasts <- purrr::map_df(fps, read_csv)
-
-#unique(all_forecasts$filename)
 dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 
 sub_loc <- "04"
@@ -46,3 +33,18 @@ sub_date <- dates[1]
 sub_forecasts <- sub_forecasts %>% filter(forecast_date == sub_date)
 
 plot_forecast(prepped_hosp, sub_forecasts, sub_loc)
+
+# draft summary tables
+# previous_week <-
+#   prepped_hosp %>%
+#   dplyr::as_tibble() %>%
+#   dplyr::group_by(location) %>%
+#   ## restrict to appropriate epiyear/epiweek for week prior to submission
+#   #dplyr::filter(epiyear == previous_ey, epiweek == previous_ew) %>%
+#   ## add a column for horizon 0 so we can stack on submission data (see below)
+#   dplyr::mutate(horizon = 0) %>%
+#   dplyr::select(horizon, location, count = flu.admits) %>%
+#   dplyr::left_join(select(fiphde:::locations, location, location_name)) %>%
+#   ungroup() %>%
+#   select(-location) %>%
+#   select(location = location_name, week = horizon, count)

@@ -54,7 +54,7 @@ ui <- fluidPage(
   titlePanel("FIPHDE Explorer"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("forecast", "Select forecast", choices = dates),
+      selectInput("forecast", "Select forecast date", choices = dates),
       uiOutput("loc_checkbox"),
       htmlOutput("valid"),
       tags$br(),
