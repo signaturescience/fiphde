@@ -121,7 +121,6 @@ server <- function(input, output) {
   submission_raw <- reactive({
     ## get the path to the forecast file from the input basename
     tmp_fp <- grep(input$forecast, fps, value = TRUE)
-    #data <- read_csv(paste0(dirname(tmp_fp), "/", input$forecast))
     data <- map_df(tmp_fp, read_forc)
     return(list(data = data))
   })
@@ -181,15 +180,10 @@ server <- function(input, output) {
 
     req(!is.null(submission()))
     req(length(unique(submission()$data$selected_models) == 1))
-    #tmp_file <- file.path(tempdir(), "submission-tmp.csv")
-
-    #submission()$data %>%
-    #  write_csv(., tmp_file)
 
     ## should NOT be valid to have no locations selected
     if(nrow(submission()$data) == 0) {
       "<br><font color=\"#b22222\"><b>FORECAST FILE IS NOT VALID</b></font><br>"
-    #} else if(validate_forecast(tmp_file)$valid) {
     } else if(validate_forecast(submission()$data)$valid) {
       "<br><font color=\"#228B22\"><b>FORECAST FILE IS VALID</b></font><br>"
     } else {
