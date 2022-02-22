@@ -15,7 +15,7 @@ fps <- fps[!grepl("params", fps)]
 dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 #dates <- unique(as.Date(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"),
 #                format="%Y-%m-%d"))
-#str_match(fps[1], dates[1])
+
 
 # read in ground truth data
 # prepped_hosp <-
@@ -56,6 +56,7 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("forecast", "Select forecast date", choices = dates),
       uiOutput("loc_checkbox"),
+      uiOutput("model_checkbox"),
       htmlOutput("valid"),
       tags$br(),
       downloadButton("download"),
@@ -142,12 +143,15 @@ server <- function(input, output) {
       pull(location) %>%
       unique(.)
 
+    ## get the model names
+    mods <-
+      unique(submission_raw()$data$model)
+
     data <-
       submission_raw()$data %>%
-      filter(location %in% tmp_loc) #%>%
-      #map_df(fps, read_forc)
+      filter(location %in% tmp_loc)
 
-    return(list(data = data, selected_loc = tmp_loc))
+    return(list(data = data, selected_loc = tmp_loc, selected_models = mods))
 
   })
 
@@ -176,6 +180,7 @@ server <- function(input, output) {
   validate_dat <- reactive({
 
     req(!is.null(submission()))
+    req(length(unique(submission()$data$selected_models) == 1))
     #tmp_file <- file.path(tempdir(), "submission-tmp.csv")
 
     #submission()$data %>%
@@ -212,6 +217,19 @@ server <- function(input, output) {
 
     ## checkbox choices are *names* (not codes) ... see above
     pickerInput("location","Select location", choices = locs$location_name, selected = locs$location_name, options = list(`actions-box` = TRUE),multiple = T)
+  })
+
+  output$model_checkbox <- renderUI({
+
+    ## requires that the original submission file has been read in ...
+    req(!is.null(submission_raw()))
+
+    ## get the model names
+    mods <-
+      unique(submission_raw()$data$model)
+
+    ## checkbox choices
+    pickerInput("model","Select models", choices = mods, selected = mods, options = list(`actions-box` = TRUE),multiple = T)
   })
 
   ## renders all of the plots (individual renderPlot calls generated as a list by get_plots)
