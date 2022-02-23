@@ -42,6 +42,142 @@ read_forc <- function(fp) {
     mutate(model = basename(dirname(fp)))
 }
 
+## helpers for submission summary
+spread_value <- function(.data, ...) {
+
+  ## quietly ...
+  suppressMessages({
+    tmp <-
+      ## spread the data
+      tidyr::spread(.data, ...) %>%
+      ## then get the location names
+      dplyr::left_join(dplyr::select(fiphde:::locations, location, location_name)) %>%
+      dplyr::select(-location)
+  })
+
+  ## one more piece of logic to get "Previous" column before w ahead columns if need be
+  if("Previous" %in% names(tmp)) {
+    tmp <-
+      tmp %>%
+      dplyr::select(location = location_name, Previous, dplyr::everything())
+  } else {
+    tmp <-
+      tmp %>%
+      dplyr::select(location = location_name, dplyr::everything())
+  }
+
+  ## if US is in there put it on top
+  if("US" %in% tmp$location) {
+    tmp <-
+      dplyr::bind_rows(dplyr::filter(tmp, location == "US"), dplyr::filter(tmp, location !="US"))
+  }
+}
+
+submission_summary <- function(.data, submission, location = NULL) {
+
+  if(!is.null(location)) {
+    loc_name <- location
+    submission <-
+      submission %>%
+      dplyr::filter(location %in% loc_name)
+  }
+
+  ## get epiweek and epiyear for week before based on submission data
+  ## this will be used find event count to determine 1wk horizon % change
+  submission_ew <- min(lubridate::epiweek(submission$target_end_date))
+  submission_ey <- min(lubridate::epiyear(submission$target_end_date))
+
+  previous_ew <- ifelse(submission_ew == 1, 53, submission_ew - 1)
+  previous_ey <- ifelse(submission_ew == 1, submission_ey - 1, submission_ey)
+
+  previous_week <-
+    .data %>%
+    dplyr::as_tibble() %>%
+    dplyr::group_by(location) %>%
+    ## restrict to appropriate epiyear/epiweek for week prior to submission
+    dplyr::filter(epiyear == previous_ey, epiweek == previous_ew) %>%
+    ## add a column for horizon 0 so we can stack on submission data (see below)
+    dplyr::mutate(horizon = as.character(0)) %>%
+    dplyr::select(horizon, location, flu.admits)
+
+
+  ## take the submission data ...
+  tmp_counts <-
+    submission %>%
+    ## restrict to point estimates
+    dplyr::filter(type == "point") %>%
+    ## only need target value and location columns
+    dplyr::select(target, value, location) %>%
+    ## string manip to get the horizon and target name separated
+    tidyr::separate(., target, into = c("horizon", "target"), sep = "wk ahead") %>%
+    dplyr::mutate(horizon = stringr::str_trim(horizon, "both"),
+                  target = stringr::str_trim(target, "both")) %>%
+    ## clean up taret name
+    dplyr::mutate(target =
+                    dplyr::case_when(
+                      target == "inc flu hosp" ~ "flu.admits")) %>%
+    ## reshape wide
+    tidyr::spread(target, value) %>%
+    ## stack on top of the "previous week" data
+    dplyr::bind_rows(previous_week) %>%
+    ## must sort by horizon and location so that window lag function below will work
+    dplyr::arrange(horizon, location) %>%
+    ## reshape long again
+    tidyr::gather(target, value, flu.admits)
+
+
+  ## formatting for percentage difference
+  tmp_perc_diff <-
+    tmp_counts %>%
+    ## need to do the window function stuff by unique combo of location and target
+    dplyr::group_by(location, target) %>%
+    ## figure out the % change
+    dplyr::mutate(diff = value / dplyr::lag(value)) %>%
+    ## drop the horizon 0 (previous week) since we don't need it any more
+    dplyr::filter(horizon != 0) %>%
+    dplyr::mutate(diff = ifelse(diff < 1, -1*abs(1-diff), abs(1-diff))) %>%
+    dplyr::mutate(diff = diff*100) %>%
+    dplyr::mutate(diff = paste0(as.character(round(diff, 1)), "%")) %>%
+    dplyr::select(-value) %>%
+    dplyr::mutate(horizon = ifelse(horizon == 0, "Previous", paste0(horizon, "w ahead"))) %>%
+    dplyr::group_by(target)
+
+
+  ## get names for each target from group keys
+  ## used to name the list below ...
+  target_names <-
+    tmp_perc_diff %>%
+    dplyr::group_keys() %>%
+    dplyr::pull(target)
+
+  perc_diff <-
+    tmp_perc_diff %>%
+    dplyr::group_split(., .keep = FALSE) %>%
+    purrr::map(., .f = function(x) spread_value(x, horizon, diff)) %>%
+    purrr::set_names(target_names)
+
+  ## formatting for counts
+  tmp_counts <-
+    tmp_counts %>%
+    dplyr::mutate(horizon = ifelse(horizon == 0, "Previous", paste0(horizon, "w ahead"))) %>%
+    dplyr::group_by(target)
+
+  target_names <-
+    tmp_counts %>%
+    dplyr::group_keys() %>%
+    dplyr::pull(target)
+
+  counts <-
+    tmp_counts %>%
+    dplyr::group_split(., .keep = FALSE) %>%
+    purrr::map(., .f = function(x) spread_value(x, horizon, value)) %>%
+    purrr::set_names(target_names)
+
+
+  return(list(counts = counts, perc_diff = perc_diff))
+
+}
+
 ui <- fluidPage(
   titlePanel("FIPHDE Explorer"),
   sidebarLayout(
@@ -60,18 +196,17 @@ ui <- fluidPage(
         tabPanel("Visualization", uiOutput("plots")),
         tabPanel("Table", DT::dataTableOutput("table")),
         tabPanel("Summary",
-                 tabsetPanel(
-                   tabPanel("Hospitizations",
-                            fluidRow(
-                              column(
-                                tags$h3("Something"),
-                                width = 6),
-                              column(
-                                tags$h3("Something Else"),
-                                width = 6)
-                            )
+                 verbatimTextOutput("horizons"),
+                 fluidRow(
+                   column(
+                     tags$h3("Counts"),
+                     tableOutput("counts_summary"),
+                     width = 6),
+                   column(
+                     tags$h3("% Change"),
+                     tableOutput("percdiff_summary"),
+                     width = 6)
                    )
-                 )
         )
       )
     )
@@ -123,23 +258,10 @@ server <- function(input, output) {
 
   ## reactive engine that drives the bus here ...
   summary_dat <- reactive({
-
     req(!is.null(submission()))
     req(nrow(submission()$data) > 0)
-    ## get the *names* (not codes) for locations
-    locs <-
-      fiphde:::locations %>%
-      filter(abbreviation %in% c("US", state.abb, "DC")) %>%
-      filter(location %in% unique(submission_raw()$data$location))
-
-    tmp_loc <-
-      locs %>%
-      filter(location_name %in% input$location) %>%
-      pull(location) %>%
-      unique(.)
-
+    req(length(input$model) == 1)
     submission_summary(.data = prepped_hosp, submission = submission()$data, location = submission()$selected_loc)
-
   })
 
   ## reactive engine that drives the bus here ...
@@ -218,6 +340,55 @@ server <- function(input, output) {
   output$table <- DT::renderDataTable({
     submission()$formatted_data
   })
+
+  ## text explaining dates
+  output$horizons <- renderText({
+
+    tmp <-
+      submission()$data %>%
+      dplyr::distinct(target,target_end_date) %>%
+      tidyr::separate(target, into = c("horizon", "tmp"), sep = " wk ahead ") %>%
+      dplyr::select(-tmp) %>%
+      dplyr::distinct() %>%
+      dplyr::arrange(horizon) %>%
+      dplyr::mutate(frmt = toupper(paste0(horizon, "w ahead: week ending in ", target_end_date)))
+
+    ## get the date for horizon = 1
+    ## used to
+    h1_date <-
+      tmp %>%
+      filter(horizon == 1) %>%
+      pull(target_end_date)
+
+    prev <-
+      tibble(horizon  = "Previous", target_end_date = h1_date - 7) %>%
+      mutate(frmt = toupper(paste0(horizon, ": week ending in ", target_end_date)))
+
+    bind_rows(prev, tmp) %>%
+      pull(frmt) %>%
+      paste0(., collapse = "\n")
+  })
+
+
+  ## summary table counts
+  output$counts_summary <- renderTable({
+    x <- summary_dat()$counts$flu.admits
+    names(x) <- gsub(" ahead", "", names(x))
+    names(x) <- toupper(names(x))
+    x
+  },
+  digits = 0,
+  bordered = TRUE)
+
+  ## summary table perc change
+  output$percdiff_summary <- renderTable({
+    x <- summary_dat()$perc_diff$flu.admits
+    names(x) <- gsub(" ahead", "", names(x))
+    names(x) <- toupper(names(x))
+    x
+  },
+  digits = 0,
+  bordered = TRUE)
 
   ## handler to download the selected data
   output$download <- downloadHandler(
