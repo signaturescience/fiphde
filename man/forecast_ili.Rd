@@ -8,9 +8,8 @@ forecast_ili(
   ilidat,
   horizon = 4L,
   trim_date = NULL,
-  type = "arima",
-  constrained = TRUE,
-  param_space = list(P = 0, D = 0, Q = 0, p = 1:2, d = 0:2, q = 0)
+  models = list(arima = "PDQ(0,0,0)+pdq(1:2,0:2,0)"),
+  ...
 )
 }
 \arguments{
@@ -20,11 +19,9 @@ forecast_ili(
 
 \item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
 
-\item{type}{Either "arima" or "ets" to fit a \link[fable:ARIMA]{fable::ARIMA} or \link[fable:ETS]{fable::ETS} model. If using "ets", the \code{constrained} and \code{param_space} arguments are ignored.}
+\item{models}{The list of model parameters passed to \link{ts_fit_forecast}. Defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}. See help for \link{ts_fit_forecast}.}
 
-\item{constrained}{Should the model be constrained to a non-seasonal model? If \code{TRUE} the parameter space defined in "param_space" argument will be used. See \link[fable:ARIMA]{fable::ARIMA}.}
-
-\item{param_space}{Named list for ARIMA parameter space constraint; only used if "constrained == \code{TRUE}"; default is \code{list(P=0,D=0,Q=0,p=1:2,d=0:2,0)}, which sets space to PDQ(0,0,0) and pdq(1:2,0:2,0).}
+\item{...}{further arguments passed to \link{ts_fit_forecast} (which are then passed to \link[fable:ARIMA]{fable::ARIMA}.}
 }
 \value{
 A named list containing:
@@ -75,7 +72,8 @@ ilifor_us$ili_bound \%>\%
 
 # At the state level
 ilidat_st <- ilidat \%>\% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01", type="ets")
+ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
+                          models=list(ets="season(method='N')"))
 ilifor_st$ili_fit
 ilifor_st$arima_params
 ilifor_st$ili_forecast
@@ -105,17 +103,6 @@ tail(ilifor_us$ili_bound, 10)
 library(dplyr)
 library(ggplot2)
 theme_set(theme_classic())
-ilifor_hhs$ili_bound \%>\%
-  mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-08-01") \%>\%
-  ggplot(aes(date, ili, col=forecasted)) +
-  geom_line(lwd=.3) +
-  geom_point(aes(col=forecasted), size=.7) +
-  facet_wrap(~abbreviation, scale="free_y")
-
-## hhs using exponential smoothing model
-ilidat_hhs <- ilidat \%>\% dplyr::filter(region_type=="HHS Regions")
-ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, type="ets", trim_date="2019-01-01")
 ilifor_hhs$ili_bound \%>\%
   mutate(date=cdcfluview::mmwr_week_to_date(epiyear, epiweek)) \%>\%
   filter(date>"2021-08-01") \%>\%

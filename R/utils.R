@@ -144,6 +144,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' @param location  Vector specifying locations to filter to; 'US' by default.
 #' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
+#' @param .outcome The name of the outcome variable you're plotting in the historical data. Defaults to `"flu.admits"`. This may also be `"weighted_ili"`.
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
@@ -225,7 +226,7 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
 #' }
-plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL) {
+plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits") {
 
   if(!is.null(.model)) {
     submission$model <- .model
@@ -251,7 +252,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
     .data %>%
     tibble::as_tibble() %>%
     dplyr::filter(location %in% loc) %>%
-    dplyr::select(location, date=week_end,point=flu.admits) %>%
+    dplyr::select(location, date=week_end,point={{.outcome}}) %>%
     dplyr::mutate(model="Observed")
 
   ## get appropriate boundaries based on specified width of PI

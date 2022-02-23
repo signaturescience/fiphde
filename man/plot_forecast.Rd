@@ -4,7 +4,14 @@
 \alias{plot_forecast}
 \title{Plot forecasts}
 \usage{
-plot_forecast(.data, submission, location = "US", pi = 0.95, .model = NULL)
+plot_forecast(
+  .data,
+  submission,
+  location = "US",
+  pi = 0.95,
+  .model = NULL,
+  .outcome = "flu.admits"
+)
 }
 \arguments{
 \item{.data}{Historical truth data for all locations and outcomes in submission targets}
@@ -16,6 +23,8 @@ plot_forecast(.data, submission, location = "US", pi = 0.95, .model = NULL)
 \item{pi}{Width of prediction interval to plot; default is \code{0.95} for 95\% PI; if set to \code{NULL} the PI will not be plotted}
 
 \item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
+
+\item{.outcome}{The name of the outcome variable you're plotting in the historical data. Defaults to \code{"flu.admits"}. This may also be \code{"weighted_ili"}.}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location
