@@ -69,7 +69,8 @@ ui <- fluidPage(
       uiOutput("model_checkbox"),
       htmlOutput("valid"),
       tags$br(),
-      downloadButton("download"),
+      conditionalPanel(condition = "input.model.length == 1",
+                       downloadButton("download")),
       width = 2
     ),
     mainPanel(
@@ -153,16 +154,18 @@ server <- function(input, output) {
       pull(location) %>%
       unique(.)
 
-    ## get the model names
-    mods <-
-      unique(submission_raw()$data$model)
-
     data <-
       submission_raw()$data %>%
       filter(location %in% tmp_loc) %>%
       filter(model %in% input$model)
 
-    return(list(data = data, selected_loc = tmp_loc, selected_models = mods))
+    formatted_data <-
+      data %>%
+      select(-filename,-model)
+
+    ## NOTE: added "selected_loc" because we need to have translated location name ...
+    ## otherwise could avoid returning that altogether and just called input$location below
+    return(list(data = data, selected_loc = tmp_loc, formatted_data = formatted_data))
 
   })
 
@@ -191,12 +194,12 @@ server <- function(input, output) {
   validate_dat <- reactive({
 
     req(!is.null(submission()))
-    req(length(unique(submission()$data$selected_models) == 1))
+    req(length(input$model) == 1)
 
     ## should NOT be valid to have no locations selected
     if(nrow(submission()$data) == 0) {
       "<br><font color=\"#b22222\"><b>FORECAST FILE IS NOT VALID</b></font><br>"
-    } else if(validate_forecast(submission()$data)$valid) {
+    } else if(validate_forecast(submission()$formatted_data)$valid) {
       "<br><font color=\"#228B22\"><b>FORECAST FILE IS VALID</b></font><br>"
     } else {
       "<br><font color=\"#b22222\"><b>FORECAST FILE IS NOT VALID</b></font><br>"
@@ -418,10 +421,12 @@ server <- function(input, output) {
   ## handler to download the selected data
   output$download <- downloadHandler(
     filename = function() {
-      input$forecast
+      paste0(input$forecast, "-", input$model, ".csv")
     },
     content = function(file) {
-      readr::write_csv(submission()$data, file)
+      submission()$formatted_data %>%
+        dplyr::mutate_all(., as.character) %>%
+        readr::write_csv(., file)
     }
   )
 
