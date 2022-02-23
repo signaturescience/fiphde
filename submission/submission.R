@@ -285,7 +285,8 @@ prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=c("hosp_rank", "ili_rank"),
+                               stepwise=FALSE, approximation=FALSE)
 
 # format for submission
 formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
