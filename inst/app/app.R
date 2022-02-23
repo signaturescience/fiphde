@@ -42,6 +42,16 @@ dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 #   return(plot_output_list)
 # }
 
+get_plots <- function(n, ...) {
+
+  plot_output_object <- renderPlot({
+    plot_forecast(...)
+  },
+  height = n*250)
+
+  list(plot_output_object)
+}
+
 ## helper function to bind all dfs together with filename as key
 read_forc <- function(fp) {
   tmp <- read_csv(fp)
@@ -65,8 +75,8 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         #tabPanel("Welcome", includeMarkdown("welcome.md")),
-        # tabPanel("Visualization", uiOutput("plots")),
-        tabPanel("Visualization", plotOutput("plots")),
+        tabPanel("Visualization", uiOutput("plots")),
+        # tabPanel("Visualization", plotOutput("plots")),
         tabPanel("Table", DT::dataTableOutput("table")),
         tabPanel("Summary",
                  tags$br(),
@@ -228,28 +238,8 @@ server <- function(input, output) {
     pickerInput("model","Select models", choices = mods, selected = mods, options = list(`actions-box` = TRUE),multiple = T)
   })
 
-  # ## renders all of the plots (individual renderPlot calls generated as a list by get_plots)
-  # output$plots <- renderUI({
-  #
-  #   ## before trying to render plots make sure that locations are selected
-  #   if(nrow(submission()$data) == 0) {
-  #     HTML("<em>No locations selected.</em>")
-  #   } else {
-  #     ## call get_plots
-  #     ## defined above
-  #     ## effectively wraps fiphde::plot_forecast() ...
-  #     ## submission is reactive data from submission() reactive ...
-  #     ## as is the location
-  #     get_plots(n = length(unique(submission()$data$location)),
-  #               .data = prepped_hosp,
-  #               submission = submission()$data,
-  #               location = submission()$selected_loc)
-  #   }
-  #
-  # })
-
   ## renders all of the plots (individual renderPlot calls generated as a list by get_plots)
-  output$plots <- renderPlot({
+  output$plots <- renderUI({
 
     ## before trying to render plots make sure that locations are selected
     if(nrow(submission()$data) == 0) {
@@ -260,10 +250,30 @@ server <- function(input, output) {
       ## effectively wraps fiphde::plot_forecast() ...
       ## submission is reactive data from submission() reactive ...
       ## as is the location
-      plot_forecast(.data = prepped_hosp, submission = submission()$data, location = submission()$selected_loc)
+      get_plots(n = length(unique(submission()$data$location)),
+                .data = prepped_hosp,
+                submission = submission()$data,
+                location = submission()$selected_loc)
     }
 
   })
+
+  # ## renders all of the plots (individual renderPlot calls generated as a list by get_plots)
+  # output$plots <- renderPlot({
+  #
+  #   ## before trying to render plots make sure that locations are selected
+  #   if(nrow(submission()$data) == 0) {
+  #     HTML("<em>No locations selected.</em>")
+  #   } else {
+  #     ## call get_plots
+  #     ## defined above
+  #     ## effectively wraps fiphde::plot_forecast() ...
+  #     ## submission is reactive data from submission() reactive ...
+  #     ## as is the location
+  #     plot_forecast(.data = prepped_hosp, submission = submission()$data, location = submission()$selected_loc)
+  #   }
+  #
+  # })
 
   ## tabular output
   output$table <- DT::renderDataTable({
