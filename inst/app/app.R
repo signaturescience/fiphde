@@ -82,7 +82,7 @@ ui <- fluidPage(
                                 tableOutput("counts_cdeaths"),
                                 width = 6)
                             )
-                   ),
+                   )
                    # tabPanel("Incident Counts",
                    #          fluidRow(
                    #            column(
@@ -149,7 +149,8 @@ server <- function(input, output) {
 
     data <-
       submission_raw()$data %>%
-      filter(location %in% tmp_loc)
+      filter(location %in% tmp_loc) %>%
+      filter(model %in% input$model)
 
     return(list(data = data, selected_loc = tmp_loc, selected_models = mods))
 
