@@ -5,7 +5,7 @@ library(fiphde)
 
 ## data dir
 ## list files in data dir
-#data_dir <- .GlobalEnv$.submission_dir
+data_dir <- .GlobalEnv$.submission_dir
 #data_dir <- "C:/Users/sjessa/OneDrive - Signature Science, LLC/Documents/FIPDHE/fiphde/submission"
 ## note that fps are reversed so that most recent *should* appear first
 fps <- rev(list.files(data_dir, pattern = "*.csv$", recursive = TRUE, full.names = TRUE))
@@ -21,7 +21,7 @@ dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 #   get_hdgov_hosp(limitcols = TRUE) %>%
 #   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
 #   dplyr::filter(abbreviation != "DC")
-#prepped_hosp <- .GlobalEnv$.data
+prepped_hosp <- .GlobalEnv$.data
 
 
 get_plots <- function(n, ...) {
@@ -373,6 +373,7 @@ server <- function(input, output) {
   ## summary table counts
   output$counts_summary <- renderTable({
     x <- summary_dat()$counts$flu.admits
+    x <- x[complete.cases(x),]
     names(x) <- gsub(" ahead", "", names(x))
     names(x) <- toupper(names(x))
     x
@@ -383,6 +384,7 @@ server <- function(input, output) {
   ## summary table perc change
   output$percdiff_summary <- renderTable({
     x <- summary_dat()$perc_diff$flu.admits
+    x <- x[complete.cases(x),]
     names(x) <- gsub(" ahead", "", names(x))
     names(x) <- toupper(names(x))
     x
