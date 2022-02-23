@@ -238,6 +238,7 @@ server <- function(input, output) {
       ## effectively wraps fiphde::plot_forecast() ...
       ## submission is reactive data from submission() reactive ...
       ## as is the location
+
       get_plots(n = length(unique(submission()$data$location)),
                 .data = prepped_hosp,
                 submission = submission()$data,
