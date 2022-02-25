@@ -2,6 +2,7 @@ library(shiny)
 library(shinyWidgets)
 library(tidyverse)
 library(fiphde)
+library(plotly)
 
 ## data dir
 ## list files in data dir
@@ -26,10 +27,27 @@ prepped_hosp <- .GlobalEnv$.data
 
 get_plots <- function(n, ...) {
 
-  plot_output_object <- renderPlot({
-    plot_forecast(...)
-  },
-  height = n*250)
+  # create plotly object
+  plot_output_object <- renderPlotly({
+    gp <- ggplotly(plot_forecast(...), height = n*250)
+
+    ## Unify legend names
+    # Get the names of the legend entries
+    leg_names <- data.frame(id = seq_along(gp$x$data), legend_entries = unlist(lapply(gp$x$data, `[[`, "name")))
+    # Extract the group identifier (ie. "observed", "SigSci-CREG", etc.)
+    leg_names$legend_group <- gsub("^\\((.*?),\\d+\\)", "\\1", leg_names$legend_entries)
+    leg_names$first <- !duplicated(leg_names$legend_group)
+
+    for (i in leg_names$id) {
+      first <- leg_names$first[[i]]
+      # Assign the group identifier to the name and legend_group arguments
+      gp$x$data[[i]]$name <- leg_names$legend_group[[i]]
+      gp$x$data[[i]]$legendgroup <- gp$x$data[[i]]$name
+      # Show the legend only once
+      if (!first) gp$x$data[[i]]$showlegend <- FALSE
+    }
+    gp
+  })
 
   list(plot_output_object)
 }
