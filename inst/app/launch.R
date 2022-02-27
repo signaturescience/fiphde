@@ -1,9 +1,11 @@
 library(fiphde)
 library(tidyverse)
 
-submission_dir <- here::here("submission")
-## NOTE: using here::here("submission") may not work in automated pipeline app refresh
-# submission_dir <- "/submission/"
+## NOTE: submission_dir and app_dir may need to be reset to run locally
+#submission_dir <- here::here("submission")
+submission_dir <- "/submission/"
+#app_dir <- here::here("inst/app")
+app_dir <- "/src/explorer"
 
 prepped_hosp <-
   get_hdgov_hosp(limitcols = TRUE) %>%
@@ -23,5 +25,7 @@ fiphde_launcher <- function(.data, submission_dir,...) {
 
 fiphde_launcher(.data = prepped_hosp,
                 submission_dir = submission_dir,
-                appDir = here::here("inst/app"),
-                port = 3838)
+                host = "0.0.0.0",
+                appDir = app_dir,
+                launch.browser = TRUE,
+                port = 80)

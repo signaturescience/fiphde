@@ -7,23 +7,15 @@ library(plotly)
 ## data dir
 ## list files in data dir
 data_dir <- .GlobalEnv$.submission_dir
-#data_dir <- "C:/Users/sjessa/OneDrive - Signature Science, LLC/Documents/FIPDHE/fiphde/submission"
-## note that fps are reversed so that most recent *should* appear first
-fps <- rev(list.files(data_dir, pattern = "*.csv$", recursive = TRUE, full.names = TRUE))
-## ignore params csv if present
-fps <- fps[!grepl("params", fps)]
-## find dates
-dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
-#dates <- unique(as.Date(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"),
-#                format="%Y-%m-%d"))
-
-# read in ground truth data
-# prepped_hosp <-
-#   get_hdgov_hosp(limitcols = TRUE) %>%
-#   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
-#   dplyr::filter(abbreviation != "DC")
 prepped_hosp <- .GlobalEnv$.data
 
+## note that fps are reversed so that most recent *should* appear first
+fps <- rev(list.files(data_dir, pattern = "*candidate.csv$", recursive = TRUE, full.names = TRUE))
+## ignore params csv if present
+fps <- fps[!grepl("params", fps)]
+
+## find dates
+dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 
 get_plots <- function(n, ...) {
 
