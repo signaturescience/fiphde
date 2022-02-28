@@ -4,10 +4,18 @@
 \alias{ts_format_for_submission}
 \title{Format time series forecast}
 \usage{
-ts_format_for_submission(tsfor)
+ts_format_for_submission(
+  tsfor,
+  .target = "wk ahead inc flu hosp",
+  .counts = TRUE
+)
 }
 \arguments{
 \item{tsfor}{The forecast from \link{ts_fit_forecast}.}
+
+\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
+
+\item{.counts}{Logical. Default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer.}
 }
 \value{
 A named list of tibbles, one for each model, formatted for submission.
