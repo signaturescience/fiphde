@@ -3,6 +3,9 @@ library(shinyWidgets)
 library(dplyr)
 library(readr)
 library(tidyr)
+library(lubridate)
+library(purrr)
+library(stringr)
 library(fiphde)
 library(plotly)
 
@@ -17,7 +20,7 @@ fps <- rev(list.files(data_dir, pattern = "*candidate.csv$", recursive = TRUE, f
 fps <- fps[!grepl("params", fps)]
 
 ## find dates
-dates <- unique(str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
+dates <- unique(stringr::str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 
 get_plots <- function(n, ...) {
 
