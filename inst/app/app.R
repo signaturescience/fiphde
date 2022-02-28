@@ -85,6 +85,9 @@ spread_value <- function(.data, ...) {
 
 submission_summary <- function(.data, submission, location = NULL) {
 
+  ## force submission value to be numeric
+  submission$value <- as.numeric(submission$value)
+
   if(!is.null(location)) {
     loc_name <- location
     submission <-
