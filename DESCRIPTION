@@ -21,9 +21,7 @@ Authors@R:
              email = "sturner@signaturescience.com",
              comment = c(ORCID = "0000-0001-9140-9028"))
       )
-Description: Miscellaneous functions for retrieving data, creating and evaluating time series 
-    forecasting models for influenza-like illness (ILI) and influenza hospitalizations in 
-    the United States.
+Description: Miscellaneous functions for retrieving data, creating and evaluating time series forecasting models for influenza-like illness (ILI) and influenza hospitalizations in the United States.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
