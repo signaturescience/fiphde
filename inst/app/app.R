@@ -1,6 +1,8 @@
 library(shiny)
 library(shinyWidgets)
-library(tidyverse)
+library(dplyr)
+library(readr)
+library(tidyr)
 library(fiphde)
 library(plotly)
 
