@@ -46,7 +46,7 @@ get_plots <- function(n, ...) {
 
 ## helper function to bind all dfs together with filename as key
 read_forc <- function(fp) {
-  tmp <- read_csv(fp)
+  tmp <- read_csv(fp, col_types = "DcDcccc")
   tmp %>%
     mutate(filename = basename(fp)) %>%
     mutate(model = basename(dirname(fp)))
