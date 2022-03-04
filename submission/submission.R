@@ -364,7 +364,7 @@ hosp_arima_params <-
   mutate(location = hosp_fitfor$tsfit$location, .before = "p") %>%
   mutate(forecast_date = this_monday())
 
-hosp_ets_formula <- hosp_fitfor$ets_formula
+hosp_ets_formula <- hosp_fitfor$formulas$ets
 
 glm_forcres <- c(forcres, us_forcres)
 glm_model_info <-
@@ -373,5 +373,9 @@ glm_model_info <-
   map_df("model") %>%
   mutate(forecast_date = this_monday())
 
+## save tsens component forecasts
+hosp_ets_forc <- formatted_list$ets
+hosp_arima_forc <- formatted_list$arima
+
 save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
-save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))
+save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))
