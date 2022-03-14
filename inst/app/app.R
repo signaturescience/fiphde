@@ -15,7 +15,7 @@ data_dir <- .GlobalEnv$.submission_dir
 prepped_hosp <- .GlobalEnv$.data
 
 ## note that fps are reversed so that most recent *should* appear first
-fps <- rev(list.files(data_dir, pattern = "*candidate.csv$", recursive = TRUE, full.names = TRUE))
+fps <- rev(list.files(data_dir, pattern = "candidate\\.csv$", recursive = TRUE, full.names = TRUE))
 ## ignore params csv if present
 fps <- fps[!grepl("params", fps)]
 
