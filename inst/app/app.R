@@ -80,12 +80,6 @@ spread_value <- function(.data, ...) {
       tmp %>%
       dplyr::select(location = location_name, dplyr::everything())
   }
-
-  ## if US is in there put it on top
-  if("US" %in% tmp$location) {
-    tmp <-
-      dplyr::bind_rows(dplyr::filter(tmp, location == "US"), dplyr::filter(tmp, location !="US"))
-  }
 }
 
 submission_summary <- function(.data, submission, location = NULL) {
@@ -191,6 +185,13 @@ submission_summary <- function(.data, submission, location = NULL) {
     purrr::map(., .f = function(x) spread_value(x, horizon, value)) %>%
     purrr::set_names(target_names)
 
+  ## if US is in there put it on top
+  if("US" %in% counts$location) {
+    counts <- dplyr::bind_rows(dplyr::filter(counts, location == "US"), dplyr::filter(counts, location !="US"))
+  }
+  if("US" %in% perc_diff$location) {
+    perc_diff <- dplyr::bind_rows(dplyr::filter(perc_diff, location == "US"), dplyr::filter(perc_diff, location !="US"))
+  }
 
   return(list(counts = counts, perc_diff = perc_diff))
 
