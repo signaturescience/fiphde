@@ -26,7 +26,9 @@ hs <- h %>%
   mutate(beds.avail=beds-beds.used)
 
 hs %>%
-  ggplot(aes(date, beds.capacity)) + geom_line() + geom_point()
+  select(date, beds, beds.used, beds.capacity, beds.avail) %>%
+  gather(key, value, -date) %>%
+  ggplot(aes(date, value)) + geom_line() + geom_point() + facet_wrap(~key, scale="free_y")
 
 hs %>%
   select(-epiyear, -epiweek) %>%
