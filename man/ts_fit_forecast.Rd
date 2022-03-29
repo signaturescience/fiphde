@@ -13,6 +13,7 @@ ts_fit_forecast(
     "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
   ensemble = TRUE,
+  remove_null_models = TRUE,
   ...
 )
 }
@@ -30,6 +31,8 @@ ts_fit_forecast(
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
 \item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
+
+\item{remove_null_models}{Should null models be removed? Default \code{TRUE}.}
 
 \item{...}{Further arguments that are passed to \link[fable:ARIMA]{fable::ARIMA}.
 \itemize{
