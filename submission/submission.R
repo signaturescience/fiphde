@@ -377,5 +377,8 @@ glm_model_info <-
 hosp_ets_forc <- formatted_list$ets
 hosp_arima_forc <- formatted_list$arima
 
+## Save locations/models which were null
+hosp_tsens_null_models <- hosp_fitfor$nullmodels
+
 save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
-save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))
+save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, hosp_tsens_null_models, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))
