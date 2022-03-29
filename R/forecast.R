@@ -13,6 +13,7 @@
 #' - To run an autoregressive neural net with P=1: `list(nnetar="AR(P=1)")`. See also [fable::NNETAR].
 #' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
 #' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
+#' @param remove_null_models Should null models be removed? Default `TRUE`.
 #' @return A list of the time series fit, time series forecast, and model formulas.
 #' - `tsfit`: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
 #' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
@@ -60,7 +61,9 @@ ts_fit_forecast <- function(prepped_tsibble,
                                         ets='season(method="N")',
                                         nnetar=NULL),
                             covariates=c("hosp_rank", "ili_rank"),
-                            ensemble=TRUE, ...) {
+                            ensemble=TRUE,
+                            remove_null_models=TRUE,
+                            ...) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -104,7 +107,6 @@ ts_fit_forecast <- function(prepped_tsibble,
   # e.g. if an ARIMA model doesn't fit for one location but the ETS does, you still want the ETS model for that location.
   tsfit <- purrr::reduce(tsfit, dplyr::inner_join, by="location")
 
-
   # Ensemble the ARIMA and ETS models
   # Hard-coded for now - can always ensemble other models if/when we add them.
   # fixme: this could be more flexible
@@ -113,6 +115,22 @@ ts_fit_forecast <- function(prepped_tsibble,
       tsfit %>%
       dplyr::mutate(ensemble=(arima+ets)/2)
   }
+
+  # Find which location/models are null models.
+  # Can result in multiple rows for one location if multiple models are NULL
+  nullmodels <-
+    tsfit %>%
+    tibble::as_tibble() %>%
+    tidyr::gather(model, value, -location) %>%
+    dplyr::mutate(is_null_model=fabletools::is_null_model(value)) %>%
+    dplyr::filter(is_null_model) %>%
+    dplyr::distinct(location, model)
+
+  # Get rid of entire rows if one of the models is null
+  tsfit <-
+    nullmodels %>%
+    dplyr::distinct(location) %>%
+    dplyr::anti_join(tsfit, ., by="location")
 
   # forecast
   if (is.null(covariates)) {
@@ -131,7 +149,7 @@ ts_fit_forecast <- function(prepped_tsibble,
     tsfor <- fabletools::forecast(tsfit, new_data=new_data)
   }
 
-  return(tibble::lst(tsfit, tsfor, formulas))
+  return(tibble::lst(tsfit, tsfor, formulas, nullmodels))
 
 }
 

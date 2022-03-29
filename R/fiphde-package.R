@@ -95,5 +95,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "expected_sat",
                                                         "horizon",
                                                         ".submission_dir",
+                                                        "is_null_model",
                                                         "."))
 
