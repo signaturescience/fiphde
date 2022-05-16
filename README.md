@@ -19,9 +19,14 @@ Install FIPHDE from GitHub:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("signaturescience/fiphde")
+remotes::install_github("signaturescience/fiphde", build_vignettes = TRUE)
 ```
 
 ## Usage
 
-*Work in progress…*
+To get started, see the [package
+vignette](https://signaturescience.github.io/fiphde/articles/fiphde.html):
+
+``` r
+vignette("fiphde")
+```
