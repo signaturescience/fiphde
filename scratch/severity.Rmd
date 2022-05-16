@@ -13,11 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, include=F}
 # import libraries
-library(fiphde)
+#library(fiphde)
 library(cdcfluview)
 library(dplyr)
 library(ggplot2)
-library(fitdistrplus)
+#library(fitdistrplus)
 ```
 
 ```{r}
@@ -44,13 +44,14 @@ hospStats <-
     filter(year %>% between(2010, 2021)) %>%
     mutate("counts" = as.numeric(weeklyrate)*3300) %>%
     dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
-    rename(EpiWeek = year_wk_num) %>%
-    group_by(EpiWeek) %>%
-    summarise(Minimum = min(counts),
-              LowerHinge = IQR(counts, 0.25),
-              Median = median(counts),
-              UpperHinge = IQR(counts, 0.75),
-              Mean = mean(counts))
+    rename(epiweek = year_wk_num) %>%
+    group_by(epiweek) %>%
+    summarise(min = min(counts),
+              lowhinge = IQR(counts, 0.25),
+              med = median(counts),
+              uprhinge = IQR(counts, 0.75),
+              max = max(counts),
+              mean = mean(counts))
 hospStats
 ```
 

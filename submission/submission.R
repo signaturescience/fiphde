@@ -11,9 +11,11 @@ library(furrr)
 ## first an option
 ## do we want to log-transform ILI ???
 tologili <- TRUE
-## another options for the number of cores to use in parallelization
-## defaults to 4 cores
-n_workers <- 4
+## another option for the number of cores to use in parallelization
+## use almost all of the cores you have (-2)
+n_workers <- max(1, parallel::detectCores()-2)
+## or alterantively just set at a value (eg 4)
+# n_workers <- 4
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
 ## if this is set to TRUE it will expect ...
 ## the hospitalization data will be reported for the entire last week
@@ -24,6 +26,12 @@ if(as.POSIXlt(lubridate::today())$wday == 0) {
 } else {
   ri <-  TRUE
 }
+## if there are lots of warnings we want to print them in the pipeline script
+## especially non-interactively (i.e. when the automated instance runs the script)
+if(!interactive()) {
+  message("setting option for max number of warnings printed to be 10000 ... ")
+  options(nwarnings = 10000)
+}
 # Get data
 # the years argument for cdcfluview::ilinet gets the *season* corresponding to the year.
 # so, 2019 = the 2019-2020 flu season. If you only get 2020-2021, you're getting the
@@ -32,9 +40,19 @@ ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(l
 ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
+ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
 hosp <- get_hdgov_hosp(limitcols = TRUE)
+
+# If using log(ili), make all the zeros be the minimum nonzero value
+if (tologili) {
+  ilidat    <- ilidat    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilidat_st <- ilidat_st %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilifor_st$ilidat     <- ilifor_st$ilidat     %>% mutate(ili=mnz_replace(ili))
+  ilifor_st$ili_future <- ilifor_st$ili_future %>% mutate(ili=mnz_replace(ili))
+  ilifor_st$ili_bound  <- ilifor_st$ili_bound  %>% mutate(ili=mnz_replace(ili))
+}
 
 ## data list by location
 datl <-
@@ -134,6 +152,9 @@ system.time({
   forcres <- future_map(datl, ~run_forc(.x))
 })
 
+## view any warnings
+warnings()
+
 ## see below (after national forecasting) for formatting of state forecasts
 
 ############################################################################
@@ -141,7 +162,16 @@ system.time({
 
 ## use ilidat from above
 ilidat_us <- iliaug %>% dplyr::filter(location=="US")
-ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+
+# If using log(ili), make all the zeros be the minimum nonzero value
+if (tologili) {
+  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilidat_us <- ilidat_us %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilifor_us$ilidat     <- ilifor_us$ilidat     %>% mutate(ili=mnz_replace(ili))
+  ilifor_us$ili_future <- ilifor_us$ili_future %>% mutate(ili=mnz_replace(ili))
+  ilifor_us$ili_bound  <- ilifor_us$ili_bound  %>% mutate(ili=mnz_replace(ili))
+}
 
 ## data list by location
 dat_us <-
@@ -230,7 +260,7 @@ bound_truth <-
   do.call("rbind", datl) %>%
   bind_rows(., dat_us)
 
-pdf(paste0("submission/SigSci-CREG/artifacts/plots/SigSci-CREG-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-CREG/artifacts/plots/", this_monday(), "-SigSci-CREG.pdf"), width=11.5, height=8)
 for(loc in unique(all_prepped$location)) {
   p <- plot_forecast(bound_truth, all_prepped, location = loc)
   print(p)
@@ -255,8 +285,8 @@ prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               constrained=TRUE,
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=c("hosp_rank", "ili_rank"),
+                               stepwise=FALSE, approximation=FALSE)
 
 # format for submission
 formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
@@ -268,7 +298,7 @@ validate_forecast(formatted_list$arima)
 # formatted_list$arima %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ARIMA.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ARIMA-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "-SigSci-TSENS-ARIMA.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$arima$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$arima, location = loc)
   print(p)
@@ -282,7 +312,7 @@ validate_forecast(formatted_list$ets)
 # formatted_list$ets %>%
 #   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS-ETS.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ETS-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "-SigSci-TSENS-ETS.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ets$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ets, location = loc)
   print(p)
@@ -296,13 +326,30 @@ validate_forecast(formatted_list$ensemble)
 formatted_list$ensemble %>%
   write_csv(., paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.csv"))
 
-pdf(paste0("submission/SigSci-TSENS/artifacts/plots/SigSci-TSENS-ensemble-", this_monday(), ".pdf"), width=11.5, height=8)
+pdf(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "-SigSci-TSENS-ensemble.pdf"), width=11.5, height=8)
 for(loc in unique(formatted_list$ensemble$location)) {
   p <- plot_forecast(prepped_hosp, formatted_list$ensemble, location = loc)
   print(p)
 }
 dev.off()
 
+
+################################################################################
+## create a PDF with all models plotted together
+combo_sub <-
+  bind_rows(
+    mutate(all_prepped, model = "SigSci-CREG"),
+    mutate(formatted_list$ensemble, model = "SigSci-TSENS"),
+    mutate(formatted_list$ets, model = "SigSci-TSENS (ETS)"),
+    mutate(formatted_list$arima, model = "SigSci-TSENS (ARIMA)")
+  )
+
+pdf(paste0("submission/", this_monday(), "-all-models.pdf"), width=11.5, height=8)
+for(loc in unique(combo_sub$location)) {
+  p <- plot_forecast(bound_truth, combo_sub, location = loc)
+  print(p)
+}
+dev.off()
 
 ################################################################################
 ## save model formulas / arima params / objects for posterity
@@ -317,7 +364,7 @@ hosp_arima_params <-
   mutate(location = hosp_fitfor$tsfit$location, .before = "p") %>%
   mutate(forecast_date = this_monday())
 
-hosp_ets_formula <- hosp_fitfor$ets_formula
+hosp_ets_formula <- hosp_fitfor$formulas$ets
 
 glm_forcres <- c(forcres, us_forcres)
 glm_model_info <-
@@ -326,5 +373,12 @@ glm_model_info <-
   map_df("model") %>%
   mutate(forecast_date = this_monday())
 
-save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/SigSci-CREG-model-info-", this_monday(), ".rda"))
-save(ili_params,hosp_arima_params, hosp_ets_formula, file = paste0("submission/SigSci-TSENS/artifacts/params/SigSci-TSENS-model-info-", this_monday(), ".rda"))
+## save tsens component forecasts
+hosp_ets_forc <- formatted_list$ets
+hosp_arima_forc <- formatted_list$arima
+
+## Save locations/models which were null
+hosp_tsens_null_models <- hosp_fitfor$nullmodels
+
+save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
+save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, hosp_tsens_null_models, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))

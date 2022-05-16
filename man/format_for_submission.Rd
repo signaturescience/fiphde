@@ -4,12 +4,18 @@
 \alias{format_for_submission}
 \title{Format forecasts for submission}
 \usage{
-format_for_submission(.forecasts, method = "ts")
+format_for_submission(
+  .forecasts,
+  method = "ts",
+  .target = "wk ahead inc flu hosp"
+)
 }
 \arguments{
 \item{.forecasts}{Forecasts to be formatted for submission; if method is "ts" this should be forecasts from \link{ts_fit_forecast}; otherwise this must be a \code{tibble} with forecast output (e.g. output from \link{glm_forecast}) with a colum designating "location"}
 
 \item{method}{Method for forecasting; default is "ts" which will trigger the use of \link{ts_format_for_submission} internally}
+
+\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
 }
 \value{
 A named list of tibbles, one for each model, formatted for submission.

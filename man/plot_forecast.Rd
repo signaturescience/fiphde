@@ -4,7 +4,14 @@
 \alias{plot_forecast}
 \title{Plot forecasts}
 \usage{
-plot_forecast(.data, submission, location = "US", pi = TRUE)
+plot_forecast(
+  .data,
+  submission,
+  location = "US",
+  pi = 0.95,
+  .model = NULL,
+  .outcome = "flu.admits"
+)
 }
 \arguments{
 \item{.data}{Historical truth data for all locations and outcomes in submission targets}
@@ -13,7 +20,11 @@ plot_forecast(.data, submission, location = "US", pi = TRUE)
 
 \item{location}{Vector specifying locations to filter to; 'US' by default.}
 
-\item{pi}{Logical as to whether or not the plot should include 95\% prediction interval; default is \code{TRUE}}
+\item{pi}{Width of prediction interval to plot; default is \code{0.95} for 95\% PI; if set to \code{NULL} the PI will not be plotted}
+
+\item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
+
+\item{.outcome}{The name of the outcome variable you're plotting in the historical data. Defaults to \code{"flu.admits"}. This may also be \code{"weighted_ili"}.}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location
@@ -34,14 +45,14 @@ prepped_hosp_all <- prep_hdgov_hosp(h_raw)
 # What are the last four weeks of recorded data?
 last4 <-
   prepped_hosp_all \%>\%
-  distinct(week_start) \%>\%
-  arrange(week_start) \%>\%
+  dplyr::distinct(week_start) \%>\%
+  dplyr::arrange(week_start) \%>\%
   tail(4)
 
 #remove those
 prepped_hosp <-
-  prepped_hosp \%>\%
-  anti_join(last4, by="week_start")
+  prepped_hosp_all \%>\%
+  dplyr::anti_join(last4, by="week_start")
 
 # Make a tsibble
 prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
@@ -73,6 +84,29 @@ plot_forecast(prepped_hosp, hosp_formatted$ets)
 plot_forecast(prepped_hosp_all, hosp_formatted$ets)
 plot_forecast(prepped_hosp, hosp_formatted$arima)
 plot_forecast(prepped_hosp_all, hosp_formatted$arima)
-}
 
+# Demonstrating multiple models
+prepped_hosp <-
+  h_raw \%>\%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
+  dplyr::filter(abbreviation != "DC")
+
+tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
+creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+combo_20220110 <- dplyr::bind_rows(
+  dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
+  dplyr::mutate(creg_20220110, model = "SigSci-CREG")
+)
+plot_forecast(prepped_hosp, combo_20220110, location = "24")
+plot_forecast(prepped_hosp, tsens_20220110, location = "24")
+plot_forecast(prepped_hosp, combo_20220110, location = c("34","36"))
+plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+
+## demonstrating different prediction interval widths
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.5)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.9)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
+plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
+}
 }

@@ -30,6 +30,8 @@ is_monday <- function() {
 #' @details This only replaces instances of `weighted_ili` in the specified `state` where `weighted_ili` is `NA`. _Most_ ILI data from FL is missing, but not all.
 #' @param ilidat Data from [get_cdc_ili].
 #' @param state Two-letter state abbreviation to replace completely
+#' @param impute Logical; try to mean impute missing values using the immediately preceding and following values. See examples.
+#' @param ... Other arguments passed to [get_nowcast_ili], e.g. `boundatzero`, which is `TRUE` by default.
 #' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
 #' @seealso [replace_ili_nowcast]
 #' @examples
@@ -44,15 +46,42 @@ is_monday <- function() {
 #'   dplyr::arrange(location, epiyear, epiweek)
 #' ilidat
 #' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' # Example with Florida, which has a negative value for nowcasted ILI
+#' ilidat <- get_cdc_ili(years=2019)
+#' ilidat <- ilidat %>%
+#'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
+#'   dplyr::filter(epiyear==2020 & epiweek %in% c(20, 21, 22)) %>%
+#'   dplyr::select(location:weighted_ili) %>%
+#'   dplyr::arrange(location, epiyear, epiweek)
+#' ilidat
+#' # defaults to bound at zero
+#' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' # show results when you don't bound at zero
+#' state_replace_ili_nowcast_all(ilidat, state="FL", boundatzero=FALSE)
+#' # example with missing data in florida
+#' ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+#' ilidat <- ilidat %>%
+#'   dplyr::filter(abbreviation=="FL") %>%
+#'   dplyr::filter(week_start>="2020-12-13" & week_start<="2021-01-10")
+#' ilidat
+#' state_replace_ili_nowcast_all(ilidat, state="FL")
+#' state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
 #' }
 #' @export
-state_replace_ili_nowcast_all <- function(ilidat, state) {
+state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
   dates <- sort(unique(ilidat$week_start))
-  ilinow <- get_nowcast_ili(dates=dates, state=state)
+  ilinow <- get_nowcast_ili(dates=dates, state=state, ...)
   res <- ilidat %>%
     dplyr::left_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
     dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili) & abbreviation==state, weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
+  # Quick fix for FL 2020:53: mean impute a missing value using the immediately preceding and following values
+  if (impute) {
+    res <- res %>%
+      dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili),
+                                        yes = (dplyr::lead(weighted_ili) + dplyr::lag(weighted_ili))/2,
+                                        no  = weighted_ili))
+  }
   return(res)
 }
 
@@ -113,7 +142,9 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' @param .data 	Historical truth data for all locations and outcomes in submission targets
 #' @param submission Formatted submission
 #' @param location  Vector specifying locations to filter to; 'US' by default.
-#' @param pi Logical as to whether or not the plot should include 95% prediction interval; default is `TRUE`
+#' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
+#' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
+#' @param .outcome The name of the outcome variable you're plotting in the historical data. Defaults to `"flu.admits"`. This may also be `"weighted_ili"`.
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
@@ -131,14 +162,14 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' # What are the last four weeks of recorded data?
 #' last4 <-
 #'   prepped_hosp_all %>%
-#'   distinct(week_start) %>%
-#'   arrange(week_start) %>%
+#'   dplyr::distinct(week_start) %>%
+#'   dplyr::arrange(week_start) %>%
 #'   tail(4)
 #'
 #' #remove those
 #' prepped_hosp <-
-#'   prepped_hosp %>%
-#'   anti_join(last4, by="week_start")
+#'   prepped_hosp_all %>%
+#'   dplyr::anti_join(last4, by="week_start")
 #'
 #' # Make a tsibble
 #' prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
@@ -170,9 +201,43 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
 #' plot_forecast(prepped_hosp_all, hosp_formatted$ets)
 #' plot_forecast(prepped_hosp, hosp_formatted$arima)
 #' plot_forecast(prepped_hosp_all, hosp_formatted$arima)
-#' }
 #'
-plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
+#' # Demonstrating multiple models
+#' prepped_hosp <-
+#'   h_raw %>%
+#'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+#'   dplyr::filter(abbreviation != "DC")
+#'
+#' tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
+#' creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+#' combo_20220110 <- dplyr::bind_rows(
+#'   dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
+#'   dplyr::mutate(creg_20220110, model = "SigSci-CREG")
+#' )
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24")
+#' plot_forecast(prepped_hosp, tsens_20220110, location = "24")
+#' plot_forecast(prepped_hosp, combo_20220110, location = c("34","36"))
+#' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+#' plot_forecast(prepped_hosp, creg_20220110, location = "US", .model = "SigSci-CREG")
+#'
+#' ## demonstrating different prediction interval widths
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.5)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.9)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
+#' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
+#' }
+plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits") {
+
+  if(!is.null(.model)) {
+    submission$model <- .model
+  }
+
+  validpi <- sort(unique(round(abs(2*(q-0.5)),2)))[-1]
+  if (!is.null(pi) && !(pi %in% validpi)) {
+    stop(paste("pi must be NULL or one of:", paste(validpi, collapse=" ")))
+  }
+
+  if (!("model" %in% colnames(submission))) submission$model <- "Forecast"
 
   ## pretty sure we need to add an intermediary variable for the filter below
   ## otherwise the condition will interpret as the column name not the vector ... i think?
@@ -187,21 +252,61 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
     .data %>%
     tibble::as_tibble() %>%
     dplyr::filter(location %in% loc) %>%
-    dplyr::select(location, date=week_end,point=flu.admits) %>%
-    dplyr::mutate(type="recorded")
+    dplyr::select(location, date=week_end,point={{.outcome}}) %>%
+    dplyr::mutate(model="Observed")
 
-  # Grab the forecasted data
-  forecasted <-
-    submission %>%
-    dplyr::filter(type=="point" | quantile == "0.025" | quantile == "0.975") %>%
-    dplyr::filter(location %in% loc) %>%
-    dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
-    dplyr::select(-type) %>%
-    tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
-    dplyr::select(location, date=target_end_date,quantile, value) %>%
-    dplyr::mutate(value = as.numeric(value)) %>%
-    tidyr::spread(quantile, value) %>%
-    dplyr::mutate(type="forecast")
+  ## get appropriate boundaries based on specified width of PI
+  ## default is 0.95 ...
+  ## which would estrict to q0.025 (lower) and q0.975 (upper)
+  if(!is.null(pi)) {
+    lower_bound <-
+      round(0.5 - (pi/2),3) %>%
+      as.character(.) %>%
+      stringr::str_pad(.,width = 5, pad = "0", side = "right")
+
+    upper_bound <-
+      round(0.5 + (pi/2),3) %>%
+      as.character(.) %>%
+      stringr::str_pad(.,width = 5, pad = "0", side = "right")
+
+    tmp_forecasted <-
+      submission %>%
+      ## force all quantile representations to be 0.150 vs 0.15 (for example) formatting
+      dplyr::mutate(quantile = stringr::str_pad(quantile,width = 5, pad = "0", side = "right")) %>%
+      dplyr::group_by(model) %>%
+      dplyr::filter(type=="point" | quantile == lower_bound | quantile == upper_bound)
+
+    # Grab the forecasted data
+    forecasted <-
+      tmp_forecasted %>%
+      dplyr::filter(location %in% loc) %>%
+      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::select(-type) %>%
+      tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
+      dplyr::select(location, date=target_end_date,quantile, value, model) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::mutate(quantile = ifelse(quantile == lower_bound, "lower",
+                                      ifelse(quantile == upper_bound, "upper",
+                                             quantile))) %>%
+      tidyr::spread(quantile, value)
+
+    ## get number of models to control alpha for PI below
+    n_models <- dplyr::n_groups(tmp_forecasted)
+  } else {
+
+    # Grab the forecasted data
+    forecasted <-
+      submission %>%
+      dplyr::group_by(model) %>%
+      dplyr::filter(type == "point") %>%
+      dplyr::filter(location %in% loc) %>%
+      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::select(-type) %>%
+      tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
+      dplyr::select(location, date=target_end_date,quantile, value, model) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      tidyr::spread(quantile, value)
+  }
 
   # Bind them
   bound <-
@@ -215,20 +320,55 @@ plot_forecast <- function(.data, submission, location="US", pi = TRUE) {
   p <-
     bound %>%
     ggplot2::ggplot(ggplot2::aes(date, point)) +
-    ggplot2::geom_point(ggplot2::aes(col=type)) +
-    ggplot2::geom_line(ggplot2::aes(col=type)) +
+    ggplot2::geom_point(ggplot2::aes(col=model)) +
+    ggplot2::geom_line(ggplot2::aes(col=model)) +
     ggplot2::scale_y_continuous(labels = scales::number_format(big.mark = ",")) +
-    ggplot2::facet_wrap(~location, scales="free", ncol = 3) +
+    ggplot2::facet_wrap(~location, scales="free", ncol = 1) +
     ggplot2::theme_bw() +
     ggplot2::labs(x = "Date", y = NULL) +
-    ggplot2::theme(legend.position = "Bottom", legend.title = ggplot2::element_blank())
+    ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank())
 
-  if(pi) {
+  if(!is.null(pi)) {
+
+    ## NOTE: alpha is controlled by the number of models plotted
+    ## if only 1 model is plotted set to 0.5 so the ribbon isnt solid
+    pi_alpha <- ifelse(n_models > 1, 1/n_models, 0.5)
     p <-
       p +
-      ggplot2::geom_ribbon(ggplot2::aes(fill = type, ymin = `0.025`, ymax = `0.975`),
-                           alpha = 0.5, color="lightpink", data=dplyr::filter(bound, type == "forecast"))
+      ggplot2::geom_ribbon(ggplot2::aes(fill = model, ymin = lower, ymax = upper),
+                           alpha = pi_alpha)
   }
 
   return(p)
+}
+
+#' @title Minimum non-zero
+#' @description Get the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return The minimum non-zero positive value from `x`.
+#' @seealso [mnz_replace]
+#' @export
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+mnz <- function(x) {
+  if (!is.numeric(x)) stop("x must be a numeric vector")
+  return(min(x[which(x>0)]))
+}
+
+#' @title Minimum non-zero replacement
+#' @description Replace zeros and negative values with the minimum non-zero positive value from a vector.
+#' @param x a numeric vector
+#' @return A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.
+#' @examples
+#' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
+#' x
+#' mnz(x)
+#' mnz_replace(x)
+#' tibble::tibble(x) %>% dplyr::mutate(x2=mnz_replace(x))
+#' @export
+mnz_replace <- function(x) {
+  x[which(x<=0)] <- mnz(x)
+  return(x)
 }

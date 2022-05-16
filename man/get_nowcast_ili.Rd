@@ -7,7 +7,8 @@
 get_nowcast_ili(
   epiyearweeks = NULL,
   dates = lubridate::today() - c(14, 7),
-  state = NULL
+  state = NULL,
+  boundatzero = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ get_nowcast_ili(
 \item{dates}{A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.}
 
 \item{state}{A vector of states to retrieve (two-letter abbreviation). Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
+
+\item{boundatzero}{Bound nowcasts at zero? defaults to TRUE.}
 }
 \value{
 A tibble

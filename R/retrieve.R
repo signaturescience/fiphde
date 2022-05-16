@@ -202,6 +202,7 @@ get_cdc_hosp <- function(years=NULL) {
 #' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
 #' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
+#' @param boundatzero Bound nowcasts at zero? defaults to TRUE.
 #' @return A tibble
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
@@ -232,7 +233,7 @@ get_cdc_hosp <- function(years=NULL) {
 #'   arrange(desc(abs(diff)))
 #' }
 #' @export
-get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL) {
+get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL, boundatzero=TRUE) {
 
   # Check that you're not supplying both. If you are, error out.
   if (!xor(is.null(epiyearweeks), is.null(dates))) {
@@ -293,6 +294,10 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
     dplyr::inner_join(locations, by="abbreviation") %>%
     dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili_now=value) %>%
     dplyr::arrange(epiyear, epiweek, location)
+
+  if (boundatzero) {
+    res$weighted_ili_now[res$weighted_ili_now<0] <- 0
+  }
 
   return(res)
 }
