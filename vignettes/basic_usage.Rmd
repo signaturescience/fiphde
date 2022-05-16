@@ -1,16 +1,33 @@
 ---
-title: "fiphde: Basic Usage"
-subtitle: "*F*orecasting *I*nfluenza in Support of *P*ublic *H*ealth *De*cision Making"
-output: html_document
+title: "Basic Usage"
+output: 
+  rmarkdown::html_vignette:
+      toc: true
+vignette: >
+  %\VignetteIndexEntry{Basic Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  eval=FALSE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
+
+## Overview
+
+_Fixme intro text here..._
+
+## Usage
 
 First, load the `fiphde` package and other ancillary packages.
 
-```{r, message = FALSE, warning = FALSE}
+```{r setup}
+library(fiphde)
 library(fiphde)
 library(dplyr)
 library(purrr)
@@ -19,7 +36,7 @@ library(ggplot2)
 library(furrr)
 ```
 
-# Get data
+### Get data
 
 First, let's retrieve Influenza-like Illness (ILI) data from [CDC FluView](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html). Note that `years` argument gets the *flu season* corresponding to the year. If you only get 2020-2021, you're getting the 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 
@@ -37,7 +54,7 @@ ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ```
 
-# Fit ARIMA model
+### Fit ARIMA model
 
 Now that the data has been gathered we being model fitting. We use `forecast_ili` to fit a `fable::ARIMA` model with parameters optimized automatically. Here 
 

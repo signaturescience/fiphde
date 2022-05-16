@@ -56,5 +56,8 @@ Suggests:
     plotly,
     shinyWidgets,
     here,
-    DT
+    DT,
+    knitr,
+    rmarkdown
 Config/testthat/edition: 3
+VignetteBuilder: knitr
