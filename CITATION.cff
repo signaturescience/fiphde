@@ -2,7 +2,7 @@
 # CITATION file created with {cffr} R package, v0.2.2
 # See also: https://docs.ropensci.org/cffr/
 # -----------------------------------------------------------
- 
+
 cff-version: 1.2.0
 message: 'To cite package "fiphde" in publications use:'
 type: software
@@ -27,6 +27,7 @@ authors:
   given-names: Stephen
   email: sturner@signaturescience.com
   orcid: https://orcid.org/0000-0001-9140-9028
+url: https://github.com/signaturescience/fiphde
 preferred-citation:
   type: manual
   title: 'fiphde: Forecasting Influenza in Support of Public Health Decision Making'
@@ -56,6 +57,7 @@ preferred-citation:
     orcid: https://orcid.org/0000-0003-0060-566X
   license: GPL-3.0-or-later
   year: '2022'
+  url: https://github.com/signaturescience/fiphde
 contact:
 - family-names: Nagraj
   given-names: VP
