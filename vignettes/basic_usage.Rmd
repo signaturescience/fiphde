@@ -12,34 +12,133 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  eval=FALSE,
-  comment = "#>"
+  eval=TRUE,
+  warning=FALSE,
+  message=FALSE,
+  comment = "#>",
+  fig.width=6, fig.height=4
 )
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
+
+```{r, echo=FALSE}
+# Load precooked results. See data-raw/generate_sysdata.R for details
+hosp <- fiphde:::vd$hosp
+prepped_hosp <- fiphde:::vd$prepped_hosp
+prepped_hosp_tsibble <- fiphde:::vd$prepped_hosp_tsibble
+hosp_fitfor <- fiphde:::vd$hosp_fitfor
+```
+
+# Overview
+
+The fiphde (**f**orecasting **i**nfluenza in support of **p**ublic **e**ealth **de**cision making) package provides utilities for forecasting influenza hospitalizations in the United States. fiphde provides functions for retrieval of hospitalization time series data from the HHS Protect system at [HealthData.gov](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh), preparation of raw data for forecasting, fitting time series and count regression models to create probabilistic forecasts for influenza hospitalizations at state and national levels, visualizing and evaluating forecasts, and formatting forecasts for submission to [FluSight](https://www.cdc.gov/flu/weekly/flusight/index.html).
+
+fiphde rhymes with "fifty," as in the 50 states in the US.
+
+# Usage
+
+First, load the packages that are used in this vignette.
+
+```{r setup,}
+library(fiphde)
+library(dplyr)
+library(purrr)
+library(readr)
+library(furrr)
+library(ggplot2)
+theme_set(theme_bw())
+```
+
+## Data retrieval
+
+Prior to fitting any forecasts we need to first retrieve data from the [HealthData.gov COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries API](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh). 
+
+```{r, eval=FALSE}
+hosp <- get_hdgov_hosp(limitcols = TRUE)
+```
+
+```{r}
+hosp
+```
+
+## Time series forecasting
+
+We will first fit a time series model, creating an ensemble model from ARIMA and exponential smoothing time series models. Time series modeling is based on the tidyverts (<https://tidyverts.org/>) collection of packages for tidy time series forecasting in R.
+
+### Data preparation
+
+FIrst let's prepare the data for a time series forecast. The `prep_hdgov_hosp` function call below will limit to states only (removes territories), removes any data from an incomplete epidemiological week (Sunday-Saturday), removes locations with little to no reported hospitalizations over the last month, and further removes Washington DC. Then the function summarizes total number of cases over each epidemiological week at each location. This function also adds in location FIPS codes, and joins in historical unweighted influenza-like illness (ILI) and hospitalizations mean and ranks. ILI data collected from [CDC ILINet](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html), and historical flu hospitalization data collected from [CDC FluSurv-Net](https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm).
+
+```{r, eval=FALSE}
+# Prep data
+prepped_hosp <-
+  hosp %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+  dplyr::filter(abbreviation != "DC")
+```
+
+```{r}
+prepped_hosp
+```
+
+Let's explore the data:
+
+```{r}
+prepped_hosp %>% 
+  filter(abbreviation %in% c("US", "CA", "TX", "NY")) %>% 
+  ggplot(aes(week_end, flu.admits)) + geom_line() + 
+  facet_wrap(~abbreviation, scale="free_y")
+```
+
+What states had the highest admissions over the 2021-2022 flu season?
+
+```{r}
+prepped_hosp %>% 
+  filter(abbreviation!="US") %>% 
+  filter(week_start>="2021-07-01" & week_end<"2022-06-30") %>% 
+  group_by(abbreviation) %>% 
+  summarize(total.flu.admits=sum(flu.admits)) %>% 
+  arrange(desc(total.flu.admits)) %>% 
+  head(10) %>% 
+  knitr::kable(caption="Top 10 states with highest flu hospitalizations in 2021-2022.")
+```
+
+Next let's turn this into a [tsibble](https://tsibble.tidyverts.org/). tsibble objects are tibbles with an _index_ variable describing the inherent ordering from past to present, and a _key_ that defines observational units over time. The fiphde package's `make_tsibble` function provides a convenience wrapper around `tsibble::as_tsibble` using the epidemiological week's Monday as the weekly index and the location as the key.  
+
+```{r, eval=FALSE}
+prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+                                     epiyear = epiyear,
+                                     epiweek=epiweek,
+                                     key=location)
+```
+
+```{r}
+prepped_hosp_tsibble
+```
+
+
+### Fit a model
+
+Fixme: explain what it's doing
+
+```{r, eval=FALSE}
+hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               covariates=c("hosp_rank", "ili_rank"))
+```
+
+Fixme explain what's here
+
+```{r}
+hosp_fitfor
+```
+
 
 ```{r, eval=TRUE}
 knitr::knit_exit()
 ```
 
-
-## Overview
-
-_Fixme intro text here..._
-
-## Usage
-
-First, load the `fiphde` package and other ancillary packages.
-
-```{r setup}
-library(fiphde)
-library(fiphde)
-library(dplyr)
-library(purrr)
-library(readr)
-library(ggplot2)
-library(furrr)
-```
 
 ### Get data
 
