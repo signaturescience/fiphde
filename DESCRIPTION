@@ -48,7 +48,9 @@ Imports:
     stats,
     scales,
     readr,
-    shiny
+    shiny,
+    feasts,
+    urca
 Depends: 
     R (>= 2.10)
 Suggests: 
