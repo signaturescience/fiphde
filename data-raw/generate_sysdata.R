@@ -2,6 +2,7 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(ggplot2)
+library(fiphde)
 theme_set(theme_bw())
 
 # Location metadata -------------------------------------------------------
@@ -135,6 +136,37 @@ historical_severity %>%
   gather(key, value, -epiweek) %>%
   ggplot(aes(epiweek, value)) + geom_point() + geom_line() + facet_wrap(~key, scale="free_y")
 
+
+# Create data used in vignette --------------------------------------------
+
+# vignette data
+vd <- list()
+# Get data include in vignette
+vd$hosp <- get_hdgov_hosp(limitcols = TRUE)
+# Limit to the previous epiweek
+vd$hosp <- vd$hosp %>% filter(date <= "2022-05-28")
+
+# Prep data
+vd$prepped_hosp <-
+  vd$hosp %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+  dplyr::filter(abbreviation != "DC")
+
+# Make tsibble
+vd$prepped_hosp_tsibble <- make_tsibble(vd$prepped_hosp,
+                                        epiyear = epiyear,
+                                        epiweek=epiweek,
+                                        key=location)
+
+
+# Fit model
+vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               covariates=c("hosp_rank", "ili_rank"))
+
+
+
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, hospstats, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations, q, quidk, historical_severity, hospstats, vd, internal = TRUE, overwrite = TRUE)
