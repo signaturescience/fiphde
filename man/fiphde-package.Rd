@@ -8,6 +8,13 @@
 \description{
 Miscellaneous functions for retrieving data, creating and evaluating time series forecasting models for influenza-like illness (ILI) and influenza hospitalizations in the United States.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://signaturescience.github.io/fiphde/}
+}
+
+}
 \author{
 \strong{Maintainer}: VP Nagraj \email{pnagraj@signaturescience.com} (\href{https://orcid.org/0000-0003-0060-566X}{ORCID})
 
