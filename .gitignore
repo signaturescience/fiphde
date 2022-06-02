@@ -2,6 +2,4 @@
 .Rhistory
 .DS_Store
 inst/doc
-
-# pkgdown site: eventually remove this and set github pages to publish from docs/
-docs
+docs/
