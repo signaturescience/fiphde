@@ -18,6 +18,11 @@ knitr::opts_chunk$set(
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
+```{r, eval=TRUE}
+knitr::knit_exit()
+```
+
+
 ## Overview
 
 _Fixme intro text here..._
