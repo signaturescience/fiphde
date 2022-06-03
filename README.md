@@ -28,5 +28,5 @@ To get started, see the [package
 vignette](https://signaturescience.github.io/fiphde/articles/fiphde.html):
 
 ``` r
-vignette("fiphde")
+vignette("basic_usage", package="fiphde")
 ```
