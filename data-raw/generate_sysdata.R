@@ -165,6 +165,8 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
                                outcome="flu.admits",
                                covariates=c("hosp_rank", "ili_rank"))
 
+# Format for submission
+vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
 
 
 # Write package data ------------------------------------------------------
