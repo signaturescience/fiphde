@@ -23,15 +23,23 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ```{r, echo=FALSE}
 # Load precooked results. See data-raw/generate_sysdata.R for details
+
+# TSENS
 hosp <- fiphde:::vd$hosp
 prepped_hosp <- fiphde:::vd$prepped_hosp
 prepped_hosp_tsibble <- fiphde:::vd$prepped_hosp_tsibble
 hosp_fitfor <- fiphde:::vd$hosp_fitfor
 formatted_list <- fiphde:::vd$formatted_list
+
+# CREG
+ilidat <- fiphde:::vd$ilidat
+iliaug <- fiphde:::vd$iliaug
+ilifor <- fiphde:::vd$ilifor
+res <- fiphde:::vd$res
+res$forecasts$location <- "US"
 ```
 
 ```{r, eval=FALSE, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
-devtools::build_vignettes()
 devtools::install(build_vignettes = TRUE, upgrade = FALSE)
 vignette("basic_usage", package="fiphde")
 ```
@@ -195,34 +203,121 @@ hosp_fitfor$tsfit$arima %>%
 
 ## Count regression forecasting
 
+The time series methods above assume that the outcome data has a continuous distribution. However, in reality we are forecasting _counts_, e.g., "how many influenza hospitalizations will occur next week in the United States?" In practice this does not matter when counts are large as the difference between a continuous and discrete distribution will have no meaningful effect on time series forecasts. However, when data contains small counts, methods specifically designed for forecasting _counts_ may have more desirable properties. Here we will fit count regression models forecasting influenza hospitalizations modeled on influenza-like illness (ILI) indicators and historical hospitalization severity for given epidemiological weeks, automatically finding the "best" models from possible covariates and model families (e.g., Poisson, Quasipoisson, Negative binomial, etc.).
+
 ### ILI retrieval and prep
+
+First we must retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `cdcfluview::ilinet()`. Here we're only using recent ILI data (i.e., since 2019). We next replace _all_ of Florida's weighted ILI data using Nowcast data from [CMU Delphi ILI Nearby](https://delphi.cmu.edu/nowcast/) (ILINet does not have weighted ILI data for Florida). We next replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/) to created augmented data (`iliaug`). Finally, we fit a time series model to forecast ILI for the next four weeks.
+
+```{r, eval=FALSE}
+ilidat <- get_cdc_ili(region=c("national"), years=2019:2022)
+ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
+iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+```
+
+In the next step we are going to log transform weighted ILI and flu admissions, so in this step we need to remove all the zeros. The fiphde package provides the `mnz_replace` function which replaces zeros in a variable with the smallest non-zero value of that variable.
+
+```{r}
+ilidat <- ilidat %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+iliaug <- iliaug %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+
+ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
+```
+
+Finally, we create our modeling dataset by combining the flu admission data prepared above with the forecasted ILI data in future weeks together with the historical severity data by epidemiological week.
+
+```{r}
+dat_us <-
+  prepped_hosp %>%
+  filter(location=="US") %>%
+  mutate(lag_1 = lag(flu.admits, 1)) %>%
+  filter(!is.na(lag_1)) %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  mutate(ili = log(ili)) %>%
+  mutate(flu.admits.cov=log(flu.admits.cov))
+dat_us
+```
 
 ### Fit a model and forecast
 
-### Advanced: parallelize forecasts over locations
+First we create a list of different count regression models to fit. Inspect the Poisson model formulation and the negative binomial model specification using an offset.
 
-## FIPHDE explorer Shiny app
+```{r}
+models <-
+  list(
+    poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
+    poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "poisson"),
+    quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
+    quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "quasipoisson"),
+    negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
+    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov))
+  )
+models$poisson1
+models$negbin2
+```
 
-```{r, eval=TRUE}
+We must next project covariates four weeks into the future. Do this by pulling from the forecasted ILI and historical severity data.
+
+```{r}
+new_cov <-
+  ilifor$ili_future %>%
+  filter(location %in% unique(dat_us$location)) %>%
+  left_join(fiphde:::historical_severity, by="epiweek") %>%
+  ## assume the coverage will be the average of the last 8 weeks of reporting
+  bind_cols(.,tibble(flu.admits.cov = rep(mean(dat_us$flu.admits.cov,8), 4))) %>%
+  select(-epiweek,-epiyear) %>%
+  mutate(ili = log(ili))
+new_cov
+```
+
+Next we use fiphde's `glm_wrap` function which attempts to find the best-fitting model out of all the models supplied, and specifies the prediction interval quantiles used in Flusight.
+
+```{r, eval=FALSE}
+res <- glm_wrap(dat_us,
+                new_covariates = new_cov,
+                .models = models,
+                alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
+res$forecasts$location <- "US"
+```
+
+Take a look at the model forecast as well as different aspects of the final fitted model.
+
+```{r}
+head(res$forecasts)
+res$model
+res$model$fit
+res$model$fit$fitted_model$family
+res$model$fit$fitted_model$coefficients
+```
+
+Prepare the data for submission to flusight.
+
+```{r}
+us_glm_prepped <- format_for_submission(res$forecasts, method="CREG")
+us_glm_prepped
+```
+
+Optionally, validate the forecast according to Flusight's validation scheme.
+
+```{r, eval=FALSE}
+validate_forecast(us_glm_prepped$CREG)
+```
+
+Finally, visualize the forecast with the observed data.
+
+```{r, warning=FALSE}
+plot_forecast(dat_us, us_glm_prepped$CREG, location="US")
+```
+
+The count regression model appears to forecast far fewer influenza hospitalizations than recent weeks' data might suggest, and far fewer than the time series approach above forecasted. Remember that the count regression model is based on current ILI and historical influenza hospitalization severity. The 2022 season is atypical in that the season peaked in late spring, when flu hospitalizations had historically been low. The typical downturn in ILI and flu hospitalizations in early spring combined with the 2021-2022 season's atypically late peak is likely the cause of this low forecast.
+
+```{r, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
 
-
-<!-- Everything below is leftover from SAJ's previous start. -->
-
-First, let's retrieve Influenza-like Illness (ILI) data from [CDC FluView](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html). Note that `years` argument gets the *flu season* corresponding to the year. If you only get 2020-2021, you're getting the 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
-
-```{r, message = FALSE, eval=FALSE}
-ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
-```
-
-Some states have missing ILI data so we pull from [CMU Delphi NowCast](https://delphi.cmu.edu/nowcast/) instead.
-
-```{r, message = FALSE, eval=FALSE}
-# Replace FluView data with NowCast data for Florida only
-ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
-
-## Pull NowCast data for all states for a specified date
-iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
-```
+## FIPHDE explorer Shiny app
 
