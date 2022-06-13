@@ -168,6 +168,62 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
 # Format for submission
 vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
 
+# CREG ILI data - stuff in vd$ is created here and saved
+vd$ilidat <- get_cdc_ili(region=c("national"), years=2019:2022)
+vd$ilidat <- state_replace_ili_nowcast_all(vd$ilidat, state="FL")
+vd$iliaug <- replace_ili_nowcast(vd$ilidat, weeks_to_replace=1)
+vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+vd$ilidat <- vd$ilidat %>% filter(week_start<=max(vd$prepped_hosp$week_start))
+vd$iliaug <- vd$iliaug %>% filter(week_start<=max(vd$prepped_hosp$week_start))
+
+# This stuff is done in the vignette
+ilidat <- vd$ilidat
+iliaug <- vd$iliaug
+ilifor <- vd$ilifor
+prepped_hosp <- vd$prepped_hosp
+
+ilidat <- ilidat %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+iliaug <- iliaug %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+
+ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
+
+dat_us <-
+  prepped_hosp %>%
+  filter(location=="US") %>%
+  mutate(lag_1 = lag(flu.admits, 1)) %>%
+  filter(!is.na(lag_1)) %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  mutate(ili = log(ili)) %>%
+  mutate(flu.admits.cov=log(flu.admits.cov))
+
+models <-
+  list(
+    poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
+    poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "poisson"),
+    quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
+    quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "quasipoisson"),
+    negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
+    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov))
+  )
+
+new_cov <-
+  ilifor$ili_future %>%
+  filter(location %in% unique(dat_us$location)) %>%
+  left_join(fiphde:::historical_severity, by="epiweek") %>%
+  ## assume the coverage will be the average of the last 8 weeks of reporting
+  bind_cols(.,tibble(flu.admits.cov = rep(mean(dat_us$flu.admits.cov,8), 4))) %>%
+  select(-epiweek,-epiyear) %>%
+  mutate(ili = log(ili))
+
+res <- glm_wrap(dat_us,
+                new_covariates = new_cov,
+                .models = models,
+                alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
+vd$res <- res
+
 
 # Write package data ------------------------------------------------------
 
