@@ -222,6 +222,8 @@ res <- glm_wrap(dat_us,
                 new_covariates = new_cov,
                 .models = models,
                 alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
+
+# Put the final res object back in vd
 vd$res <- res
 
 
