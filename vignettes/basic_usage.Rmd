@@ -267,7 +267,6 @@ new_cov <-
   ilifor$ili_future %>%
   filter(location %in% unique(dat_us$location)) %>%
   left_join(fiphde:::historical_severity, by="epiweek") %>%
-  ## assume the coverage will be the average of the last 8 weeks of reporting
   bind_cols(.,tibble(flu.admits.cov = rep(mean(dat_us$flu.admits.cov,8), 4))) %>%
   select(-epiweek,-epiyear) %>%
   mutate(ili = log(ili))
