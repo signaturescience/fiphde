@@ -33,10 +33,9 @@ formatted_list <- fiphde:::vd$formatted_list
 
 # CREG
 ilidat <- fiphde:::vd$ilidat
-iliaug <- fiphde:::vd$iliaug
 ilifor <- fiphde:::vd$ilifor
 res <- fiphde:::vd$res
-res$forecasts$location <- "US"
+res$forecasts$location <- "15"
 ```
 
 ```{r, eval=FALSE, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
@@ -46,7 +45,7 @@ vignette("basic_usage", package="fiphde")
 
 # Overview
 
-The fiphde (**f**orecasting **i**nfluenza in support of **p**ublic **h**ealth **de**cision making) package provides utilities for forecasting influenza hospitalizations in the United States. fiphde provides functions for retrieval of hospitalization time series data from the HHS Protect system at [HealthData.gov](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh), preparation of raw data for forecasting, fitting time series and count regression models to create probabilistic forecasts for influenza hospitalizations at state and national levels, visualizing and evaluating forecasts, and formatting forecasts for submission to [FluSight](https://www.cdc.gov/flu/weekly/flusight/index.html).
+The fiphde (**f**orecasting **i**nfluenza in support of **p**ublic **h**ealth **de**cision making) package provides utilities for forecasting influenza hospitalizations in the United States. fiphde includes functions for retrieving hospitalization time series data from the HHS Protect system at [HealthData.gov](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh), preparing raw data for forecasting, fitting time series and count regression models to create probabilistic forecasts for influenza hospitalizations at state and national levels, visualizing and evaluating forecasts, and formatting forecasts for submission to [FluSight](https://www.cdc.gov/flu/weekly/flusight/index.html).
 
 fiphde rhymes with "fifty," as in the 50 states in the US.
 
@@ -83,7 +82,7 @@ We will first fit a time series model, creating an ensemble model from ARIMA and
 
 ### Data preparation
 
-FIrst let's prepare the data for a time series forecast. The `prep_hdgov_hosp` function call below will limit to states only (removes territories), removes any data from an incomplete epidemiological week (Sunday-Saturday), removes locations with little to no reported hospitalizations over the last month, and further removes Washington DC. Then the function summarizes total number of cases over each epidemiological week at each location. This function also adds in location FIPS codes, and joins in historical unweighted influenza-like illness (ILI) and hospitalizations mean and ranks. ILI data collected from [CDC ILINet](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html), and historical flu hospitalization data collected from [CDC FluSurv-Net](https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm).
+First let's prepare the data for a time series forecast. The `prep_hdgov_hosp` function call below will limit to states only (removes territories), removes any data from an incomplete epidemiological week (Sunday-Saturday), removes locations with little to no reported hospitalizations over the last month, and further removes Washington DC. Then the function summarizes total number of cases over each epidemiological week at each location. This function also adds in location FIPS codes, and joins in historical unweighted influenza-like illness (ILI) and hospitalizations mean and ranks. ILI data collected from [CDC ILINet](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html), and historical flu hospitalization data collected from [CDC FluSurv-Net](https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm).
 
 ```{r, eval=FALSE}
 # Prep data
@@ -137,7 +136,7 @@ prepped_hosp_tsibble
 
 Next, let's fit a time series model and create forecasts using the `ts_fit_forecast` function. This function takes a tsibble created as above, a forecast horizon in weeks, the name of the outcome variable to forecast, and optional covariates to use in the ARIMA model. 
 
-Here we fit a nonseasonal ARIMA model with the nonseasonal autoregressive term (p) restricted to 1:2, order of integration for non-seasonal differencing restricted to 0:2, and the moving average restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an auto-regressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We trim the data at January 1 2021 (hospitalization data prior to that date is sparse and not useful for learning). By setting `ensemble=TRUE` we create an ensemble model by averaging the ARIMA and exponential smoothing models. By setting `remove_null_models=TRUE` we catch models that did not converge to a solution and remove those from downstream processing.
+Here we fit a nonseasonal ARIMA model with the nonseasonal autoregressive term (p) restricted to 1:2, order of integration for non-seasonal differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an auto-regressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We trim the data at January 1 2021 (hospitalization data prior to that date is sparse and not useful for learning). By setting `ensemble=TRUE` we create an ensemble model by averaging the ARIMA and exponential smoothing models. By setting `remove_null_models=TRUE` we catch models that did not converge to a solution and remove those from downstream processing.
 
 ```{r, eval=FALSE}
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
@@ -203,16 +202,18 @@ hosp_fitfor$tsfit$arima %>%
 
 ## Count regression forecasting
 
-The time series methods above assume that the outcome data has a continuous distribution. However, in reality we are forecasting _counts_, e.g., "how many influenza hospitalizations will occur next week in the United States?" In practice this does not matter when counts are large as the difference between a continuous and discrete distribution will have no meaningful effect on time series forecasts. However, when data contains small counts, methods specifically designed for forecasting _counts_ may have more desirable properties. Here we will fit count regression models forecasting influenza hospitalizations modeled on influenza-like illness (ILI) indicators and historical hospitalization severity for given epidemiological weeks, automatically finding the "best" models from possible covariates and model families (e.g., Poisson, Quasipoisson, Negative binomial, etc.).
+The time series methods above assume that the outcome has a continuous distribution. When forecasting _counts_ and especially _small counts_ (e.g., "how many influenza hospitalizations will occur next week in Hawaii?") alternative methods may have more desirable properties. fiphde provides functionality to leverage count regression models for forecasting influenza hospitalizations. Here we will demonstrate how to implement a count regression modeling approach. The example will step through the process of forecasting hospitalizations in Hawaii by using influenza-like illness (ILI) and indicators of historical hospitalization and ILI severity for the given epidemiological weeks. The usage illustrates an automated tuning procedure that finds the "best" models from possible covariates and model families (e.g., Poisson, Quasipoisson, Negative binomial, etc.).
 
 ### ILI retrieval and prep
 
-First we must retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `cdcfluview::ilinet()`. Here we're only using recent ILI data (i.e., since 2019). We next replace _all_ of Florida's weighted ILI data using Nowcast data from [CMU Delphi ILI Nearby](https://delphi.cmu.edu/nowcast/) (ILINet does not have weighted ILI data for Florida). We next replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/) to created augmented data (`iliaug`). Finally, we fit a time series model to forecast ILI for the next four weeks.
+Given that ILI will be a covariate in the count regression model, we must first retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `cdcfluview::ilinet()`. Here, we're only using recent ILI data (i.e., since 2019) and we further filter the signal to only include Hawaii. Given that ILI is subject to revision and may be less reliable when initally reported, we replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/) to created augmented data (`iliaug`). Finally, we fit a time series model to forecast ILI for the next four weeks.
 
 ```{r, eval=FALSE}
-ilidat <- get_cdc_ili(region=c("national"), years=2019:2022)
-ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
-iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+ilidat <- 
+  get_cdc_ili(region=c("state"), years=2019:2022) %>%
+  filter(region == "Hawaii") %>%
+  replace_ili_nowcast(., weeks_to_replace=1)
+
 ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 ```
 
@@ -220,44 +221,38 @@ In the next step we are going to log transform weighted ILI and flu admissions, 
 
 ```{r}
 ilidat <- ilidat %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-iliaug <- iliaug %>% mutate(weighted_ili=mnz_replace(weighted_ili))
 
-ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
+ilifor$ilidat <- ilifor$ilidat %>% mutate(ili=mnz_replace(ili))
 ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
-ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_bound <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
 ```
 
 Finally, we create our modeling dataset by combining the flu admission data prepared above with the forecasted ILI data in future weeks together with the historical severity data by epidemiological week.
 
 ```{r}
-dat_us <-
+dat_hi <-
   prepped_hosp %>%
-  filter(location=="US") %>%
-  mutate(lag_1 = lag(flu.admits, 1)) %>%
-  filter(!is.na(lag_1)) %>%
+  filter(abbreviation=="HI") %>%
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
   left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
-  mutate(ili = log(ili)) %>%
-  mutate(flu.admits.cov=log(flu.admits.cov))
-dat_us
+  mutate(ili = log(ili))
+dat_hi
 ```
 
 ### Fit a model and forecast
 
-First we create a list of different count regression models to fit. Inspect the Poisson model formulation and the negative binomial model specification using an offset.
+First we create a list of different count regression models to fit. We can inspect the formulations of each model.
 
 ```{r}
 models <-
   list(
-    poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
-    poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "poisson"),
-    quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
-    quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
-    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov))
+    poisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
+    quasipoisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
+    negbin = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank)
   )
-models$poisson1
-models$negbin2
+models$poisson
+models$quasipoisson
+models$negbin
 ```
 
 We must next project covariates four weeks into the future. Do this by pulling from the forecasted ILI and historical severity data.
@@ -265,22 +260,20 @@ We must next project covariates four weeks into the future. Do this by pulling f
 ```{r}
 new_cov <-
   ilifor$ili_future %>%
-  filter(location %in% unique(dat_us$location)) %>%
   left_join(fiphde:::historical_severity, by="epiweek") %>%
-  bind_cols(.,tibble(flu.admits.cov = rep(mean(dat_us$flu.admits.cov,8), 4))) %>%
   select(-epiweek,-epiyear) %>%
   mutate(ili = log(ili))
 new_cov
 ```
 
-Next we use fiphde's `glm_wrap` function which attempts to find the best-fitting model out of all the models supplied, and specifies the prediction interval quantiles used in Flusight.
+Next we use fiphde's `glm_wrap` function which attempts to find the best-fitting model out of all the models supplied, and specifies the prediction interval quantiles used in FluSight.
 
 ```{r, eval=FALSE}
-res <- glm_wrap(dat_us,
+res <- glm_wrap(dat_hi,
                 new_covariates = new_cov,
                 .models = models,
                 alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
-res$forecasts$location <- "US"
+res$forecasts$location <- "15"
 ```
 
 Take a look at the model forecast as well as different aspects of the final fitted model.
@@ -293,30 +286,19 @@ res$model$fit$fitted_model$family
 res$model$fit$fitted_model$coefficients
 ```
 
-Prepare the data for submission to flusight.
+Next we prepare the data in the quantile format used by FluSight.
 
 ```{r}
-us_glm_prepped <- format_for_submission(res$forecasts, method="CREG")
-us_glm_prepped
+hi_glm_prepped <- format_for_submission(res$forecasts, method="CREG")
+hi_glm_prepped
 ```
 
-Optionally, validate the forecast according to Flusight's validation scheme.
-
-```{r, eval=FALSE}
-validate_forecast(us_glm_prepped$CREG)
-```
-
-Finally, visualize the forecast with the observed data.
+Finally, we can visualize the forecast alongside the observed data.
 
 ```{r, warning=FALSE}
-plot_forecast(dat_us, us_glm_prepped$CREG, location="US")
+plot_forecast(dat_hi, hi_glm_prepped$CREG, location="15")
 ```
-
-The count regression model appears to forecast far fewer influenza hospitalizations than recent weeks' data might suggest, and far fewer than the time series approach above forecasted. Remember that the count regression model is based on current ILI and historical influenza hospitalization severity. The 2022 season is atypical in that the season peaked in late spring, when flu hospitalizations had historically been low. The typical downturn in ILI and flu hospitalizations in early spring combined with the 2021-2022 season's atypically late peak is likely the cause of this low forecast.
 
 ```{r, eval=TRUE, echo=FALSE}
 knitr::knit_exit()
 ```
-
-## FIPHDE explorer Shiny app
-
