@@ -2,6 +2,7 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(ggplot2)
+library(fiphde)
 theme_set(theme_bw())
 
 # Location metadata -------------------------------------------------------
@@ -135,6 +136,87 @@ historical_severity %>%
   gather(key, value, -epiweek) %>%
   ggplot(aes(epiweek, value)) + geom_point() + geom_line() + facet_wrap(~key, scale="free_y")
 
+
+# Create data used in vignette --------------------------------------------
+
+# vignette data
+vd <- list()
+# Get data include in vignette
+vd$hosp <- get_hdgov_hosp(limitcols = TRUE)
+# Limit to the previous epiweek
+vd$hosp <- vd$hosp %>% filter(date <= "2022-05-28")
+
+# Prep data
+vd$prepped_hosp <-
+  vd$hosp %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+  dplyr::filter(abbreviation != "DC")
+
+# Make tsibble
+vd$prepped_hosp_tsibble <- make_tsibble(vd$prepped_hosp,
+                                        epiyear = epiyear,
+                                        epiweek=epiweek,
+                                        key=location)
+
+
+# Fit model
+vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               covariates=c("hosp_rank", "ili_rank"))
+
+# Format for submission
+vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
+
+# CREG ILI data - stuff in vd$ is created here and saved
+vd$ilidat <-
+  get_cdc_ili(region=c("state"), years=2019:2022) %>%
+  filter(region == "Hawaii") %>%
+  replace_ili_nowcast(., weeks_to_replace=1)
+
+vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+
+# This stuff is done in the vignette
+ilidat <- vd$ilidat
+ilifor <- vd$ilifor
+prepped_hosp <- vd$prepped_hosp
+
+ilidat <- ilidat %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+
+ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
+
+dat_hi <-
+  prepped_hosp %>%
+  filter(abbreviation=="HI") %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  mutate(ili = log(ili))
+
+models <-
+  list(
+    poisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
+    quasipoisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
+    negbin = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank)
+  )
+
+new_cov <-
+  ilifor$ili_future %>%
+  left_join(fiphde:::historical_severity, by="epiweek") %>%
+  select(-epiweek,-epiyear) %>%
+  mutate(ili = log(ili))
+
+
+res <- glm_wrap(dat_hi,
+                new_covariates = new_cov,
+                .models = models,
+                alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
+
+# Put the final res object back in vd
+vd$res <- res
+
+
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, hospstats, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations, q, quidk, historical_severity, hospstats, vd, internal = TRUE, overwrite = TRUE)

@@ -25,8 +25,8 @@ remotes::install_github("signaturescience/fiphde", build_vignettes = TRUE)
 ## Usage
 
 To get started, see the [package
-vignette](https://signaturescience.github.io/fiphde/articles/fiphde.html):
+vignette](https://signaturescience.github.io/fiphde/articles/basic_usage.html):
 
 ``` r
-vignette("fiphde")
+vignette("basic_usage", package="fiphde")
 ```

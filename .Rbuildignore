@@ -10,3 +10,5 @@
 ^docs$
 ^pkgdown$
 ^CITATION\.cff$
+^doc$
+^Meta$

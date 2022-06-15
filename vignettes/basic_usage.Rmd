@@ -4,7 +4,7 @@ output:
   rmarkdown::html_vignette:
       toc: true
 vignette: >
-  %\VignetteIndexEntry{fiphde}
+  %\VignetteIndexEntry{basic_usage}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,58 +12,293 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  eval=FALSE,
-  comment = "#>"
+  eval=TRUE,
+  warning=FALSE,
+  message=FALSE,
+  comment = "#>",
+  fig.width=6, fig.height=4
 )
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
-```{r, eval=TRUE}
-knitr::knit_exit()
+```{r, echo=FALSE}
+# Load precooked results. See data-raw/generate_sysdata.R for details
+
+# TSENS
+hosp <- fiphde:::vd$hosp
+prepped_hosp <- fiphde:::vd$prepped_hosp
+prepped_hosp_tsibble <- fiphde:::vd$prepped_hosp_tsibble
+hosp_fitfor <- fiphde:::vd$hosp_fitfor
+formatted_list <- fiphde:::vd$formatted_list
+
+# CREG
+ilidat <- fiphde:::vd$ilidat
+ilifor <- fiphde:::vd$ilifor
+res <- fiphde:::vd$res
+res$forecasts$location <- "15"
 ```
 
+```{r, eval=FALSE, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+devtools::install(build_vignettes = TRUE, upgrade = FALSE)
+vignette("basic_usage", package="fiphde")
+```
 
-## Overview
+# Overview
 
-_Fixme intro text here..._
+The fiphde (**f**orecasting **i**nfluenza in support of **p**ublic **h**ealth **de**cision making) package provides utilities for forecasting influenza hospitalizations in the United States. fiphde includes functions for retrieving hospitalization time series data from the HHS Protect system at [HealthData.gov](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh), preparing raw data for forecasting, fitting time series and count regression models to create probabilistic forecasts for influenza hospitalizations at state and national levels, visualizing and evaluating forecasts, and formatting forecasts for submission to [FluSight](https://www.cdc.gov/flu/weekly/flusight/index.html).
 
-## Usage
+fiphde rhymes with "fifty," as in the 50 states in the US.
 
-First, load the `fiphde` package and other ancillary packages.
+# Usage
 
-```{r setup}
-library(fiphde)
+The fiphde package retrieves current data from HHS and CDC APIs and fits models and forecasts using this data. This vignette uses data current to May 28, 2022 (MMWR epidemiological week 21 of 2022). Running the code here as written will produce different results depending on _when_ you run the code, as new data is constantly being added and historical data is constantly being revised.
+
+To get started, load the packages that are used in this vignette.
+
+```{r setup,}
 library(fiphde)
 library(dplyr)
 library(purrr)
 library(readr)
 library(ggplot2)
-library(furrr)
+theme_set(theme_bw())
 ```
 
-### Get data
+## Data retrieval
 
-First, let's retrieve Influenza-like Illness (ILI) data from [CDC FluView](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html). Note that `years` argument gets the *flu season* corresponding to the year. If you only get 2020-2021, you're getting the 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
+Prior to fitting any forecasts we need to first retrieve data from the [HealthData.gov COVID-19 Reported Patient Impact and Hospital Capacity by State Timeseries API](https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh). Running `get_hdgov_hosp(limitcols=TRUE)` will initiate an API call with an argument to return only a selection of fields relevant to flu hospitalization reporting.
 
-```{r, message = FALSE}
-ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
+```{r, eval=FALSE}
+hosp <- get_hdgov_hosp(limitcols = TRUE)
 ```
 
-Some states have missing ILI data so we pull from [CMU Delphi NowCast](https://delphi.cmu.edu/nowcast/) instead.
-
-```{r, message = FALSE}
-# Replace FluView data with NowCast data for Florida only
-ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
-
-## Pull NowCast data for all states for a specified date
-iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+```{r}
+hosp
 ```
 
-### Fit ARIMA model
+## Time series forecasting
 
-Now that the data has been gathered we being model fitting. We use `forecast_ili` to fit a `fable::ARIMA` model with parameters optimized automatically. Here 
+We will first fit a time series model, creating an ensemble model from ARIMA and exponential smoothing models. Time series modeling is based on the tidyverts (<https://tidyverts.org/>) collection of packages for tidy time series forecasting in R.
 
-```{r, message = FALSE}
-ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01")
+### Data preparation
+
+We need to initially prepare the data for a time series forecast. The `prep_hdgov_hosp` function call below will limit to states only (no territories), remove any data from an incomplete epidemiological week (Sunday-Saturday), remove locations with little to no reported hospitalizations over the last month, and further exclude Washington DC from downstream analysis. The function aggregates total number of cases at each epidemiological week at each location. This function also adds in location FIPS codes, and joins in historical influenza-like illness (ILI) and hospitalization mean values and ranks by week. Historical indicators for ILI and hospitalizations are summarized from [CDC ILINet](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html) and [CDC FluSurv-Net](https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm) respectively.
+
+```{r, eval=FALSE}
+# Prep data
+prepped_hosp <-
+  hosp %>%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+  dplyr::filter(abbreviation != "DC")
+```
+
+```{r}
+prepped_hosp
+```
+
+Now let's explore the data.
+
+```{r}
+prepped_hosp %>% 
+  filter(abbreviation %in% c("US", "CA", "TX", "NY")) %>% 
+  ggplot(aes(week_end, flu.admits)) + geom_line() + 
+  facet_wrap(~abbreviation, scale="free_y")
+```
+
+What states had the highest admissions over the 2021-2022 flu season?
+
+```{r}
+prepped_hosp %>% 
+  filter(abbreviation!="US") %>% 
+  filter(week_start>="2021-07-01" & week_end<"2022-06-30") %>% 
+  group_by(abbreviation) %>% 
+  summarize(total.flu.admits=sum(flu.admits)) %>% 
+  arrange(desc(total.flu.admits)) %>% 
+  head(10) %>% 
+  knitr::kable(caption="Top 10 states with highest flu hospitalizations in 2021-2022.")
+```
+
+Next let's turn this into a [tsibble](https://tsibble.tidyverts.org/). tsibble objects are tibbles with an _index_ variable describing the inherent ordering from past to present, and a _key_ that defines observational units over time. The `make_tsibble` function provides a convenience wrapper around `tsibble::as_tsibble` using the epidemiological week's Monday as the weekly index and the location as the key. Note that the specification of arguments for epidemiological week / year and location key are passed as "bare" (unquoted) names of columns storing this information in the original tibble.
+
+```{r, eval=FALSE}
+prepped_hosp_tsibble <- make_tsibble(prepped_hosp,
+                                     epiyear=epiyear,
+                                     epiweek=epiweek,
+                                     key=location)
+```
+
+```{r}
+prepped_hosp_tsibble
+```
+
+
+### Fit a model and forecast
+
+Next, let's fit a time series model and create forecasts using the `ts_fit_forecast` function. This function takes a tsibble created as above, a forecast horizon in weeks, the name of the outcome variable to forecast, and optional covariates to use in the ARIMA model. 
+
+Here we fit a non-seasonal ARIMA model with the autoregressive term (p) restricted to 1:2, order of integration for differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an autoregressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We can also trim the data used in modeling, and here we restrict to only include hospitalization data reported after January 1, 2021. By setting `ensemble=TRUE` we create an ensemble model that averages the ARIMA and exponential smoothing models. The `remove_null_models=TRUE` specification identifies models that did not converge and removes those from downstream processing.
+
+```{r, eval=FALSE}
+hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits",
+                               trim_date = "2021-01-01",
+                               covariates=c("hosp_rank", "ili_rank"), 
+                               models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
+                                           ets='season(method="N")',
+                                           nnetar=NULL), 
+                               ensemble=TRUE, 
+                               remove_null_models=TRUE)
+```
+
+The function will output messages describing the ARIMA and ETS model formulas passed to `fable::ARIMA` and `fable::ETS`.
+
+```
+Trimming to 2021-01-01
+ARIMA  formula: flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank
+ETS    formula: flu.admits ~ season(method = "N")
+```
+
+After fitting the models, the function then forecasts the outcome to the specified number of weeks. Let's take a look at the object returned from this model fit + forecast. We see `$tsfit`, which gives us the ARIMA, ETS, and ensemble model fits as list columns, one row per location; `$tsfor` gives us the forecast for the next four weeks, one row per model per location (key in the tsibble); `$formulas` gives us the model formulas passed to fable modeling functions; and if any models failed to converge we would see those locations in `$nullmodels`.
+
+```{r}
+hosp_fitfor
+```
+
+Next, we can format the forecasts for [submission to FluSight](https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md) using the `format_for_submission` function.
+
+```{r, eval=FALSE}
+formatted_list <- format_for_submission(hosp_fitfor$tsfor)
+```
+
+The list contains separate submission-ready tibbles, one element for each type of model fitted. 
+
+```{r}
+formatted_list
+```
+
+We can check to see if the submission is [valid](https://github.com/cdcepi/Flusight-forecast-data/blob/e1a2a05fa2bb065dfa80a7067c444394edde05e2/data-forecasts/README.md#Forecast-validation). Note that this will fail if the expected date of the target dates and current dates don't line up. You'll see a message noting _"The submission target end dates do not line up with expected Saturdays by horizon. Note if submission forecast date is not Sunday or Monday, then forecasts are assumed to to start the following week."_ If validation succeeds, the `$valid` element of the returned list will be `TRUE`, and `FALSE` if any validation checks fail.
+
+```{r, eval=FALSE}
+validate_forecast(formatted_list$ensemble)
+```
+
+Let's plot the forecast with the observed data using the `plot_forecast` function. Here we plot forecasts with the 50% prediction interval for US, New York (FIPS 36) and Florida (FIPS 12).
+
+```{r}
+plot_forecast(prepped_hosp, formatted_list$ensemble, loc="US", pi = .5)
+plot_forecast(prepped_hosp, formatted_list$ensemble, loc="36", pi = .5)
+plot_forecast(prepped_hosp, formatted_list$ensemble, loc="12", pi = .5)
+```
+
+Finally, we can pull out the ARIMA model parameters used for each location to save for posterity or retrospective analysis.
+
+```{r}
+hosp_fitfor$tsfit$arima %>% 
+  map("fit") %>% 
+  map_df("spec") %>% 
+  mutate(location = hosp_fitfor$tsfit$location, .before = "p")
+```
+
+## Count regression forecasting
+
+The time series methods above assume that the outcome has a continuous distribution. When forecasting _counts_ and especially _small counts_ (e.g., "how many influenza hospitalizations will occur next week in Hawaii?") alternative methods may have more desirable properties. fiphde provides functionality to leverage count regression models for forecasting influenza hospitalizations. Here we will demonstrate how to implement a count regression modeling approach. The example will step through the process of forecasting hospitalizations in Hawaii by using influenza-like illness (ILI) and indicators of historical hospitalization and ILI severity for the given epidemiological weeks. The usage illustrates an automated tuning procedure that finds the "best" models from possible covariates and model families (e.g., Poisson, Quasipoisson, Negative binomial, etc.).
+
+### ILI retrieval and prep
+
+Given that ILI will be a covariate in the count regression model, we must first retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `cdcfluview::ilinet()`. Here, we're only using recent ILI data (i.e., since 2019) and we further filter the signal to only include Hawaii. ILI is subject to revision and may be less reliable when initially reported, so we replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/). Finally, we fit a time series model to forecast ILI for the next four weeks.
+
+```{r, eval=FALSE}
+ilidat <- 
+  get_cdc_ili(region=c("state"), years=2019:2022) %>%
+  filter(region == "Hawaii") %>%
+  replace_ili_nowcast(., weeks_to_replace=1)
+
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+```
+
+In the next step we are going to log transform weighted ILI and flu admissions, so in this step we need to remove all the zeros. The fiphde package provides the `mnz_replace` function which replaces zeros in a variable with the smallest non-zero value of that variable.
+
+```{r}
+ilidat <- ilidat %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+
+ilifor$ilidat <- ilifor$ilidat %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
+ilifor$ili_bound <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
+```
+
+Finally, we create our modeling dataset by combining the flu admission data prepared above with the forecasted ILI data in future weeks together with the historical severity data by epidemiological week.
+
+```{r}
+dat_hi <-
+  prepped_hosp %>%
+  filter(abbreviation=="HI") %>%
+  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  mutate(ili = log(ili))
+dat_hi
+```
+
+### Fit a model and forecast
+
+First we create a list of different count regression models to fit. We can inspect the formulations of each model. Note that these models are specified using the [trending package](https://github.com/reconverse/trending) and internally the [trendeval package](https://github.com/reconverse/trendeval) is used to determine the best fitting approach.
+
+```{r}
+models <-
+  list(
+    poisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
+    quasipoisson = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
+    negbin = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank)
+  )
+models$poisson
+models$quasipoisson
+models$negbin
+```
+
+We must next project covariates four weeks into the future, which we can accomplish by pulling from the forecasted ILI and historical severity data.
+
+```{r}
+new_cov <-
+  ilifor$ili_future %>%
+  left_join(fiphde:::historical_severity, by="epiweek") %>%
+  select(-epiweek,-epiyear) %>%
+  mutate(ili = log(ili))
+new_cov
+```
+
+Next we use fiphde's `glm_wrap` function which attempts to find the best-fitting model out of all the models supplied, and specifies the prediction interval quantiles used in FluSight.
+
+```{r, eval=FALSE}
+res <- glm_wrap(dat_hi,
+                new_covariates = new_cov,
+                .models = models,
+                alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
+res$forecasts$location <- "15"
+```
+
+We can take a quick look at the forecast output as well as different aspects of the final fitted model.
+
+```{r}
+head(res$forecasts)
+res$model
+res$model$fit
+res$model$fit$fitted_model$family
+res$model$fit$fitted_model$coefficients
+```
+
+Next we prepare the data in the quantile format used by FluSight.
+
+```{r}
+hi_glm_prepped <- format_for_submission(res$forecasts, method="CREG")
+hi_glm_prepped
+```
+
+Finally, we can visualize the forecasted point estimates with the 90% prediction interval alongside the observed data.
+
+```{r, warning=FALSE}
+plot_forecast(dat_hi, hi_glm_prepped$CREG, location="15", pi=.9)
+```
+
+```{r, eval=TRUE, echo=FALSE}
+knitr::knit_exit()
 ```
