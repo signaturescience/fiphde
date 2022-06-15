@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,18 +61,29 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>ilidat</dt>
 <dd><p>Data returned from <a href="get_cdc_ili.html">get_cdc_ili</a>.</p></dd>
+
+
 <dt>horizon</dt>
 <dd><p>Optional horizon periods through which the forecasts should be generated; default is <code>4</code></p></dd>
+
+
 <dt>trim_date</dt>
 <dd><p>Earliest start date you want to use for ILI data. Default <code>NULL</code> doesn't trim.</p></dd>
+
+
 <dt>models</dt>
 <dd><p>The list of model parameters passed to <a href="ts_fit_forecast.html">ts_fit_forecast</a>. Defaults to <code>list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"</code>. See help for <a href="ts_fit_forecast.html">ts_fit_forecast</a>.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>further arguments passed to <a href="ts_fit_forecast.html">ts_fit_forecast</a> (which are then passed to <a href="https://fable.tidyverts.org/reference/ARIMA.html" class="external-link">fable::ARIMA</a>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list containing:</p><ol><li><p><code>ilidat</code>: The data sent into the function filtered to the location and the <code>trim_date</code>. Select columns returned.</p></li>
+    
+
+<p>A named list containing:</p><ol><li><p><code>ilidat</code>: The data sent into the function filtered to the location and the <code>trim_date</code>. Select columns returned.</p></li>
 <li><p><code>ilidat_tsibble</code>: The <code>tsibble</code> class object returned by running <a href="make_tsibble.html">make_tsibble</a> on the data above.</p></li>
 <li><p><code>ili_fit</code>: The fit from <a href="https://fabletools.tidyverts.org/reference/model.html" class="external-link">fabletools::model</a>.</p></li>
 <li><p><code>ili_forecast</code>: The forecast from <a href="https://fabletools.tidyverts.org/reference/forecast.html" class="external-link">fabletools::forecast</a> at the specified horizon.</p></li>
@@ -167,7 +178,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

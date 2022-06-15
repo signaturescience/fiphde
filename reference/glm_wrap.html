@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,18 +61,29 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>.data</dt>
 <dd><p>Data including all explanatory and outcome variables needed for modeling</p></dd>
+
+
 <dt>.models</dt>
 <dd><p>List of models defined as <a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">trending_model</a> objects</p></dd>
+
+
 <dt>new_covariates</dt>
 <dd><p>Tibble with one column per covariate, and n rows for n horizons being forecasted</p></dd>
+
+
 <dt>horizon</dt>
 <dd><p>Number of weeks ahead for forecasting</p></dd>
+
+
 <dt>alpha</dt>
 <dd><p>Vector specifying the threshold(s) to be used for prediction intervals; alpha of <code>0.05</code> would correspond to 95% PI; default is <code>c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2</code> to range of intervals</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Named list with two elements:</p><ul><li><p>model: Output from <a href="glm_fit.html">glm_fit</a> with selected model fit</p></li>
+    
+
+<p>Named list with two elements:</p><ul><li><p>model: Output from <a href="glm_fit.html">glm_fit</a> with selected model fit</p></li>
 <li><p>forecasts: Output from <a href="glm_forecast.html">glm_forecast</a> with forecasts from each horizon combined as a single tibble</p></li>
 </ul></div>
 
@@ -85,7 +96,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

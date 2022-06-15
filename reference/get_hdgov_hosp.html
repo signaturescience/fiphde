@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,14 +59,21 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>endpoint</dt>
 <dd><p>URL to healthdata.gov endpoint (see references)..</p></dd>
+
+
 <dt>app_token</dt>
 <dd><p>App token from healthdata.gov. If <code>NULL</code> you might get rate limited. Add an entry to your <code>~/.Renviron</code> with <code>HEALTHDATA_APP_TOKEN="tokenhere"</code> that you got from <a href="https://healthdata.gov/profile/edit/developer_settings" class="external-link">https://healthdata.gov/profile/edit/developer_settings</a>.</p></dd>
+
+
 <dt>limitcols</dt>
 <dd><p>Limit the columns returned to the subjectively defined important ones?</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A tibble</p>
+    
+
+<p>A tibble</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -94,7 +101,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

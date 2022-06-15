@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,20 +66,36 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>prepped_tsibble</dt>
 <dd><p>A tsibble with data retrieved from <a href="get_hdgov_hosp.html">get_hdgov_hosp</a>, prepped by <a href="prep_hdgov_hosp.html">prep_hdgov_hosp</a>, and made into a tsibble with <a href="make_tsibble.html">make_tsibble</a>.</p></dd>
+
+
 <dt>outcome</dt>
 <dd><p>The outcome variable to model (default <code>"flu.admits"</code>).</p></dd>
+
+
 <dt>horizon</dt>
 <dd><p>Number of weeks ahead</p></dd>
+
+
 <dt>trim_date</dt>
 <dd><p>The date (YYYY-MM-DD) at which point ts modeling should be started. Default <code>"2021-01-01"</code>. Set to <code>NULL</code> to stop trimming.</p></dd>
+
+
 <dt>models</dt>
 <dd><p>A list of right hand side formula contents for models you want to run. See the examples.</p></dd>
+
+
 <dt>covariates</dt>
 <dd><p>Covariates that should be modeled with the time series. Defaults to <code>c("hosp_rank", "ili_rank")</code>, from the historical data brought in with <a href="prep_hdgov_hosp.html">prep_hdgov_hosp</a>.</p></dd>
+
+
 <dt>ensemble</dt>
 <dd><p>Should ARIMA and ETS models be ensembled? Default <code>TRUE</code>.</p></dd>
+
+
 <dt>remove_null_models</dt>
 <dd><p>Should null models be removed? Default <code>TRUE</code>.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Further arguments that are passed to <a href="https://fable.tidyverts.org/reference/ARIMA.html" class="external-link">fable::ARIMA</a>.</p><ul><li><p>Defaults to <code>list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)</code></p></li>
 <li><p>Setting the type of model to <code>NULL</code> turns the model off.</p></li>
@@ -87,10 +103,13 @@
 <li><p>To run a seasonal exponential smoothing: <code>list(ets='season(method=c("A", "M", "N"), period="3 months")')</code>. See also <a href="https://fable.tidyverts.org/reference/ETS.html" class="external-link">fable::ETS</a>.</p></li>
 <li><p>To run an autoregressive neural net with P=1: <code>list(nnetar="AR(P=1)")</code>. See also <a href="https://fable.tidyverts.org/reference/NNETAR.html" class="external-link">fable::NNETAR</a>.</p></li>
 </ul></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of the time series fit, time series forecast, and model formulas.</p><ul><li><p><code>tsfit</code>: A <code>mdl_df</code> class "mable" with one row for each location, columns for arima and ets models.</p></li>
+    
+
+<p>A list of the time series fit, time series forecast, and model formulas.</p><ul><li><p><code>tsfit</code>: A <code>mdl_df</code> class "mable" with one row for each location, columns for arima and ets models.</p></li>
 <li><p><code>tsfor</code>: A <code>fbl_ts</code> class "fable" with one row per location-model-timepoint up to <code>horizon</code> number of time points.</p></li>
 <li><p><code>formulas</code>: A list of ARIMA, ETS, and/or NNETAR formulas</p></li>
 </ul></div>
@@ -141,7 +160,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>

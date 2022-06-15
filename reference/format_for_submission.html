@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,14 +59,21 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>.forecasts</dt>
 <dd><p>Forecasts to be formatted for submission; if method is "ts" this should be forecasts from <a href="ts_fit_forecast.html">ts_fit_forecast</a>; otherwise this must be a <code>tibble</code> with forecast output (e.g. output from <a href="glm_forecast.html">glm_forecast</a>) with a colum designating "location"</p></dd>
+
+
 <dt>method</dt>
 <dd><p>Method for forecasting; default is "ts" which will trigger the use of <a href="ts_format_for_submission.html">ts_format_for_submission</a> internally</p></dd>
+
+
 <dt>.target</dt>
 <dd><p>Name of the target in the forecast. Default is <code>"wk ahead inc flu hosp"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list of tibbles, one for each model, formatted for submission.</p>
+    
+
+<p>A named list of tibbles, one for each model, formatted for submission.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -114,7 +121,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>
