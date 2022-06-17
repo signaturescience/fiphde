@@ -20,9 +20,9 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Shakeel Jessa \email{sjessa@signaturescience.com}
-  \item Chris Hulme-Lowe \email{mscholz@signaturescience.com}
-  \item Stephen Turner \email{sturner@signaturescience.com} (\href{https://orcid.org/0000-0001-9140-9028}{ORCID})
+  \item Shakeel Jessa
+  \item Chris Hulme-Lowe
+  \item Stephen Turner (\href{https://orcid.org/0000-0001-9140-9028}{ORCID})
 }
 
 }

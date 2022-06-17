@@ -9,16 +9,13 @@ Authors@R:
              comment = c(ORCID = "0000-0003-0060-566X")),
       person(given = "Shakeel",
              family = "Jessa",
-             role = "aut",
-             email = "sjessa@signaturescience.com"),
+             role = "aut"),
       person(given = "Chris",
              family = "Hulme-Lowe",
-             role = "aut",
-             email = "mscholz@signaturescience.com"),
+             role = "aut"),
       person(given = "Stephen",
              family = "Turner",
              role = "aut",
-             email = "sturner@signaturescience.com",
              comment = c(ORCID = "0000-0001-9140-9028"))
       )
 Description: Miscellaneous functions for retrieving data, creating and evaluating time series forecasting models for influenza-like illness (ILI) and influenza hospitalizations in the United States.
