@@ -13,7 +13,7 @@ get_cdc_hosp(years = NULL)
 A tibble
 }
 \description{
-Get hospitalization data from CDC FluView. See \link[cdcfluview:hospitalizations]{cdcfluview::hospitalizations}.
+Get hospitalization data from CDC FluView. See \link{hospitalizations}.
 }
 \examples{
 \dontrun{

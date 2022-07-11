@@ -19,7 +19,7 @@ locations <-
   locations %>%
   dplyr::filter(location != "11001")
 
-# If using cdcfluview::ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
+# If using ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
 # Bind to this tibble above 10 more rows for the 10 hhs regions so the get_cdc_ili function will work out of the box.
 locations <-
   tibble::tibble(abbreviation=1:10,
@@ -54,7 +54,7 @@ quidk
 # Historical severity -----------------------------------------------------
 
 # Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
-hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
@@ -73,7 +73,7 @@ hospstats <-
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
-ili <- cdcfluview::ilinet(region="national")
+ili <- ilinet(region="national")
 ili
 ilisum <-
   ili %>%
@@ -85,7 +85,7 @@ ilisum <-
 ilisum
 
 # Get historical hospitalization data (2010-2019), summarize by epiweek
-#hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+#hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
 #hosp
 hospsum <-
   hosp %>%

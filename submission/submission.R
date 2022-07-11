@@ -33,7 +33,7 @@ if(!interactive()) {
   options(nwarnings = 10000)
 }
 # Get data
-# the years argument for cdcfluview::ilinet gets the *season* corresponding to the year.
+# the years argument for ilinet gets the *season* corresponding to the year.
 # so, 2019 = the 2019-2020 flu season. If you only get 2020-2021, you're getting the
 # 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))

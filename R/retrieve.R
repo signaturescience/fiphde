@@ -129,7 +129,7 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/api/views/k87d-gv3u/rows.
 
 
 #' @title Get ILI data from CDC FluView
-#' @description Get ILI data from CDC FluView. See [cdcfluview::ilinet].
+#' @description Get ILI data from CDC FluView. See [ilinet].
 #' @param region Either "state", "national", or "hhs". Defaults to `c("national", "state", "hhs") for all three`.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
 #' @return A tibble
@@ -145,8 +145,8 @@ get_cdc_vax <- function(endpoint="https://data.cdc.gov/api/views/k87d-gv3u/rows.
 get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
   # Check that you aren't specifying unsupported regions
   if (!all(region %in% c("national", "state", "hhs"))) stop("Invalid region. See ?get_cdc_ili.")
-  # Map over regions calling cdcfluview::ilinet for that region and specified years
-  d <- purrr::map_dfr(region, ~cdcfluview::ilinet(., years=years))
+  # Map over regions calling ilinet for that region and specified years
+  d <- purrr::map_dfr(region, ~ilinet(., years=years))
   # Get only relevant columns (drop age group distributions)
   # Join to internal package data to get state abbreviations and FIPS codes
   d <- d %>%
@@ -166,7 +166,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 }
 
 #' @title Get hospitalization data from CDC FluView
-#' @description Get hospitalization data from CDC FluView. See [cdcfluview::hospitalizations].
+#' @description Get hospitalization data from CDC FluView. See [hospitalizations].
 #' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
 #' @return A tibble
 #' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
@@ -176,7 +176,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' }
 get_cdc_hosp <- function(years=NULL) {
   warning("CDC hospitalization should only be used for historical analysis. Use get_hdgov_hosp() for flusight forecasting.")
-  d <- cdcfluview::hospitalizations(surveillance_area="flusurv", region="all", years=years)
+  d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)
   d <- d %>%
     dplyr::filter(age_label=="Overall") %>%
     dplyr::transmute(location="US",

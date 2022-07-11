@@ -206,7 +206,7 @@ The time series methods above assume that the outcome has a continuous distribut
 
 ### ILI retrieval and prep
 
-Given that ILI will be a covariate in the count regression model, we must first retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `cdcfluview::ilinet()`. Here, we're only using recent ILI data (i.e., since 2019) and we further filter the signal to only include Hawaii. ILI is subject to revision and may be less reliable when initially reported, so we replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/). Finally, we fit a time series model to forecast ILI for the next four weeks.
+Given that ILI will be a covariate in the count regression model, we must first retrieve ILI data using the `get_cdc_ili()` function, which is a wrapper around `ilinet()`. Here, we're only using recent ILI data (i.e., since 2019) and we further filter the signal to only include Hawaii. ILI is subject to revision and may be less reliable when initially reported, so we replace the current week and one week previous with [Nowcast data](https://delphi.cmu.edu/nowcast/). Finally, we fit a time series model to forecast ILI for the next four weeks.
 
 ```{r, eval=FALSE}
 ilidat <- 
