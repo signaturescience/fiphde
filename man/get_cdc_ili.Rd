@@ -15,7 +15,7 @@ get_cdc_ili(region = c("national", "state", "hhs"), years = NULL)
 A tibble
 }
 \description{
-Get ILI data from CDC FluView. See \link[cdcfluview:ilinet]{cdcfluview::ilinet}.
+Get ILI data from CDC FluView. See \link{ilinet}.
 }
 \examples{
 \dontrun{

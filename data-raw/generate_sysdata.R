@@ -19,7 +19,7 @@ locations <-
   locations %>%
   dplyr::filter(location != "11001")
 
-# If using cdcfluview::ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
+# If using ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
 # Bind to this tibble above 10 more rows for the 10 hhs regions so the get_cdc_ili function will work out of the box.
 locations <-
   tibble::tibble(abbreviation=1:10,
@@ -54,7 +54,7 @@ quidk
 # Historical severity -----------------------------------------------------
 
 # Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
-hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
@@ -73,7 +73,7 @@ hospstats <-
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
-ili <- cdcfluview::ilinet(region="national")
+ili <- ilinet(region="national")
 ili
 ilisum <-
   ili %>%
@@ -85,7 +85,7 @@ ilisum <-
 ilisum
 
 # Get historical hospitalization data (2010-2019), summarize by epiweek
-#hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+#hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
 #hosp
 hospsum <-
   hosp %>%
@@ -217,6 +217,28 @@ res <- glm_wrap(dat_hi,
 vd$res <- res
 
 
+# From cdcfluview ---------------------------------------------------------
+
+.cdcfluview_ua <-"Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
+.region_map <- c(national = 3, hhs = 1, census = 2, state = 5)
+.surv_map <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")
+.surv_rev_map <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")
+.httr_timeout <- 120
+mmwrid_map <- cdcfluview:::mmwrid_map
+
+
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, hospstats, vd, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations,
+                  q,
+                  quidk,
+                  historical_severity,
+                  hospstats,
+                  vd,
+                  .cdcfluview_ua,
+                  .region_map,
+                  .surv_map,
+                  .surv_rev_map,
+                  .httr_timeout,
+                  mmwrid_map,
+                  internal = TRUE, overwrite = TRUE)
