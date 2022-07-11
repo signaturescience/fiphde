@@ -217,6 +217,28 @@ res <- glm_wrap(dat_hi,
 vd$res <- res
 
 
+# From cdcfluview ---------------------------------------------------------
+
+.cdcfluview_ua <-"Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
+.region_map <- c(national = 3, hhs = 1, census = 2, state = 5)
+.surv_map <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")
+.surv_rev_map <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")
+.httr_timeout <- 120
+mmwrid_map <- cdcfluview:::mmwrid_map
+
+
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, hospstats, vd, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations,
+                  q,
+                  quidk,
+                  historical_severity,
+                  hospstats,
+                  vd,
+                  .cdcfluview_ua,
+                  .region_map,
+                  .surv_map,
+                  .surv_rev_map,
+                  .httr_timeout,
+                  mmwrid_map,
+                  internal = TRUE, overwrite = TRUE)
