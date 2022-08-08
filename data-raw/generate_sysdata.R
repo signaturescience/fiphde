@@ -224,7 +224,10 @@ vd$res <- res
 .surv_map <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")
 .surv_rev_map <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")
 .httr_timeout <- 120
-mmwrid_map <- cdcfluview:::mmwrid_map
+
+# Remove need for cdcfluview for dev/build
+# cdcfluview:::mmwrid_map %>% write_csv(here::here("data-raw/mmwrid_map.csv"))
+mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="DDii")
 
 
 # Write package data ------------------------------------------------------
