@@ -312,7 +312,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #' (National Respiratory and Enteric Virus Surveillance System).
 #'
 #' This function retrieves current and historical ILINet surveillance data for
-#' the identified region.
+#' the identified region. The function is used internally in `get_cdc_ili()` but is not exported.
 #'
 #' @param region one of "`national`", "`hhs`", "`census`", or "`state`"
 #' @param years a vector of years to retrieve data for (i.e. `2014` for CDC
@@ -326,7 +326,6 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #' - [CDC FluView Portal](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html)
 #' - [ILINet Portal](https://wwwn.cdc.gov/ilinet/) (Login required)
 #' - [WHO/NREVSS](https://www.cdc.gov/surveillance/nrevss/index.html)
-#' @export
 #' @examples
 #' national_ili <- ilinet("national", years = 2017)
 #' \dontrun{

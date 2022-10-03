@@ -73,7 +73,7 @@ hospstats <-
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
-ili <- ilinet(region="national")
+ili <- fiphde:::ilinet(region="national")
 ili
 ilisum <-
   ili %>%

@@ -26,7 +26,7 @@ ILINet (Influenza-like Illness Surveillance Network) and WHO/NREVSS
 (National Respiratory and Enteric Virus Surveillance System).
 
 This function retrieves current and historical ILINet surveillance data for
-the identified region.
+the identified region. The function is used internally in \code{get_cdc_ili()} but is not exported.
 }
 \examples{
 national_ili <- ilinet("national", years = 2017)
