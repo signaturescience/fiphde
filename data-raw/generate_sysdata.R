@@ -54,7 +54,7 @@ quidk
 # Historical severity -----------------------------------------------------
 
 # Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
-hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
+hosp <- fiphde:::hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
@@ -216,15 +216,6 @@ res <- glm_wrap(dat_hi,
 # Put the final res object back in vd
 vd$res <- res
 
-
-# From cdcfluview ---------------------------------------------------------
-
-.cdcfluview_ua <-"Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
-.region_map <- c(national = 3, hhs = 1, census = 2, state = 5)
-.surv_map <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")
-.surv_rev_map <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")
-.httr_timeout <- 120
-
 # Remove need for cdcfluview for dev/build
 # cdcfluview:::mmwrid_map %>% write_csv(here::here("data-raw/mmwrid_map.csv"))
 mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="DDii")
@@ -238,10 +229,5 @@ usethis::use_data(locations,
                   historical_severity,
                   hospstats,
                   vd,
-                  .cdcfluview_ua,
-                  .region_map,
-                  .surv_map,
-                  .surv_rev_map,
-                  .httr_timeout,
                   mmwrid_map,
                   internal = TRUE, overwrite = TRUE)

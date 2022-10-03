@@ -372,3 +372,85 @@ mnz_replace <- function(x) {
   x[which(x<=0)] <- mnz(x)
   return(x)
 }
+
+#' Convert an MMWR year+week or year+week+day to a Date object
+#'
+#' Adapted from cdcfluview::mmwr_week_to_date.
+#' This is a reformat and re-export of a function in the `MMWRweek` package.
+#' It provides a snake case version of its counterpart and produces a vector
+#' of `Date` objects that corresponds to the input MMWR year+week or year+week+day
+#' vectors. This also adds some parameter checking and cleanup to avoid exceptions.
+#'
+#' @param year,week,day Year, week and month vectors. All must be the same length
+#'        unless `day` is `NULL`.
+#' @return vector of `Date` objects
+#' @references
+#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' @export
+#' @examples
+#' mwd <- mmwr_week_to_date(2016,10,3)
+mmwr_week_to_date <- function(year, week, day=NULL) {
+
+  year <- as.numeric(year)
+  week <- as.numeric(week)
+  day <- if (!is.null(day)) as.numeric(day) else rep(1, length(week))
+
+  week <- ifelse(0 < week & week < 54, week, NA)
+
+  as.Date(ifelse(is.na(week), NA, MMWRweek::MMWRweek2Date(year, week, day)),
+          origin="1970-01-01")
+
+}
+
+#' Make clean column names
+#'
+#' This helper function is used
+#'
+#' @param tbl Input tibble with columns to rename
+#'
+#' @return Tibble with clean column names
+#'
+#'
+.mcga <- function(tbl) {
+  x <- colnames(tbl)
+  x <- tolower(x)
+  x <- gsub("[[:punct:][:space:]]+", "_", x)
+  x <- gsub("_+", "_", x)
+  x <- gsub("(^_|_$)", "", x)
+  x <- gsub("^x_", "", x)
+  x <- make.unique(x, sep = "_")
+  colnames(tbl) <- x
+  tbl
+}
+
+#' Clean numeric values
+#'
+#' This helper function used in the `ilinet()` function to strip special characters and empty space and convert vector to numeric.
+#'
+#' @param x Input character vector for which special characters should be stripped and converted
+#'
+#' @return Numeric vector
+#'
+#' @md
+#'
+to_num <- function(x) {
+  x <- gsub("%", "", x, fixed=TRUE)
+  x <- gsub(">", "", x, fixed=TRUE)
+  x <- gsub("<", "", x, fixed=TRUE)
+  x <- gsub(",", "", x, fixed=TRUE)
+  x <- gsub(" ", "", x, fixed=TRUE)
+  suppressWarnings(as.numeric(x))
+}
+
+#' Retrieve a list of valid sub-regions for each surveillance area.
+#'
+#' @md
+#' @export
+#' @examples
+#' sa <- surveillance_areas()
+surveillance_areas <- function() {
+  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
+  xdf <- stats::setNames(meta$catchments[,c("name", "area")], c("surveillance_area", "region"))
+  xdf$surveillance_area <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")[xdf$surveillance_area]
+  xdf
+}
