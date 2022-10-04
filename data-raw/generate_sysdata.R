@@ -169,10 +169,16 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
 vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
 
 # CREG ILI data - stuff in vd$ is created here and saved
+# # Original: no time limit and nowcast
+# vd$ilidat <-
+#   get_cdc_ili(region=c("state"), years=2019:2022) %>%
+#   filter(region == "Hawaii") %>%
+#   replace_ili_nowcast(., weeks_to_replace=1)
+# Modified: limit dates to when this vignette was originally created
 vd$ilidat <-
   get_cdc_ili(region=c("state"), years=2019:2022) %>%
   filter(region == "Hawaii") %>%
-  replace_ili_nowcast(., weeks_to_replace=1)
+  filter(week_start<="2022-06-05")
 
 vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
