@@ -22,6 +22,9 @@
     <loc>https://signaturescience.github.io/fiphde/news/index.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/dot-mcga.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/fiphde-package.html</loc>
   </url>
   <url>
@@ -61,6 +64,12 @@
     <loc>https://signaturescience.github.io/fiphde/reference/glm_wrap.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/hospitalizations.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/ilinet.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/index.html</loc>
   </url>
   <url>
@@ -68,6 +77,9 @@
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/make_tsibble.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/mmwr_week_to_date.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/mnz.html</loc>
@@ -94,7 +106,13 @@
     <loc>https://signaturescience.github.io/fiphde/reference/state_replace_ili_nowcast_all.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/surveillance_areas.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/this_monday.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/to_num.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/ts_fit_forecast.html</loc>
