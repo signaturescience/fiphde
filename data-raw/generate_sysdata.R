@@ -19,7 +19,7 @@ locations <-
   locations %>%
   dplyr::filter(location != "11001")
 
-# If using cdcfluview::ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
+# If using ilinet(region="hhs") You'll get hhs regions as "Region 1", "Region 2", etc.
 # Bind to this tibble above 10 more rows for the 10 hhs regions so the get_cdc_ili function will work out of the box.
 locations <-
   tibble::tibble(abbreviation=1:10,
@@ -54,7 +54,7 @@ quidk
 # Historical severity -----------------------------------------------------
 
 # Get historical hospitalization data (2010-2021), convert to counts, summarize by epiweek
-hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+hosp <- fiphde:::hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
@@ -73,7 +73,7 @@ hospstats <-
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
-ili <- cdcfluview::ilinet(region="national")
+ili <- fiphde:::ilinet(region="national")
 ili
 ilisum <-
   ili %>%
@@ -85,7 +85,7 @@ ilisum <-
 ilisum
 
 # Get historical hospitalization data (2010-2019), summarize by epiweek
-#hosp <- cdcfluview::hospitalizations(surveillance_area = "flusurv", region="all")
+#hosp <- hospitalizations(surveillance_area = "flusurv", region="all")
 #hosp
 hospsum <-
   hosp %>%
@@ -169,10 +169,16 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
 vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
 
 # CREG ILI data - stuff in vd$ is created here and saved
+# # Original: no time limit and nowcast
+# vd$ilidat <-
+#   get_cdc_ili(region=c("state"), years=2019:2022) %>%
+#   filter(region == "Hawaii") %>%
+#   replace_ili_nowcast(., weeks_to_replace=1)
+# Modified: limit dates to when this vignette was originally created
 vd$ilidat <-
   get_cdc_ili(region=c("state"), years=2019:2022) %>%
   filter(region == "Hawaii") %>%
-  replace_ili_nowcast(., weeks_to_replace=1)
+  filter(week_start<="2022-06-05")
 
 vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
@@ -216,7 +222,18 @@ res <- glm_wrap(dat_hi,
 # Put the final res object back in vd
 vd$res <- res
 
+# Remove need for cdcfluview for dev/build
+# cdcfluview:::mmwrid_map %>% write_csv(here::here("data-raw/mmwrid_map.csv"))
+mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="DDii")
+
 
 # Write package data ------------------------------------------------------
 
-usethis::use_data(locations, q, quidk, historical_severity, hospstats, vd, internal = TRUE, overwrite = TRUE)
+usethis::use_data(locations,
+                  q,
+                  quidk,
+                  historical_severity,
+                  hospstats,
+                  vd,
+                  mmwrid_map,
+                  internal = TRUE, overwrite = TRUE)

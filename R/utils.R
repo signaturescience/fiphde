@@ -88,6 +88,7 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
 #' @title Replace ILInet with nowcast data
 #' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
 #' @param ilidat Data from [get_cdc_ili].
+#' @param start_date Date from which to start nowcasting. Defaults to [lubridate::today].
 #' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
 #' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
 #' @export
@@ -114,11 +115,12 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
 #' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
 #'                iliaug %>% dplyr::filter(location=="51"))
 #' }
-replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
+replace_ili_nowcast <- function (ilidat, start_date = NULL, weeks_to_replace = 1)  {
+  if (is.null(start_date)) start_date <- lubridate::today()
   # How many days back do you need to go? 1 to weeks+1, *7
   days_back <- (1:(weeks_to_replace+1))*7
   # What are those dates?
-  dates_back <- lubridate::today() - days_back
+  dates_back <- start_date - days_back
   ilinow <- get_nowcast_ili(dates=dates_back)
   ilinow <- ilinow %>% dplyr::filter(location %in% ilidat$location)
   message(paste0("Replacing weighted_ili with nowcast weighted_ili on dates: ", paste(dates_back, collapse=", ")))
@@ -127,11 +129,9 @@ replace_ili_nowcast <- function(ilidat, weeks_to_replace=1) {
     dplyr::full_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
     dplyr::mutate(week_start=MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
     dplyr::arrange(location, week_start) %>%
-    tidyr::fill(region_type, region, .direction="down") %>%
+    tidyr::fill(region_type, region, .direction = "down") %>%
     dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
-  # We expect to have one extra row per location in the result compared to the input.
-  # if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
   return(res)
 }
 
@@ -371,4 +371,86 @@ mnz <- function(x) {
 mnz_replace <- function(x) {
   x[which(x<=0)] <- mnz(x)
   return(x)
+}
+
+#' Convert an MMWR year+week or year+week+day to a Date object
+#'
+#' Adapted from cdcfluview::mmwr_week_to_date.
+#' This is a reformat and re-export of a function in the `MMWRweek` package.
+#' It provides a snake case version of its counterpart and produces a vector
+#' of `Date` objects that corresponds to the input MMWR year+week or year+week+day
+#' vectors. This also adds some parameter checking and cleanup to avoid exceptions.
+#'
+#' @param year,week,day Year, week and month vectors. All must be the same length
+#'        unless `day` is `NULL`.
+#' @return vector of `Date` objects
+#' @references
+#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' @export
+#' @examples
+#' mwd <- mmwr_week_to_date(2016,10,3)
+mmwr_week_to_date <- function(year, week, day=NULL) {
+
+  year <- as.numeric(year)
+  week <- as.numeric(week)
+  day <- if (!is.null(day)) as.numeric(day) else rep(1, length(week))
+
+  week <- ifelse(0 < week & week < 54, week, NA)
+
+  as.Date(ifelse(is.na(week), NA, MMWRweek::MMWRweek2Date(year, week, day)),
+          origin="1970-01-01")
+
+}
+
+#' Make clean column names
+#'
+#' This helper function is used
+#'
+#' @param tbl Input tibble with columns to rename
+#'
+#' @return Tibble with clean column names
+#'
+#'
+.mcga <- function(tbl) {
+  x <- colnames(tbl)
+  x <- tolower(x)
+  x <- gsub("[[:punct:][:space:]]+", "_", x)
+  x <- gsub("_+", "_", x)
+  x <- gsub("(^_|_$)", "", x)
+  x <- gsub("^x_", "", x)
+  x <- make.unique(x, sep = "_")
+  colnames(tbl) <- x
+  tbl
+}
+
+#' Clean numeric values
+#'
+#' This helper function used in the `ilinet()` function to strip special characters and empty space and convert vector to numeric.
+#'
+#' @param x Input character vector for which special characters should be stripped and converted
+#'
+#' @return Numeric vector
+#'
+#' @md
+#'
+to_num <- function(x) {
+  x <- gsub("%", "", x, fixed=TRUE)
+  x <- gsub(">", "", x, fixed=TRUE)
+  x <- gsub("<", "", x, fixed=TRUE)
+  x <- gsub(",", "", x, fixed=TRUE)
+  x <- gsub(" ", "", x, fixed=TRUE)
+  suppressWarnings(as.numeric(x))
+}
+
+#' Retrieve a list of valid sub-regions for each surveillance area.
+#'
+#' @md
+#' @export
+#' @examples
+#' sa <- surveillance_areas()
+surveillance_areas <- function() {
+  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
+  xdf <- stats::setNames(meta$catchments[,c("name", "area")], c("surveillance_area", "region"))
+  xdf$surveillance_area <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")[xdf$surveillance_area]
+  xdf
 }

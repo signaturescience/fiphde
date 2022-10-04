@@ -96,5 +96,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "horizon",
                                                         ".submission_dir",
                                                         "is_null_model",
+                                                        "mmwrid_map",
+                                                        ".surv_map",
+                                                        ".region_map",
                                                         "."))
 
