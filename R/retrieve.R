@@ -327,8 +327,8 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #' - [ILINet Portal](https://wwwn.cdc.gov/ilinet/) (Login required)
 #' - [WHO/NREVSS](https://www.cdc.gov/surveillance/nrevss/index.html)
 #' @examples
-#' national_ili <- ilinet("national", years = 2017)
 #' \dontrun{
+#' national_ili <- ilinet("national", years = 2017)
 #' hhs_ili <- ilinet("hhs")
 #' census_ili <- ilinet("census")
 #' state_ili <- ilinet("state")

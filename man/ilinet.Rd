@@ -29,8 +29,8 @@ This function retrieves current and historical ILINet surveillance data for
 the identified region. The function is used internally in \code{get_cdc_ili()} but is not exported.
 }
 \examples{
-national_ili <- ilinet("national", years = 2017)
 \dontrun{
+national_ili <- ilinet("national", years = 2017)
 hhs_ili <- ilinet("hhs")
 census_ili <- ilinet("census")
 state_ili <- ilinet("state")
