@@ -4,14 +4,14 @@
 \alias{replace_ili_nowcast}
 \title{Replace ILInet with nowcast data}
 \usage{
-replace_ili_nowcast(ilidat, start_date = NULL, weeks_to_replace = 1)
+replace_ili_nowcast(ilidat, weeks_to_replace = 1, fallback = TRUE)
 }
 \arguments{
 \item{ilidat}{Data from \link{get_cdc_ili}.}
 
-\item{start_date}{Date from which to start nowcasting. Defaults to \link[lubridate:now]{lubridate::today}.}
-
 \item{weeks_to_replace}{Number of weeks of \code{ilidat} to replace. Defaults to 2.}
+
+\item{fallback}{Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is \code{TRUE}}
 }
 \value{
 The same as the \code{ilidat} input, but with \code{weeks_to_replace} weeks replaced with nowcasted data.

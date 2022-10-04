@@ -280,26 +280,32 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   # Read in the raw json
   resjson <- jsonlite::read_json(api_url, simplifyVector = TRUE)
 
-  # Parse the json. separate epiweek into epiyear/epiweek, then line up the names with our location data.
-  res <-
-    resjson$epidata %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(epiweek, into=c("epiyear", "epiweek"), sep=4, convert = TRUE) %>%
-    dplyr::mutate(location=toupper(location)) %>%
-    dplyr::mutate(location=gsub("NAT", "US", location)) %>%
-    dplyr::mutate(location=ifelse(grepl("HHS", location),
-                                  location %>% stringr::str_extract("\\d+") %>% stringr::str_pad(width=2, pad=0) %>% paste0("HHS", .),
-                                  location)) %>%
-    dplyr::rename(abbreviation=location) %>%
-    dplyr::inner_join(locations, by="abbreviation") %>%
-    dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili_now=value) %>%
-    dplyr::arrange(epiyear, epiweek, location)
+  ## check that epidata returns nowcast values for *all* weeks
+  if(purrr::is_empty(resjson$epidata) | !all(epiyearweeks %in% resjson$epidata$epiweek)) {
+    message("The nowcast data returned is missing some or all of the query weeks. Returning NA.")
+    return(NA)
+  } else {
+    # Parse the json. separate epiweek into epiyear/epiweek, then line up the names with our location data.
+    res <-
+      resjson$epidata %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(epiweek, into=c("epiyear", "epiweek"), sep=4, convert = TRUE) %>%
+      dplyr::mutate(location=toupper(location)) %>%
+      dplyr::mutate(location=gsub("NAT", "US", location)) %>%
+      dplyr::mutate(location=ifelse(grepl("HHS", location),
+                                    location %>% stringr::str_extract("\\d+") %>% stringr::str_pad(width=2, pad=0) %>% paste0("HHS", .),
+                                    location)) %>%
+      dplyr::rename(abbreviation=location) %>%
+      dplyr::inner_join(locations, by="abbreviation") %>%
+      dplyr::select(location, abbreviation, epiyear, epiweek, weighted_ili_now=value) %>%
+      dplyr::arrange(epiyear, epiweek, location)
 
-  if (boundatzero) {
-    res$weighted_ili_now[res$weighted_ili_now<0] <- 0
+    if (boundatzero) {
+      res$weighted_ili_now[res$weighted_ili_now<0] <- 0
+    }
+
+    return(res)
   }
-
-  return(res)
 }
 
 #' Retrieve ILINet Surveillance Data

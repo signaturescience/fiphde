@@ -31,6 +31,7 @@ is_monday <- function() {
 #' @param ilidat Data from [get_cdc_ili].
 #' @param state Two-letter state abbreviation to replace completely
 #' @param impute Logical; try to mean impute missing values using the immediately preceding and following values. See examples.
+#' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
 #' @param ... Other arguments passed to [get_nowcast_ili], e.g. `boundatzero`, which is `TRUE` by default.
 #' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
 #' @seealso [replace_ili_nowcast]
@@ -68,9 +69,38 @@ is_monday <- function() {
 #' state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
 #' }
 #' @export
-state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
+state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=TRUE, ...) {
   dates <- sort(unique(ilidat$week_start))
   ilinow <- get_nowcast_ili(dates=dates, state=state, ...)
+
+  ## handle case when delphi ili nowcast api doesnt return all of the nowcast data
+  if(is.na(ilinow)) {
+    if(fallback) {
+
+      message("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'TRUE'. Using 4 most recent weeks of available data to generate pseudo nowcast for each location.")
+      ilinow <-
+        ilidat %>%
+        dplyr::filter(abbreviation == state) %>%
+        dplyr::group_by(location) %>%
+        dplyr::arrange(location,week_start) %>%
+        ## get last 4 rows for ilidat for each location
+        dplyr::filter(dplyr::row_number() > dplyr::n()-4) %>%
+        ## compute weighted ili "nowcast" as average of last 4
+        dplyr::summarise(weighted_ili_now = mean(weighted_ili, na.rm = TRUE)) %>%
+        ## join to locations object to get abbreviation
+        dplyr::left_join(dplyr::select(locations, abbreviation, location), by = "location") %>%
+        ## create combinations of pseudo nowcast value and all dates / locations
+        ## pseudo nowcast value will be same for all weeks specfied
+        tidyr::crossing(dates, .) %>%
+        ## get epiyear and epiweek
+        dplyr::mutate(epiweek = lubridate::epiweek(dates),
+                      epiyear = lubridate::epiyear(dates)) %>%
+        dplyr::select(-dates)
+    } else {
+      stop("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'FALSE'. Cannot proceed.")
+    }
+  }
+
   res <- ilidat %>%
     dplyr::left_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
     dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili) & abbreviation==state, weighted_ili_now, weighted_ili)) %>%
@@ -88,8 +118,8 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
 #' @title Replace ILInet with nowcast data
 #' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
 #' @param ilidat Data from [get_cdc_ili].
-#' @param start_date Date from which to start nowcasting. Defaults to [lubridate::today].
 #' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
+#' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
 #' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
 #' @export
 #' @examples
@@ -115,13 +145,40 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, ...) {
 #' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
 #'                iliaug %>% dplyr::filter(location=="51"))
 #' }
-replace_ili_nowcast <- function (ilidat, start_date = NULL, weeks_to_replace = 1)  {
-  if (is.null(start_date)) start_date <- lubridate::today()
+replace_ili_nowcast <- function(ilidat, weeks_to_replace=1, fallback=TRUE) {
   # How many days back do you need to go? 1 to weeks+1, *7
   days_back <- (1:(weeks_to_replace+1))*7
   # What are those dates?
-  dates_back <- start_date - days_back
+  dates_back <- lubridate::today() - days_back
   ilinow <- get_nowcast_ili(dates=dates_back)
+  ## handle case when delphi ili nowcast api doesnt return all of the nowcast data
+  if(is.na(ilinow)) {
+    if(fallback) {
+
+      message("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'TRUE'. Using 4 most recent weeks of available data to generate pseudo nowcast for each location.")
+
+      ilinow <-
+        ilidat %>%
+        dplyr::group_by(location) %>%
+        dplyr::arrange(location,week_start) %>%
+        ## get last 4 rows for ilidat for each location
+        dplyr::filter(dplyr::row_number() > dplyr::n()-4) %>%
+        ## compute weighted ili "nowcast" as average of last 4
+        dplyr::summarise(weighted_ili_now = mean(weighted_ili, na.rm = TRUE)) %>%
+        ## join to locations object to get abbreviation
+        dplyr::left_join(dplyr::select(locations, abbreviation, location), by = "location") %>%
+        ## create combinations of pseudo nowcast value and all dates / locations
+        ## pseudo nowcast value will be same for all weeks specfied
+        tidyr::crossing(dates_back, .) %>%
+        ## get epiyear and epiweek
+        dplyr::mutate(epiweek = lubridate::epiweek(dates_back),
+                      epiyear = lubridate::epiyear(dates_back)) %>%
+        dplyr::select(-dates_back)
+
+    } else {
+      stop("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'FALSE'. Cannot proceed.")
+    }
+  }
   ilinow <- ilinow %>% dplyr::filter(location %in% ilidat$location)
   message(paste0("Replacing weighted_ili with nowcast weighted_ili on dates: ", paste(dates_back, collapse=", ")))
   res <-
@@ -129,9 +186,11 @@ replace_ili_nowcast <- function (ilidat, start_date = NULL, weeks_to_replace = 1
     dplyr::full_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
     dplyr::mutate(week_start=MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
     dplyr::arrange(location, week_start) %>%
-    tidyr::fill(region_type, region, .direction = "down") %>%
+    tidyr::fill(region_type, region, .direction="down") %>%
     dplyr::mutate(weighted_ili=ifelse(!is.na(weighted_ili_now), weighted_ili_now, weighted_ili)) %>%
     dplyr::select(-weighted_ili_now)
+  # We expect to have one extra row per location in the result compared to the input.
+  # if (nrow(ilidat)!=nrow(res)-length(unique(res$location))) warning("Unexpected number of rows returned in result.")
   return(res)
 }
 
