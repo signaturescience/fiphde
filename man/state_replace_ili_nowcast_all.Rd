@@ -4,7 +4,13 @@
 \alias{state_replace_ili_nowcast_all}
 \title{Replace all ILInet data with nowcast data for a state}
 \usage{
-state_replace_ili_nowcast_all(ilidat, state, impute = TRUE, ...)
+state_replace_ili_nowcast_all(
+  ilidat,
+  state,
+  impute = TRUE,
+  fallback = TRUE,
+  ...
+)
 }
 \arguments{
 \item{ilidat}{Data from \link{get_cdc_ili}.}
@@ -12,6 +18,8 @@ state_replace_ili_nowcast_all(ilidat, state, impute = TRUE, ...)
 \item{state}{Two-letter state abbreviation to replace completely}
 
 \item{impute}{Logical; try to mean impute missing values using the immediately preceding and following values. See examples.}
+
+\item{fallback}{Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is \code{TRUE}}
 
 \item{...}{Other arguments passed to \link{get_nowcast_ili}, e.g. \code{boundatzero}, which is \code{TRUE} by default.}
 }
