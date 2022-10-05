@@ -301,11 +301,11 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt; $formulas</span></span>
 <span><span class="co">#&gt; $formulas$arima</span></span>
 <span><span class="co">#&gt; flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f7675e5390&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe6fa5510&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas$ets</span></span>
 <span><span class="co">#&gt; flu.admits ~ season(method = "N")</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f7675e5390&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe6fa5510&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $nullmodels</span></span>
@@ -472,7 +472,7 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt;         family = "poisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f76a55a9f0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe9f132c8&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -487,7 +487,7 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt;         family = "quasipoisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f76a52e718&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe9eee3a0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -502,7 +502,7 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt;         ili_rank, data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f76a515438&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe9ed73d0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm_nb" "trending_model"</span></span></code></pre></div>
@@ -578,8 +578,8 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt;     }</span></span>
 <span><span class="co">#&gt;     result</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x55f769af20e8&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f769783bb8&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x556fe94a9ba8&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556fe91396c0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_model_fit" "list"</span></span>
@@ -598,16 +598,16 @@ ETS    formula: flu.admits ~ season(method = "N")</code></pre>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target                  target_en…¹ locat…² type  quant…³ value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-10-04    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-10-05    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># … with 86 more rows, and abbreviated variable names ¹​target_end_date,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   ²​location, ³​quantile</span></span></span></code></pre></div>
 <p>Finally, we can visualize the forecasted point estimates with the 90% prediction interval alongside the observed data.</p>

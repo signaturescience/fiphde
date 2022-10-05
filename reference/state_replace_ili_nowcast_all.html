@@ -51,7 +51,13 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">state_replace_ili_nowcast_all</span><span class="op">(</span><span class="va">ilidat</span>, <span class="va">state</span>, impute <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">state_replace_ili_nowcast_all</span><span class="op">(</span></span>
+<span>  <span class="va">ilidat</span>,</span>
+<span>  <span class="va">state</span>,</span>
+<span>  impute <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  fallback <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +72,10 @@
 
 <dt>impute</dt>
 <dd><p>Logical; try to mean impute missing values using the immediately preceding and following values. See examples.</p></dd>
+
+
+<dt>fallback</dt>
+<dd><p>Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is <code>TRUE</code></p></dd>
 
 
 <dt>...</dt>
