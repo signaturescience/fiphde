@@ -1,3 +1,7 @@
+# fiphde 0.2.1
+
+Minor fix to include "start_date" parameter in `replace_ili_nowcast()` function so that ILI nowcasting can be performed retrospectively if needed.
+
 # fiphde 0.2.0
 
 ## New features
