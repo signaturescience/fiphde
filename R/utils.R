@@ -118,6 +118,7 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
 #' @title Replace ILInet with nowcast data
 #' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
 #' @param ilidat Data from [get_cdc_ili].
+#' @param start_date Date from which to start nowcasting. Defaults to [lubridate::today].
 #' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
 #' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
@@ -145,11 +146,12 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
 #' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
 #'                iliaug %>% dplyr::filter(location=="51"))
 #' }
-replace_ili_nowcast <- function(ilidat, weeks_to_replace=1, fallback=TRUE) {
+replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, fallback=TRUE) {
+  if (is.null(start_date)) start_date <- lubridate::today()
   # How many days back do you need to go? 1 to weeks+1, *7
   days_back <- (1:(weeks_to_replace+1))*7
   # What are those dates?
-  dates_back <- lubridate::today() - days_back
+  dates_back <- start_date - days_back
   ilinow <- get_nowcast_ili(dates=dates_back)
   ## handle case when delphi ili nowcast api doesnt return all of the nowcast data
   if(is.na(ilinow)) {
