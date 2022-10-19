@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,13 +51,22 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">replace_ili_nowcast</span><span class="op">(</span><span class="va">ilidat</span>, weeks_to_replace <span class="op">=</span> <span class="fl">1</span>, fallback <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">replace_ili_nowcast</span><span class="op">(</span></span>
+<span>  <span class="va">ilidat</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  weeks_to_replace <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  fallback <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>ilidat</dt>
 <dd><p>Data from <a href="get_cdc_ili.html">get_cdc_ili</a>.</p></dd>
+
+
+<dt>start_date</dt>
+<dd><p>Date from which to start nowcasting. Defaults to <a href="https://lubridate.tidyverse.org/reference/now.html" class="external-link">lubridate::today</a>.</p></dd>
 
 
 <dt>weeks_to_replace</dt>
