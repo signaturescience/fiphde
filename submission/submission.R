@@ -41,106 +41,6 @@ ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 ilidat <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
 
-## first define helper functions
-## TODO: abstract these to fiphde functions and re-implement cdcfluview::who_nrevss() in fiphde
-get_cdc_clin <- function(region_type = "both") {
-
-
-  if(region_type == "both") {
-    state_clin <-
-      cdcfluview::who_nrevss("state")$clinical_labs %>%
-      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
-      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
-      dplyr::mutate(total_a = as.numeric(total_a)) %>%
-      dplyr::mutate(total_b = as.numeric(total_b)) %>%
-      dplyr::rename(location_name = region) %>%
-      dplyr::left_join(fiphde:::locations, by = c("location_name")) %>%
-      dplyr::mutate(total_positive = total_a + total_b) %>%
-      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
-
-    nat_clin <-
-      cdcfluview::who_nrevss("national")$clinical_labs %>%
-      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
-      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
-      dplyr::mutate(total_a = as.numeric(total_a)) %>%
-      dplyr::mutate(total_b = as.numeric(total_b)) %>%
-      dplyr::rename(location_name = region) %>%
-      dplyr::mutate(abbreviation = "US",
-                    location = "US") %>%
-      dplyr::mutate(total_positive = total_a + total_b) %>%
-      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
-
-    clin <- dplyr::bind_rows(state_clin, nat_clin)
-  } else {
-    clin <-
-      cdcfluview::who_nrevss(region_type)$clinical_labs %>%
-      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
-      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
-      dplyr::mutate(total_a = as.numeric(total_a)) %>%
-      dplyr::mutate(total_b = as.numeric(total_b)) %>%
-      dplyr::rename(location_name = region) %>%
-      dplyr::left_join(fiphde:::locations, by = c("location_name")) %>%
-      dplyr::mutate(location = if_else(region_type == "national", "US", location),
-                    abbreviation = if_else(region_type == "national", "US", abbreviation)) %>%
-      dplyr::mutate(total_positive = total_a + total_b) %>%
-      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
-  }
-
-  return(clin)
-
-}
-
-clin_nowcast <- function(clin, weeks_to_replace = 1) {
-
-  ## get one week ahead of
-  ahead_clin <-
-    clin %>%
-    dplyr::select(location, abbreviation, week_start,total,n_positive) %>%
-    dplyr::group_by(location) %>%
-    ## get last 4 weeks of data available to average
-    dplyr::filter(dplyr::row_number() >= dplyr::n() - 3) %>%
-    ## get mean of last 4 weeks of data by region
-    dplyr::summarise(
-      n_positive = mean(n_positive, na.rm = TRUE),
-      total = mean(total, na.rm = TRUE),
-      p_positive = n_positive/total * 100,
-      ## this expression will advance dates ...
-      ## ... creates a vector as long as the value of weeks to replace
-      ## adds 7 to the last date for each week to replace
-      week_start = max(week_start) + 7*1:weeks_to_replace,
-      abbreviation = dplyr::first(abbreviation),
-      .groups = "drop") %>%
-    dplyr::mutate(
-      epiweek = lubridate::epiweek(week_start),
-      epiyear = lubridate::epiyear(week_start)) %>%
-    dplyr::ungroup()
-
-  dplyr::bind_rows(clin, ahead_clin) %>%
-    dplyr::arrange(location, week_start)
-}
-
-## helper to run poisson forecaster
-pois_forc <- function(.data, .location, .var) {
-
-  tmp_var <- dplyr::enquo(.var)
-
-  last4 <-
-    .data %>%
-    dplyr::distinct_all() %>%
-    dplyr::filter(location == .location) %>%
-    dplyr::arrange(week_start) %>%
-    tail(4) %>%
-    dplyr::pull(!!tmp_var)
-
-  ## draw 1 random poisson value based on lambda computed by average of last 4 weeks of count data
-  n1ahead <- rpois(1, mean(last4))
-  n2ahead <- rpois(1, mean(c(last4[2:4],n1ahead)))
-  n3ahead <- rpois(1, mean(c(last4[3:4],n1ahead,n2ahead)))
-  n4ahead <- rpois(1, mean(c(last4[4],n1ahead,n2ahead,n3ahead)))
-
-  c(n1ahead,n2ahead,n3ahead,n4ahead)
-}
-
 ## retrieve data and run "nowcast" to get one week ahead to handle reporting delay
 labdat <- get_cdc_clin()
 ## NOTE: will need to figure how how many weeks we actually need to "nowcast" on mondays ...
@@ -168,27 +68,6 @@ if (tologili) {
   ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
   ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
   ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
-}
-
-## helper to do weighted averaging of previous observations
-smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
-
-  ## check that n = length(weights)
-  stopifnot(n == length(weights))
-
-  ## get the last 4 items of vector
-  lastn <- tail(x,n)
-
-  ## get "weights" for each item
-  ## the weights correspond to number of times each element is repeated
-  tmp <- tibble(last_n=lastn, reps=weights)
-
-  ## repeat the elements as many times as weighted
-  ## and average
-  purrr::map2(tmp$last_n, tmp$reps, .f = function(x,y) rep(x,y)) %>%
-    unlist(.) %>%
-    mean(.)
-
 }
 
 ## data list by location
@@ -419,7 +298,7 @@ dev.off()
 ## save model formulas / arima params / objects for posterity
 
 ili_params <-
-  bind_rows(ilifor_us$arima_params, ilifor_st$arima_params) %>%
+  ilifor$arima_params %>%
   mutate(forecast_date = this_monday())
 
 hosp_arima_params <-
