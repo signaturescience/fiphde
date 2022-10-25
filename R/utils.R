@@ -515,3 +515,35 @@ surveillance_areas <- function() {
   xdf$surveillance_area <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")[xdf$surveillance_area]
   xdf
 }
+
+#' Calculate smoothed and weighted averages of previous observations
+#'
+#' @description This helper function calculates a weighted average of the last n observations.
+#'
+#' @param x Incoming vector of observations
+#' @param n Number of recent observations to smooth; default is `4`
+#' @param weights Vector of weights to be applied to last n observations during averaging
+#'
+#' @return Vector of length 1 with the weighted average of last n observations.
+#' @export
+#'
+smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
+
+  ## check that n = length(weights)
+  stopifnot(n == length(weights))
+
+  ## get the last 4 items of vector
+  lastn <- utils::tail(x,n)
+
+  ## get "weights" for each item
+  ## the weights correspond to number of times each element is repeated
+  tmp <- dplyr::tibble(last_n=lastn, reps=weights)
+
+  ## repeat the elements as many times as weighted
+  ## and average
+  purrr::map2(tmp$last_n, tmp$reps, .f = function(x,y) rep(x,y)) %>%
+    unlist(.) %>%
+    mean(.)
+
+}
+

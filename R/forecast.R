@@ -359,3 +359,78 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
   res <- tibble::lst(ilidat, ilidat_tsibble, ili_fit, ili_forecast, ili_future, ili_bound, arima_params, locstats, removed)
   return(res)
 }
+
+
+#' Nowcast clinical laboratory percent positive flu data
+#'
+#' @description This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
+#'
+#' @param clin Data prepared with [get_cdc_clin()]
+#' @param weeks_to_replace Number of retrospective weeks to replace with nowcast; default is 1
+#'
+#' @return A tibble formatted the same as that returned with `get_cdc_clin()` but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.
+#' @export
+#'
+clin_nowcast <- function(clin, weeks_to_replace = 1) {
+
+  ## get one week ahead of
+  ahead_clin <-
+    clin %>%
+    dplyr::select(location, abbreviation, week_start,total,n_positive) %>%
+    dplyr::group_by(location) %>%
+    ## get last 4 weeks of data available to average
+    dplyr::filter(dplyr::row_number() >= dplyr::n() - 3) %>%
+    ## get mean of last 4 weeks of data by region
+    dplyr::summarise(
+      n_positive = mean(n_positive, na.rm = TRUE),
+      total = mean(total, na.rm = TRUE),
+      p_positive = n_positive/total * 100,
+      ## this expression will advance dates ...
+      ## ... creates a vector as long as the value of weeks to replace
+      ## adds 7 to the last date for each week to replace
+      week_start = max(week_start) + 7*1:weeks_to_replace,
+      abbreviation = dplyr::first(abbreviation),
+      .groups = "drop") %>%
+    dplyr::mutate(
+      epiweek = lubridate::epiweek(week_start),
+      epiyear = lubridate::epiyear(week_start)) %>%
+    dplyr::ungroup()
+
+  dplyr::bind_rows(clin, ahead_clin) %>%
+    dplyr::arrange(location, week_start)
+}
+
+#' Simple Poisson count forecaster
+#'
+#' @description This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
+#'
+#' @param .data Data frame with incoming data that includes a variable with counts (see ".var" argument), and location (must be stored in a column called "location") and a variable for sorting by date (must be stored in a column called "week_start")
+#' @param .location The name of the location of interest
+#' @param .var Bare, unquoted name of the variable with counts to be forecasted
+#'
+#' @return Vector of length 4 with Poisson forecasts for 4 horizons ahead.
+#' @export
+#'
+#'
+pois_forc <- function(.data, .location, .var) {
+
+  ## handle for NSE
+  tmp_var <- dplyr::enquo(.var)
+
+  last4 <-
+    .data %>%
+    ## ensures no duplicate
+    dplyr::distinct_all() %>%
+    dplyr::filter(location == .location) %>%
+    dplyr::arrange(week_start) %>%
+    utils::tail(4) %>%
+    dplyr::pull(!!tmp_var)
+
+  ## draw 1 random poisson value based on lambda computed by average of last 4 weeks of count data
+  n1ahead <- stats::rpois(1, mean(last4))
+  n2ahead <- stats::rpois(1, mean(c(last4[2:4],n1ahead)))
+  n3ahead <- stats::rpois(1, mean(c(last4[3:4],n1ahead,n2ahead)))
+  n4ahead <- stats::rpois(1, mean(c(last4[4],n1ahead,n2ahead,n3ahead)))
+
+  c(n1ahead,n2ahead,n3ahead,n4ahead)
+}
