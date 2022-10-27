@@ -15,7 +15,7 @@ tologili <- TRUE
 ## use almost all of the cores you have (-2)
 n_workers <- max(1, parallel::detectCores()-2)
 ## or alterantively just set at a value (eg 4)
-# n_workers <- 4
+#n_workers <- 4
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
 ## if this is set to TRUE it will expect ...
 ## the hospitalization data will be reported for the entire last week
@@ -38,55 +38,92 @@ if(!interactive()) {
 # 2020-2021 and 2021-2022 flu season, meaning that you will *NOT* capture early 2020 data.
 ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
 ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
-iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
-ilidat_st <- iliaug %>% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+ilidat <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+
+## retrieve data and run "nowcast" to get one week ahead to handle reporting delay
+labdat <- get_cdc_clin()
+## NOTE: will need to figure how how many weeks we actually need to "nowcast" on mondays ...
+labdat <- clin_nowcast(labdat, 1)
+
+
+labdatfor <-
+  labdat %>%
+  group_by(location) %>%
+  summarise(total = pois_forc(., .location = location, total),
+            n_positive = pois_forc(., .location = location, n_positive),
+            epiyear = lubridate::epiyear(lubridate::today() + c(0,7,14,21)),
+            epiweek = lubridate::epiweek(lubridate::today() + c(0,7,14,21)),
+            .groups = "drop") %>%
+  mutate(p_positive = (n_positive / total)*100) %>%
+  mutate(p_positive = fiphde::mnz_replace(p_positive)) %>%
+  mutate(p_positive = log(p_positive))
 
 hosp <- get_hdgov_hosp(limitcols = TRUE)
 
 # If using log(ili), make all the zeros be the minimum nonzero value
 if (tologili) {
   ilidat    <- ilidat    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-  ilidat_st <- ilidat_st %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-  ilifor_st$ilidat     <- ilifor_st$ilidat     %>% mutate(ili=mnz_replace(ili))
-  ilifor_st$ili_future <- ilifor_st$ili_future %>% mutate(ili=mnz_replace(ili))
-  ilifor_st$ili_bound  <- ilifor_st$ili_bound  %>% mutate(ili=mnz_replace(ili))
+  # iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
+  ilifor$ilidat     <- ilifor$ilidat     %>% mutate(ili=mnz_replace(ili))
+  ilifor$ili_future <- ilifor$ili_future %>% mutate(ili=mnz_replace(ili))
+  ilifor$ili_bound  <- ilifor$ili_bound  %>% mutate(ili=mnz_replace(ili))
 }
 
 ## data list by location
-datl <-
+tmp_dat <-
   prep_hdgov_hosp(hosp, min_per_week = 0, remove_incomplete = ri) %>%
   mutate(lag_1 = lag(flu.admits, 1)) %>%
   filter(!is.na(lag_1)) %>%
   dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
-  ## states only (not US or DC)
-  filter(!abbreviation %in% c("US","DC")) %>%
-  left_join(ilifor_st$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  ## not dc
+  filter(!abbreviation %in% c("DC")) %>%
+  left_join(ilifor$ilidat, by = c("epiyear", "location", "epiweek")) %>%
+  left_join(labdat, by = c("epiyear", "location", "abbreviation", "week_start", "epiweek")) %>%
   ## optionally log tranform ILI ???
   ## see above
   ## NOTE: we *need* to add a column with the logical so eval doesnt recycle ili
   mutate(iliopt = tologili) %>%
   mutate(ili = ifelse(iliopt, log(ili), ili)) %>%
+  ## NOTE: using same option for log tranform ILI to determine log transform p_positive
+  mutate(p_positive = ifelse(p_positive == 0, fiphde::mnz_replace(p_positive), p_positive)) %>%
+  mutate(p_positive = ifelse(iliopt, log(p_positive), p_positive)) %>%
   select(-iliopt) %>%
-  mutate(flu.admits.cov=log(flu.admits.cov)) %>%
+  mutate(flu.admits.cov=log(flu.admits.cov))
+
+smoothed_admits_dat <-
+  tmp_dat %>%
+  group_by(location) %>%
+  ## NOTE: the first 3 obs will be NA because we cant smooth backwards ...
+  ## ... almost certainly a better way to handle with slider but this works for now
+  summarise(smoothed_admits = c(NA,NA,NA, map_dbl(4:n(), function(x) smoothie(flu.admits[1:x], weights = c(1,1.33,1.66,2)))),
+            epiweek = epiweek,
+            epiyear = epiyear,
+            .groups = "drop")
+
+datl <-
+  tmp_dat %>%
+  left_join(smoothed_admits_dat) %>%
+  ## the first 3 obs will be NA so this mutate fills in those values with "regular" (non smoothed) admit signal
+  mutate(smoothed_admits = ifelse(is.na(smoothed_admits), flu.admits, smoothed_admits)) %>%
   group_split(., location)
 
 models <-
   list(
-    poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
-    poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "poisson"),
-    # poisson3 = trending::glm_model(flu.admits ~ lag_1 + ili + hosp_rank + ili_rank, family = "poisson"),
-    # poisson4 = trending::glm_model(flu.admits ~ lag_1 + ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "poisson"),
-    quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
-    quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    # quasipoisson3 = trending::glm_model(flu.admits ~ lag_1 + ili + hosp_rank + ili_rank, family = "quasipoisson"),
-    # quasipoisson4 = trending::glm_model(flu.admits ~ lag_1 + ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
-    negbin2 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov))
-    # negbin3 = trending::glm_nb_model(flu.admits ~ lag_1 + ili + hosp_rank + ili_rank),
-    # negbin4 = trending::glm_nb_model(flu.admits ~ lag_1 + ili + ili_rank + hosp_rank + offset(flu.admits.cov))
+    poisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "poisson"),
+    poisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "poisson"),
+    poisson3 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "poisson"),
+    poisson4 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "poisson"),
+    quasipoisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "quasipoisson"),
+    quasipoisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "quasipoisson"),
+    quasipoisson3 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "quasipoisson"),
+    quasipoisson4 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "quasipoisson"),
+    negbin1 = trending::glm_nb_model(flu.admits ~ p_positive + ili + smoothed_admits),
+    negbin2 = trending::glm_nb_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits),
+    negbin3 = trending::glm_nb_model(flu.admits ~ ili + smoothed_admits),
+    negbin4 = trending::glm_nb_model(flu.admits ~ p_positive + smoothed_admits)
   )
+
 
 ## use furrr mapping to speed up
 run_forc <- function(dat) {
@@ -94,13 +131,16 @@ run_forc <- function(dat) {
     message(unique(dat$abbreviation))
 
     new_cov <-
-      ilifor_st$ili_future %>%
+      ilifor$ili_future %>%
+      left_join(labdatfor, by = c("epiyear", "epiweek", "location")) %>%
       filter(location %in% unique(dat$location)) %>%
       left_join(fiphde:::historical_severity) %>%
       ## assume the coverage will be the average of the last 8 weeks of reporting
       bind_cols(.,tibble(flu.admits.cov = rep(mean(dat$flu.admits.cov,8), 4))) %>%
       select(-epiweek,-epiyear) %>%
-      mutate(ili = log(ili))
+      mutate(ili = log(ili)) %>%
+      mutate(smoothed_admits = smoothie(dat$flu.admits, weights = c(1,1.33,1.66,2)))
+
 
     tmp_res <- glm_wrap(dat,
                         new_covariates = new_cov,
@@ -112,16 +152,6 @@ run_forc <- function(dat) {
     approach <- paste0("GLM-", as.character(tmp_res$model$fit$fitted_model$family)[1],
                        "\n",
                        paste0(names(tmp_res$model$fit$fitted_model$coefficients), collapse = " + "))
-
-    # future_dat <-
-    #   new_cov %>%
-    #   mutate(flu.admits = NA) %>%
-    #   mutate(date = max(dat$date) + c(7,14,21,28)) %>%
-    #   mutate(epiweek = lubridate::epiweek(date), epiyear = lubridate::epiyear(date))
-
-    # p.hosp <- plot_forc(tmp_res$forecasts, dat, future_dat) +
-    #   labs(caption = paste0(unique(dat$abbreviation), "\n", approach, "\n", max(dat$date))) +
-    #   theme(plot.caption = element_text(hjust = 0))
 
     list(
       location = unique(dat$location),
@@ -155,98 +185,13 @@ system.time({
 ## view any warnings
 warnings()
 
-## see below (after national forecasting) for formatting of state forecasts
-
-############################################################################
-## now we need to get the national forecasts
-
-## use ilidat from above
-ilidat_us <- iliaug %>% dplyr::filter(location=="US")
-ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
-
-# If using log(ili), make all the zeros be the minimum nonzero value
-if (tologili) {
-  iliaug    <- iliaug    %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-  ilidat_us <- ilidat_us %>% mutate(weighted_ili=mnz_replace(weighted_ili))
-  ilifor_us$ilidat     <- ilifor_us$ilidat     %>% mutate(ili=mnz_replace(ili))
-  ilifor_us$ili_future <- ilifor_us$ili_future %>% mutate(ili=mnz_replace(ili))
-  ilifor_us$ili_bound  <- ilifor_us$ili_bound  %>% mutate(ili=mnz_replace(ili))
-}
-
-## data list by location
-dat_us <-
-  prep_hdgov_hosp(hosp, min_per_week = 0, remove_incomplete = ri) %>%
-  mutate(lag_1 = lag(flu.admits, 1)) %>%
-  filter(!is.na(lag_1)) %>%
-  dplyr::mutate(date = MMWRweek::MMWRweek2Date(epiyear, epiweek)) %>%
-  filter(abbreviation == "US") %>%
-  left_join(ilifor_us$ilidat, by = c("epiyear", "location", "epiweek")) %>%
-  ## optionally log tranform ILI ???
-  ## see above
-  ## NOTE: we *need* to add a column with the logical so eval doesnt recycle ili
-  mutate(iliopt = tologili) %>%
-  mutate(ili = ifelse(iliopt, log(ili), ili)) %>%
-  mutate(flu.admits.cov=log(flu.admits.cov)) %>%
-  select(-iliopt)
-
-models <-
-  list(
-    poisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson"),
-    poisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "poisson"),
-    #poisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "poisson"),
-    quasipoisson1 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank, family = "quasipoisson"),
-    quasipoisson2 = trending::glm_model(flu.admits ~ ili + hosp_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    #quasipoisson3 = trending::glm_model(flu.admits ~ ili + hosp_rank + ili_rank + offset(flu.admits.cov), family = "quasipoisson"),
-    negbin1 = trending::glm_nb_model(flu.admits ~ ili + hosp_rank + ili_rank),
-    negbin2 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + offset(flu.admits.cov))
-    #negbin3 = trending::glm_nb_model(flu.admits ~  ili + hosp_rank + ili_rank + offset(flu.admits.cov))
-  )
-
-new_cov <-
-  ilifor_us$ili_future %>%
-  filter(location %in% unique(dat_us$location)) %>%
-  left_join(fiphde:::historical_severity) %>%
-  ## assume the coverage will be the average of the last 8 weeks of reporting
-  bind_cols(.,tibble(flu.admits.cov = rep(mean(dat_us$flu.admits.cov,8), 4))) %>%
-  select(-epiweek,-epiyear) %>%
-  mutate(ili = log(ili))
-
-res <- glm_wrap(dat_us,
-                new_covariates = new_cov,
-                .models = models,
-                alpha = c(0.01, 0.025, seq(0.05, 0.5, by = 0.05)) * 2)
-
-res$forecasts$location <- "US"
-
-us_approach <- paste0("GLM-", as.character(res$model$fit$fitted_model$family)[1],
-                   "\n",
-                   paste0(names(res$model$fit$fitted_model$coefficients), collapse = " + "))
-
-us_forcres <-
-  list(
-    list(
-      location = "US",
-      location_abb = "US",
-      results = res,
-      data = list(training = dat_us),
-      thru_week = max(dat_us$date),
-      approach = us_approach)
-  )
-
-state_locs <-
-  forcres %>%
-  purrr::keep(~!is.na(.x$approach)) %>%
-  purrr::map_chr(., "location")
-
-state_forecasts <-
+all_forecasts <-
   forcres %>%
   purrr::keep(~!is.na(.x$approach)) %>%
   purrr::map(., "results") %>%
-  purrr::map(., "forecasts")
+  purrr::map_df(., "forecasts")
 
-state_glm_prepped <- map_df(state_forecasts, ~format_for_submission(.x, method = "CREG"))
-us_glm_prepped <- format_for_submission(res$forecasts, method = "CREG")
-all_prepped <- bind_rows(us_glm_prepped$CREG,state_glm_prepped$CREG)
+all_prepped <- format_for_submission(all_forecasts, method = "CREG")$CREG
 
 ## force to monday (required to validate a forecast created on a day other than sunday or monday)
 all_prepped$forecast_date <- this_monday()
@@ -256,9 +201,7 @@ validate_forecast(all_prepped)
 all_prepped %>%
   write_csv(., paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.candidate.csv"))
 
-bound_truth <-
-  do.call("rbind", datl) %>%
-  bind_rows(., dat_us)
+bound_truth <- do.call("rbind", datl)
 
 pdf(paste0("submission/SigSci-CREG/artifacts/plots/", this_monday(), "-SigSci-CREG.pdf"), width=11.5, height=8)
 for(loc in unique(all_prepped$location)) {
@@ -355,7 +298,7 @@ dev.off()
 ## save model formulas / arima params / objects for posterity
 
 ili_params <-
-  bind_rows(ilifor_us$arima_params, ilifor_st$arima_params) %>%
+  ilifor$arima_params %>%
   mutate(forecast_date = this_monday())
 
 hosp_arima_params <-
@@ -366,7 +309,7 @@ hosp_arima_params <-
 
 hosp_ets_formula <- hosp_fitfor$formulas$ets
 
-glm_forcres <- c(forcres, us_forcres)
+glm_forcres <- c(forcres)
 glm_model_info <-
   glm_forcres %>%
   map("results") %>%
@@ -380,5 +323,5 @@ hosp_arima_forc <- formatted_list$arima
 ## Save locations/models which were null
 hosp_tsens_null_models <- hosp_fitfor$nullmodels
 
-save(glm_forcres, glm_model_info, ilidat_st, ilifor_st, ilidat_us, ilifor_us, file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
+save(glm_forcres, glm_model_info, ilidat, ilifor, labdat, labdatfor,  file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
 save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, hosp_tsens_null_models, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))

@@ -308,6 +308,88 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   }
 }
 
+#' Retrieve and prep clinical laboratory percent positive flu data
+#'
+#' @description This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument.
+#'
+#' @param region Either "state", "national", or "both". Defaults to "both" to return state and national data combined.
+#' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
+#'
+#' @return Tibble with prepared data pulled from NREVSS, including columns for total number of positives, percent positive, epiweek, epiyear
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'
+#'## get all clinical lab flu positivity data
+#'all_clin <- get_cdc_clin()
+#'
+#'## or look at a specific location and time
+#'## note: the year "start" will begin at the first epiweek of the season
+#'## this example 2021 will weekly data ...
+#'## ... starting at beginning of 2021/22 season
+#'## ... ending the week before start of 2022/23 season
+#'va_clin <-
+#'get_cdc_clin(region = "state", years = 2021) %>%
+#'dplyr::filter(location == "51")
+#'
+#' }
+#'
+#'
+get_cdc_clin <- function(region = "both", years = NULL) {
+
+  ## handle incoming arg
+  tmp_region <- tolower(region)
+
+  tmp_years <- years
+
+  ## if both state and national then first get state data
+  ## then get natinoal
+  if(tmp_region == "both") {
+    state_clin <-
+      who_nrevss("state", years = tmp_years)$clinical_labs %>%
+      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
+      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
+      dplyr::mutate(total_a = as.numeric(total_a)) %>%
+      dplyr::mutate(total_b = as.numeric(total_b)) %>%
+      dplyr::rename(location_name = region) %>%
+      dplyr::left_join(locations, by = c("location_name")) %>%
+      dplyr::mutate(total_positive = total_a + total_b) %>%
+      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
+
+    nat_clin <-
+      who_nrevss("national", years = tmp_years)$clinical_labs %>%
+      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
+      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
+      dplyr::mutate(total_a = as.numeric(total_a)) %>%
+      dplyr::mutate(total_b = as.numeric(total_b)) %>%
+      dplyr::rename(location_name = region) %>%
+      dplyr::mutate(abbreviation = "US",
+                    location = "US") %>%
+      dplyr::mutate(total_positive = total_a + total_b) %>%
+      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
+
+    clin <- dplyr::bind_rows(state_clin, nat_clin)
+  } else {
+    ## otherwise just get national or state
+    clin <-
+      who_nrevss(tmp_region, years = tmp_years)$clinical_labs %>%
+      dplyr::mutate(percent_positive = as.numeric(percent_positive)) %>%
+      dplyr::mutate(total_specimens = as.numeric(total_specimens)) %>%
+      dplyr::mutate(total_a = as.numeric(total_a)) %>%
+      dplyr::mutate(total_b = as.numeric(total_b)) %>%
+      dplyr::rename(location_name = region) %>%
+      dplyr::left_join(locations, by = c("location_name")) %>%
+      dplyr::mutate(location = dplyr::if_else(region_type == "national", "US", location),
+                    abbreviation = dplyr::if_else(region_type == "national", "US", abbreviation)) %>%
+      dplyr::mutate(total_positive = total_a + total_b) %>%
+      dplyr::select(abbreviation, location, epiyear = year, epiweek = week, week_start = wk_date, p_positive = percent_positive, n_positive = total_positive, total = total_specimens)
+  }
+
+  return(clin)
+
+}
+
 #' Retrieve ILINet Surveillance Data
 #'
 #' Adapted from cdcfluview::ilinet.
@@ -505,6 +587,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
          call.=FALSE)
   }
 
+  ## establish user agent for query
   ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
 
   ## submit query to API
@@ -636,6 +719,138 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
     xdf <- dplyr::filter(xdf, season %in% years)
 
   }
+
+  xdf
+
+}
+
+#' WHO/NREVSS surveillance data
+#'
+#' Adapted from cdcfluview::who_nrevss.
+#'
+#' @param region one of "`national`", "`hhs`", "`census`", or "`state`"
+#' @param years a vector of years to retrieve data for (i.e. `2014` for CDC
+#'        flu season 2014-2015). CDC has data for this API going back to 1997.
+#'        Default value (`NULL`) means retrieve **all** years. NOTE: if you
+#'        happen to specify a 2-digit season value (i.e. `57` == 2017-2018)
+#'        the function is smart enough to retrieve by season ID vs convert that
+#'        to a year.
+#' @references
+#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' @examples
+#' \dontrun{
+#' national_nrevss <- who_nrevss("national")
+#' hhs_who <- who_nrevss("hhs")
+#' census_who <- who_nrevss("census")
+#' state_who <- who_nrevss("state")
+#' }
+who_nrevss <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
+
+  ## handle region arg
+  region <- match.arg(tolower(region), c("national", "hhs", "census", "state"))
+
+  ## get metadata from CDC fluview api
+  meta <- jsonlite::fromJSON("https://gis.cdc.gov/grasp/flu2/GetPhase02InitApp?appVersion=Public")
+  ## use metadata to determine available season ids
+  available_seasons <- sort(meta$seasons$seasonid)
+
+  ## add params for query
+  params <-
+    list(
+      AppVersion = "Public",
+      DatasourceDT = list(list(ID = 1, Name = "WHO_NREVSS")),
+      RegionTypeId = c(national = 3, hhs = 1, census = 2, state = 5)[region]
+    )
+
+  params$SubRegionsDT <- switch(
+    region,
+    national = { list(list(ID=0, Name="")) },
+    hhs = { lapply(1:10, function(i) list(ID=i, Name=as.character(i))) },
+    census = { lapply(1:9, function(i) list(ID=i, Name=as.character(i))) },
+    state = { lapply(1:59, function(i) list(ID=i, Name=as.character(i))) }
+  )
+
+
+  ## default to all years if years is NULL
+  ## otherwise parse out years based given season ids and available seasons
+  if (is.null(years)) {
+    years <- available_seasons
+  } else {
+
+    years <- as.numeric(years)
+    years <- ifelse(years > 1996, years - 1960, years)
+    years <- sort(unique(years))
+    years <- years[years %in% available_seasons]
+
+    if (length(years) == 0) {
+      years <- rev(sort(meta$seasons$seasonid))[1]
+      curr_season_descr <- meta$seasons[meta$seasons$seasonid == years, "description"]
+      message(sprintf("No valid years specified, defaulting to this flu season => ID: %s [%s]",
+                      years, curr_season_descr))
+    }
+
+  }
+
+  ## add another parameter for the query for the seasons to return
+  params$SeasonsDT <- lapply(years, function(i) list(ID=i, Name=as.character(i)))
+
+  ## path to tempfile for downloading query results
+  tf <- tempfile(fileext = ".zip")
+  td <- tempdir()
+
+  on.exit(unlink(tf), TRUE)
+
+  ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
+
+  tmp_q <-
+    httr::POST(
+    url = "https://gis.cdc.gov/grasp/flu2/PostPhase02DataDownload",
+    httr::user_agent(ua),
+    httr::add_headers(
+      Origin = "https://gis.cdc.gov",
+      Accept = "application/json, text/plain, */*",
+      Referer = "https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html"
+    ),
+    encode = "json",
+    body = params,
+    httr::timeout(120),
+    httr::write_disk(tf)
+  )
+
+  httr::stop_for_status(tmp_q)
+
+  ## unzip the downloaded tempfile to the tempdir() defined above
+  nm <- utils::unzip(tf, overwrite = TRUE, exdir = td)
+
+  xdf <-
+    lapply(nm, function(x) {
+
+    tdf <- utils::read.csv(x, skip = 1, stringsAsFactors=FALSE)
+    tdf <- .mcga(tdf)
+    class(tdf) <- c("tbl_df", "tbl", "data.frame")
+
+    tdf[tdf=="X"] <- NA
+    tdf[tdf=="XX"] <- NA
+
+    tdf
+
+  })
+
+  xdf <- stats::setNames(xdf, sub("who_nrevss_", "", tools::file_path_sans_ext(tolower(basename(nm)))))
+
+  ## apply a clean up function to
+  ## 1) get "wk_date" for epiyear and epiweek
+  ## 2) title case "National" if the region is "national"
+  xdf <- lapply(xdf, function(.x) {
+    x_cols <- colnames(.x)
+    if ((("year" %in% x_cols) & ("week" %in% x_cols))) {
+      .x$wk_date <- suppressWarnings(mmwr_week_to_date(.x$year, .x$week))
+    } else {
+      .x$wk_date <- as.Date(NA)
+    }
+    if (region == "national") .x$region <- "National"
+    .x
+  })
 
   xdf
 

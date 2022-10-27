@@ -99,5 +99,12 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "mmwrid_map",
                                                         ".surv_map",
                                                         ".region_map",
+                                                        "wk_date",
+                                                        "total_specimens",
+                                                        "total_positive",
+                                                        "total_a",
+                                                        "total_b",
+                                                        "percent_positive",
+                                                        "n_positive",
                                                         "."))
 
