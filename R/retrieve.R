@@ -318,6 +318,23 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #' @return Tibble with prepared data pulled from NREVSS, including columns for total number of positives, percent positive, epiweek, epiyear
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#'
+#'## get all clinical lab flu positivity data
+#'all_clin <- get_cdc_clin()
+#'
+#'## or look at a specific location and time
+#'## note: the year "start" will begin at the first epiweek of the season
+#'## this example 2021 will weekly data ...
+#'## ... starting at beginning of 2021/22 season
+#'## ... ending the week before start of 2022/23 season
+#'va_clin <-
+#'get_cdc_clin(region = "state", years = 2021) %>%
+#'dplyr::filter(location == "51")
+#'
+#' }
+#'
 #'
 get_cdc_clin <- function(region = "both", years = NULL) {
 
@@ -722,7 +739,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' @examples
 #' \dontrun{
-#' national_who <- who_nrevss("national")
+#' national_nrevss <- who_nrevss("national")
 #' hhs_who <- who_nrevss("hhs")
 #' census_who <- who_nrevss("census")
 #' state_who <- who_nrevss("state")

@@ -17,3 +17,31 @@ A tibble formatted the same as that returned with \code{get_cdc_clin()} but wher
 \description{
 This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
 }
+\examples{
+\dontrun{
+
+## get data for Texas
+tx_clin <-
+get_cdc_clin(region = "state") \%>\%
+dplyr::filter(location == "48")
+
+## look at most recent observations
+tx_clin \%>\%
+dplyr::arrange(week_start) \%>\%
+tail()
+
+## now augment with default 1 week nowcast
+tx_clin \%>\%
+clin_nowcast(., weeks_to_replace = 1) \%>\%
+dplyr::arrange(week_start) \%>\%
+tail()
+
+## and again augmented with 2 week nowcast instead
+tx_clin \%>\%
+ clin_nowcast(., weeks_to_replace = 2) \%>\%
+ dplyr::arrange(week_start) \%>\%
+ tail()
+
+}
+
+}

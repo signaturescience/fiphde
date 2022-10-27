@@ -21,7 +21,7 @@ Adapted from cdcfluview::who_nrevss.
 }
 \examples{
 \dontrun{
-national_who <- who_nrevss("national")
+national_nrevss <- who_nrevss("national")
 hhs_who <- who_nrevss("hhs")
 census_who <- who_nrevss("census")
 state_who <- who_nrevss("state")

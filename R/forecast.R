@@ -371,6 +371,33 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
 #' @return A tibble formatted the same as that returned with `get_cdc_clin()` but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#'
+#' ## get data for Texas
+#' tx_clin <-
+#' get_cdc_clin(region = "state") %>%
+#' dplyr::filter(location == "48")
+#'
+#' ## look at most recent observations
+#' tx_clin %>%
+#' dplyr::arrange(week_start) %>%
+#' tail()
+#'
+#' ## now augment with default 1 week nowcast
+#' tx_clin %>%
+#' clin_nowcast(., weeks_to_replace = 1) %>%
+#' dplyr::arrange(week_start) %>%
+#' tail()
+#'
+#' ## and again augmented with 2 week nowcast instead
+#' tx_clin %>%
+#'  clin_nowcast(., weeks_to_replace = 2) %>%
+#'  dplyr::arrange(week_start) %>%
+#'  tail()
+#'
+#' }
+#'
 clin_nowcast <- function(clin, weeks_to_replace = 1) {
 
   ## get one week ahead of
@@ -410,6 +437,21 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
 #'
 #' @return Vector of length 4 with Poisson forecasts for 4 horizons ahead.
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#'
+#' all_clin <- get_cdc_clin()
+#' va_ahead <-
+#' dplyr::tibble(
+#' n_positive = pois_forc(all_clin, .location = "51", n_positive),
+#' total = pois_forc(all_clin, .location = "51", total),
+#' p_positive = n_positive / total
+#' )
+#'
+#' va_ahead
+#'
+#' }
 #'
 #'
 pois_forc <- function(.data, .location, .var) {

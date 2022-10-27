@@ -19,3 +19,20 @@ Vector of length 4 with Poisson forecasts for 4 horizons ahead.
 \description{
 This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
 }
+\examples{
+\dontrun{
+
+all_clin <- get_cdc_clin()
+va_ahead <-
+dplyr::tibble(
+n_positive = pois_forc(all_clin, .location = "51", n_positive),
+total = pois_forc(all_clin, .location = "51", total),
+p_positive = n_positive / total
+)
+
+va_ahead
+
+}
+
+
+}

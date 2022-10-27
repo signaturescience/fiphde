@@ -19,3 +19,24 @@ Vector of length 1 with the weighted average of last n observations.
 \description{
 This helper function calculates a weighted average of the last n observations.
 }
+\examples{
+\dontrun{
+
+## pull and prep weekly US flu hospitalization data
+hosp_us <-
+get_hdgov_hosp() \%>\%
+prep_hdgov_hosp() \%>\%
+dplyr::filter(location == "US")
+
+## what do the last 4 observations look like?
+tail(hosp_us$flu.admits, 4)
+
+## smooth over last 4 with default weights
+smoothie(hosp_us$flu.admits, n=4, weights=c(1,2,3,4))
+
+## try smoothing over last 4 with different weights (exponential this time)
+smoothie(hosp_us$flu.admits, n=4, weights=exp(1:4))
+
+}
+
+}

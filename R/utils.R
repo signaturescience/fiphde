@@ -527,6 +527,26 @@ surveillance_areas <- function() {
 #' @return Vector of length 1 with the weighted average of last n observations.
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#'
+#' ## pull and prep weekly US flu hospitalization data
+#' hosp_us <-
+#' get_hdgov_hosp() %>%
+#' prep_hdgov_hosp() %>%
+#' dplyr::filter(location == "US")
+#'
+#' ## what do the last 4 observations look like?
+#' tail(hosp_us$flu.admits, 4)
+#'
+#' ## smooth over last 4 with default weights
+#' smoothie(hosp_us$flu.admits, n=4, weights=c(1,2,3,4))
+#'
+#' ## try smoothing over last 4 with different weights (exponential this time)
+#' smoothie(hosp_us$flu.admits, n=4, weights=exp(1:4))
+#'
+#' }
+#'
 smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
 
   ## check that n = length(weights)
