@@ -22,6 +22,9 @@
     <loc>https://signaturescience.github.io/fiphde/news/index.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/clin_nowcast.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/dot-mcga.html</loc>
   </url>
   <url>
@@ -35,6 +38,9 @@
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/format_for_submission.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/get_cdc_clin.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/get_cdc_hosp.html</loc>
@@ -94,6 +100,9 @@
     <loc>https://signaturescience.github.io/fiphde/reference/plot_forecast.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/pois_forc.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/prep_hdgov_hosp.html</loc>
   </url>
   <url>
@@ -101,6 +110,9 @@
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/score_func_param_checker.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/smoothie.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/state_replace_ili_nowcast_all.html</loc>
@@ -125,6 +137,9 @@
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/weighted_interval_score.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/who_nrevss.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/wis_score.html</loc>

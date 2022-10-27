@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,14 @@
       
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="fiphde-030">fiphde 0.3.0<a class="anchor" aria-label="anchor" href="#fiphde-030"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-0"></a></h3>
+<p>This release brings in additional data retrieval and processing functions. The package now includes code adapted from <code>cdcfluview</code> to query the NREVSS surveillance system and pull clinical laboratory percent positive flu data. The <code><a href="../reference/who_nrevss.html">who_nrevss()</a></code> function is unexported but is used in the user-facing <code><a href="../reference/get_cdc_clin.html">get_cdc_clin()</a></code> function, which pulls and preps the percent positive data. A complementary function, <code><a href="../reference/clin_nowcast.html">clin_nowcast()</a></code>, is now available to augment the clinical laboratory percent positivity with a nowcasted value.</p>
+<p>The package also now includes helper functions to prepare covariates for modeling. For example, the new <code><a href="../reference/pois_forc.html">pois_forc()</a></code> helper creates a forecasted counts based on recently observed values. This can be used to create forecasted values for number of tests and number of positive flu specimens (and thefore percent positivity) to feed into models that include percent positive lab results as a covariate. The new <code><a href="../reference/smoothie.html">smoothie()</a></code> function is also available to create weighted averages of recent observations, which can be used as covariate data in models.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1" id="fiphde-021">fiphde 0.2.1<a class="anchor" aria-label="anchor" href="#fiphde-021"></a></h2>
 <p>Minor fix to include “start_date” parameter in <code><a href="../reference/replace_ili_nowcast.html">replace_ili_nowcast()</a></code> function so that ILI nowcasting can be performed retrospectively if needed.</p>
