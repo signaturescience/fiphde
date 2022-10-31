@@ -1,12 +1,27 @@
+################################################################################
+## Common: run this section for both CREG and TSENS ----
+# Load libs
 library(dplyr)
 library(purrr)
 library(readr)
 library(ggplot2)
 library(fiphde)
 library(furrr)
+# Return incomplete?
+## if this is set to TRUE it will expect ...
+## the hospitalization data will be reported for the entire last week
+## BUT this will break the code if we try to run on a sunday
+## last week
+if(as.POSIXlt(lubridate::today())$wday == 0) {
+  ri <- FALSE
+} else {
+  ri <-  TRUE
+}
+# Get hosp data
+hosp <- get_hdgov_hosp(limitcols = TRUE)
 
 ################################################################################
-## SigSci-CREG
+## SigSci-CREG ----
 
 ## first an option
 ## do we want to log-transform ILI ???
@@ -17,15 +32,6 @@ n_workers <- max(1, parallel::detectCores()-2)
 ## or alterantively just set at a value (eg 4)
 #n_workers <- 4
 ## another option whether or not to use remove_incomplete feature in prepping hdgov hosp
-## if this is set to TRUE it will expect ...
-## the hospitalization data will be reported for the entire last week
-## BUT this will break the code if we try to run on a sunday
-## last week
-if(as.POSIXlt(lubridate::today())$wday == 0) {
-  ri <- FALSE
-} else {
-  ri <-  TRUE
-}
 ## if there are lots of warnings we want to print them in the pipeline script
 ## especially non-interactively (i.e. when the automated instance runs the script)
 if(!interactive()) {
@@ -58,8 +64,6 @@ labdatfor <-
   mutate(p_positive = (n_positive / total)*100) %>%
   mutate(p_positive = fiphde::mnz_replace(p_positive)) %>%
   mutate(p_positive = log(p_positive))
-
-hosp <- get_hdgov_hosp(limitcols = TRUE)
 
 # If using log(ili), make all the zeros be the minimum nonzero value
 if (tologili) {
@@ -211,7 +215,7 @@ for(loc in unique(all_prepped$location)) {
 dev.off()
 
 ################################################################################
-## SigSci-TSENS
+## SigSci-TSENS ----
 
 # Prep, and make a tsibble
 ## NOTE: uses hosp from above but preps slightly differently
