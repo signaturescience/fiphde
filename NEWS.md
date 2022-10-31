@@ -1,3 +1,7 @@
+# fiphde 0.3.1
+
+Rearranged the submission script to pull common items (data retrieval, package loads, etc.) to the top of the script, so that CREG and TSENS can be run independently as needed.
+
 # fiphde 0.3.0
 
 ## New features
