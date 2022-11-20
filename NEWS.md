@@ -1,6 +1,12 @@
 # fiphde 0.3.1
 
-Rearranged the submission script to pull common items (data retrieval, package loads, etc.) to the top of the script, so that CREG and TSENS can be run independently as needed.
+## New features
+
+This release includes a rearranged submission script that now executes common procedures (data retrieval, package loads, etc.) at the top of the script, so that CREG and TSENS can be run independently as needed.
+
+## Bug fixes
+
+Prior to this release the explorer app (see `?fiphde_launcher`) would default visualizations to *all* locations in multiple submission modeling methods loaded into the app. However, if any of the locations were available for one but not all model submission files, then the location(s) would remain selected and the forecast visualizations would break until the missing location(s) was unselected for the model. As of this release, the app now will default selected locations to just those that are present in the given submission file.
 
 # fiphde 0.3.0
 
@@ -11,6 +17,8 @@ This release brings in additional data retrieval and processing functions. The p
 The package also now includes helper functions to prepare covariates for modeling. For example, the new `pois_forc()` helper creates a forecasted counts based on recently observed values. This can be used to create forecasted values for number of tests and number of positive flu specimens (and thefore percent positivity) to feed into models that include percent positive lab results as a covariate. The new `smoothie()` function is also available to create weighted averages of recent observations, which can be used as covariate data in models.
 
 # fiphde 0.2.1
+
+## Bug fixes
 
 Minor fix to include "start_date" parameter in `replace_ili_nowcast()` function so that ILI nowcasting can be performed retrospectively if needed.
 
