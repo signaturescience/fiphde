@@ -312,12 +312,26 @@ server <- function(input, output) {
     ## requires that the original submission file has been read in ...
     req(!is.null(submission_raw()))
 
-    ## get the *names* (not codes) for locations
-    locs <-
-      fiphde:::locations %>%
-      filter(abbreviation %in% c("US", state.abb, "DC")) %>%
-      filter(location %in% unique(submission_raw()$data$location))
+    if(length(input$model) == 1) {
+      model_locs <-
+        submission_raw()$data %>%
+        filter(model == input$model) %>%
+        pull(location) %>%
+        unique(.)
 
+      ## get the *names* (not codes) for locations
+      locs <-
+        fiphde:::locations %>%
+        filter(abbreviation %in% c("US", state.abb, "DC")) %>%
+        filter(location %in% model_locs)
+
+    } else {
+      ## get the *names* (not codes) for locations
+      locs <-
+        fiphde:::locations %>%
+        filter(abbreviation %in% c("US", state.abb, "DC")) %>%
+        filter(location %in% unique(submission_raw()$data$location))
+    }
     ## checkbox choices are *names* (not codes) ... see above
     pickerInput("location","Select location", choices = locs$location_name, selected = locs$location_name, options = list(`actions-box` = TRUE),multiple = T)
   })
