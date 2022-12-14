@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +45,29 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.2" id="fiphde-032">fiphde 0.3.2<a class="anchor" aria-label="anchor" href="#fiphde-032"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-2"></a></h3>
+<p>As of this release the submission script now includes code to prepare submission-ready files for “experimental” categorical rate change targets.</p>
+</div>
+<div class="section level3">
+<h3 id="bug-fixes-0-3-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-2"></a></h3>
+<p>Previously the validation script’s date format check was limited to 2021 and 2022. We have extended this check to work with 2023 dates.</p>
+<p>The R CMD CHECK GitHub action has been incremented to use “v2” R actions, which addresses an issue with failing continuous integration checks failing for the repository.</p>
+</div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="fiphde-031">fiphde 0.3.1<a class="anchor" aria-label="anchor" href="#fiphde-031"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1"></a></h3>
+<p>This release includes a rearranged submission script that now executes common procedures (data retrieval, package loads, etc.) at the top of the script, so that CREG and TSENS can be run independently as needed.</p>
+</div>
+<div class="section level3">
+<h3 id="bug-fixes-0-3-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-1"></a></h3>
+<p>Prior to this release the explorer app (see <code><a href="../reference/fiphde_launcher.html">?fiphde_launcher</a></code>) would default visualizations to <em>all</em> locations in multiple submission modeling methods loaded into the app. However, if any of the locations were available for one but not all model submission files, then the location(s) would remain selected and the forecast visualizations would break until the missing location(s) was unselected for the model. As of this release, the app now will default selected locations to just those that are present in the given submission file.</p>
+</div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="fiphde-030">fiphde 0.3.0<a class="anchor" aria-label="anchor" href="#fiphde-030"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-0"></a></h3>
@@ -54,7 +77,10 @@
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1" id="fiphde-021">fiphde 0.2.1<a class="anchor" aria-label="anchor" href="#fiphde-021"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-1"></a></h3>
 <p>Minor fix to include “start_date” parameter in <code><a href="../reference/replace_ili_nowcast.html">replace_ili_nowcast()</a></code> function so that ILI nowcasting can be performed retrospectively if needed.</p>
+</div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="fiphde-020">fiphde 0.2.0<a class="anchor" aria-label="anchor" href="#fiphde-020"></a></h2>
