@@ -414,6 +414,6 @@ forecast_categorical <- function(.forecast,.observed) {
 
 
 tsens_exp <- forecast_categorical(tsens_forc, prepped_hosp)
-write_csv(tsens_exp, paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.experimental.candidate.csv"))
+write_csv(tsens_exp, paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.experimental.csv"))
 creg_exp <- forecast_categorical(creg_forc, prepped_hosp)
-write_csv(tsens_exp, paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.experimental.candidate.csv"))
+write_csv(tsens_exp, paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.candidate.experimental.csv"))
