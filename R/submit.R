@@ -306,13 +306,13 @@ validate_forecast <- function(subdat) {
   ## just needs to make sure this is either 2021 or 2022 ...
   ## ... to check that the dates are formatted right
   tst_date_format <-
-    all(c(lubridate::year(strptime(subdat$forecast_date, format = "%Y-%m-%d")) %in% c(2021,2022),
-          lubridate::year(strptime(subdat$target_end_date, format = "%Y-%m-%d")) %in% c(2021,2022)))
+    all(c(lubridate::year(strptime(subdat$forecast_date, format = "%Y-%m-%d")) %in% c(2021,2022,2023),
+          lubridate::year(strptime(subdat$target_end_date, format = "%Y-%m-%d")) %in% c(2021,2022,2023)))
 
   if(tst_date_format) {
     valres$date_format <- list(valid = TRUE, msg = NULL)
   } else {
-    valres$date_format <- list(valid = FALSE, msg = "The submission includes something other than 'NA' for quantile of point estimates.")
+    valres$date_format <- list(valid = FALSE, msg = "The submission includes dates which are not 2021, 2022, or 2023.")
   }
 
   ## end_date is a saturday

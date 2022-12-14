@@ -329,3 +329,91 @@ hosp_tsens_null_models <- hosp_fitfor$nullmodels
 
 save(glm_forcres, glm_model_info, ilidat, ilifor, labdat, labdatfor,  file = paste0("submission/SigSci-CREG/artifacts/params/", this_monday(), "-SigSci-CREG-model-info.rda"))
 save(ili_params,hosp_arima_params, hosp_ets_formula, hosp_ets_forc, hosp_arima_forc, hosp_tsens_null_models, file = paste0("submission/SigSci-TSENS/artifacts/params/", this_monday(), "-SigSci-TSENS-model-info.rda"))
+
+################################################################################
+## experimental categorical targets
+
+## get creg forecast
+creg_forc <- all_prepped
+## get tsens forecast
+tsens_forc <- formatted_list$ensemble
+
+
+forecast_categorical <- function(.forecast,.observed) {
+
+  ## prep the .forecast object for experimental target summary
+  forc4exp <-
+    .forecast %>%
+    dplyr::mutate(value = as.numeric(value)) %>%
+    dplyr::mutate(quantile = as.numeric(quantile)) %>%
+    ## only looking at 2 week ahead for now
+    dplyr::filter(target == "2 wk ahead inc flu hosp") %>%
+    ## join to internal locations object that has population data
+    dplyr::left_join(fiphde:::locations) %>%
+    ## calculate rate per 100k
+    dplyr::mutate(rate = (value/population)*100000) %>%
+    ## exclude point estimates
+    dplyr::filter(type == "quantile") %>%
+    ## get columns of interest
+    dplyr::select(forecast_date, location, quantile, value, rate)
+
+  hosp4exp <-
+    .observed %>%
+    ## find observed data that is prior to the 1 week ahead forecast
+    dplyr::filter(week_end == min(.forecast$target_end_date) - 7) %>%
+    ## join to internal locations object that has population data
+    left_join(fiphde:::locations) %>%
+    ## calculate rate per 100k
+    mutate(lag_rate = (flu.admits/population)*100000) %>%
+    ## get columns of interest
+    select(location, lag_value = flu.admits, lag_rate)
+
+  ## get "probability range" from each quantile ...
+  ## for example: 0.99 and 0.01 quantiles have same prob value (0.01)
+  quants <-
+    forc4exp %>%
+    dplyr::filter(quantile < 0.5) %>%
+    dplyr::pull(quantile) %>%
+    unique(.)
+
+  quant_denom <-
+    c(quants,quants,0.5) %>%
+    sum(.)
+
+  ## join prepped forecast and prepped observed
+  dplyr::left_join(forc4exp,hosp4exp) %>%
+    ## calculate component indicators
+    dplyr::mutate(
+      ind_count = abs(value - lag_value),
+      ind_rate = abs(rate - lag_rate),
+      ind_rate2 = ifelse(rate - lag_rate > 0, "positive", "negative")
+    ) %>%
+    ## use component indicators to assess overall type per CDC flowchart
+    dplyr::mutate(type_id =
+                    dplyr::case_when(
+                      ind_count < 20 | ind_rate < 0.00001 ~ "stable",
+                      (ind_count < 40 | ind_rate < 0.00002) & ind_rate2 == "positive" ~ "increase",
+                      (ind_count < 40 | ind_rate < 0.00002) & ind_rate2 == "negative" ~ "decrease",
+                      (ind_count >= 40 & ind_rate >= 0.00002) & ind_rate2 == "positive" ~ "large_increase",
+                      (ind_count >= 40 & ind_rate >= 0.00002) & ind_rate2 == "negative" ~ "large_decrease"
+                    )) %>%
+    ## convert quantiles to "probability magnitude"
+    dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
+    dplyr::group_by(location,type_id) %>%
+    ## sum up quantiles as probability magnitude over the total sum of quantiles
+    dplyr::summarise(value = sum(quantile)/ (quant_denom), .groups = "drop") %>%
+    ## fill in any missing type_ids in a given location with 0
+    tidyr::complete(location,type_id, fill = list(value = 0)) %>%
+    ## prep the submission format
+    dplyr::mutate(forecast_date = unique(.forecast$forecast_date),
+                  target = "2 wk flu hosp rate change",
+                  type = "category") %>%
+    dplyr::select(forecast_date, target,location, type, type_id, value)
+
+}
+
+
+tsens_exp <- forecast_categorical(tsens_forc, prepped_hosp)
+write_csv(tsens_exp, paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.experimental.csv"))
+creg_exp <- forecast_categorical(creg_forc, prepped_hosp)
+write_csv(tsens_exp, paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.candidate.experimental.csv"))
