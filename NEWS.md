@@ -1,3 +1,15 @@
+# fiphde 0.3.2
+
+## New features
+
+As of this release the submission script now includes code to prepare submission-ready files for "experimental" categorical rate change targets.
+
+## Bug fixes
+
+Previously the validation script's date format check was limited to 2021 and 2022. We have extended this check to work with 2023 dates.
+
+The R CMD CHECK GitHub action has been incremented to use "v2" R actions, which addresses an issue with failing continuous integration checks failing for the repository.
+
 # fiphde 0.3.1
 
 ## New features
