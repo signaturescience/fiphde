@@ -380,8 +380,14 @@ forecast_categorical <- function(.forecast,.observed) {
     c(quants,quants,0.5) %>%
     sum(.)
 
+  ## read the location crosswalk table from github
+  location_cw <-
+    readr::read_csv("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-data/master/data-locations/locations.csv") %>%
+    select(location, count_rate1per100k, count_rate2per100k)
+
   ## join prepped forecast and prepped observed
   dplyr::left_join(forc4exp,hosp4exp) %>%
+    dplyr::left_join(location_cw) %>%
     ## calculate component indicators
     dplyr::mutate(
       ind_count = abs(value - lag_value),
@@ -391,11 +397,11 @@ forecast_categorical <- function(.forecast,.observed) {
     ## use component indicators to assess overall type per CDC flowchart
     dplyr::mutate(type_id =
                     dplyr::case_when(
-                      ind_count < 20 | ind_rate < 0.00001 ~ "stable",
-                      (ind_count < 40 | ind_rate < 0.00002) & ind_rate2 == "positive" ~ "increase",
-                      (ind_count < 40 | ind_rate < 0.00002) & ind_rate2 == "negative" ~ "decrease",
-                      (ind_count >= 40 & ind_rate >= 0.00002) & ind_rate2 == "positive" ~ "large_increase",
-                      (ind_count >= 40 & ind_rate >= 0.00002) & ind_rate2 == "negative" ~ "large_decrease"
+                      ind_count < 20 | ind_count < count_rate1per100k ~ "stable",
+                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "positive" ~ "increase",
+                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "negative" ~ "decrease",
+                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "positive" ~ "large_increase",
+                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "negative" ~ "large_decrease"
                     )) %>%
     ## convert quantiles to "probability magnitude"
     dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
