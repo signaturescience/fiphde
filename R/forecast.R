@@ -5,7 +5,6 @@
 #' @param horizon Number of weeks ahead
 #' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
 #' @param models A list of right hand side formula contents for models you want to run. See the examples.
-#' @param ... Further arguments that are passed to [fable::ARIMA].
 #' - Defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`
 #' - Setting the type of model to `NULL` turns the model off.
 #' - To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')`. See also [fable::ARIMA].
@@ -62,8 +61,7 @@ ts_fit_forecast <- function(prepped_tsibble,
                                         nnetar=NULL),
                             covariates=c("hosp_rank", "ili_rank"),
                             ensemble=TRUE,
-                            remove_null_models=TRUE,
-                            ...) {
+                            remove_null_models=TRUE) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -83,7 +81,7 @@ ts_fit_forecast <- function(prepped_tsibble,
     formulas$arima <- stats::reformulate(c(models$arima, covariates), response=outcome)
     message(paste0("ARIMA  formula: ", Reduce(paste, deparse(formulas$arima))))
     tsfit$arima <- fabletools::model(.data = prepped_tsibble,
-                                     arima = fable::ARIMA(formulas$arima, ...))
+                                     arima = fable::ARIMA(formulas$arima))
   }
 
   # If "ets" is in the models you specify, fit an ETS model

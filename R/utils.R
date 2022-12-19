@@ -246,7 +246,6 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                constrained=TRUE,
 #'                                trim_date=NULL,
 #'                                covariates=c("hosp_rank", "ili_rank"))
 #'
