@@ -1,6 +1,6 @@
 Package: fiphde
 Title: Forecasting Influenza in Support of Public Health Decision Making
-Version: 0.3.2
+Version: 0.3.3
 Authors@R: 
     c(person(given = "VP",
              family = "Nagraj",
