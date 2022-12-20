@@ -208,6 +208,9 @@ ui <- fluidPage(
       tags$br(),
       conditionalPanel(condition = "input.model.length == 1",
                        downloadButton("download")),
+      tags$br(),
+      conditionalPanel(condition = "input.model.length == 1",
+                       downloadButton("download_cat", label = "Download (categorical)")),
       width = 2
     ),
     mainPanel(
@@ -432,6 +435,19 @@ server <- function(input, output) {
     },
     content = function(file) {
       submission()$formatted_data %>%
+        dplyr::mutate_all(., as.character) %>%
+        readr::write_csv(., file)
+    }
+  )
+
+  ## handler to download the selected data (categorical targets)
+  output$download_cat <- downloadHandler(
+    filename = function() {
+      paste0(input$forecast, "-", input$model, ".experimental.csv")
+    },
+    content = function(file) {
+      submission()$formatted_data %>%
+        forecast_categorical(., prepped_hosp) %>%
         dplyr::mutate_all(., as.character) %>%
         readr::write_csv(., file)
     }
