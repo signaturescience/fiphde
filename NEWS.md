@@ -1,3 +1,13 @@
+# fiphde 0.3.3
+
+## New features
+
+In this release, we introduce `forecast_categorical()` to generate categorical rate change targets. The function takes a probabilistic forecast input (with values for each expected quantile) and converts it to the probability that the 2 week ahead trend will be a large decrease, decrease, increase, large increase, or stable. The function is implemented in the `fiphde` explorer Shiny app (see `?fiphde_launcher()`) such that the user can download the submission-ready categorical forecasts *and* probabilistic forecast files.
+
+## Bug fixes
+
+The `plot_forecast()` documentation included an example with an outmoded version of the `ts_fit_forecast()` API. We have updated the example code so that it runs with the current version of the `ts_fit_forecast()` function.
+
 # fiphde 0.3.2
 
 ## New features

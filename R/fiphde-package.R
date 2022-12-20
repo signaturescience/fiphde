@@ -106,5 +106,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "total_b",
                                                         "percent_positive",
                                                         "n_positive",
+                                                        "type_id",
+                                                        "lag_rate",
+                                                        "lag_value",
                                                         "."))
 

@@ -30,6 +30,17 @@ locations <-
   dplyr::mutate(location=abbreviation) %>%
   bind_rows(locations)
 
+# Locations with "rate change"  ---------------------------------------------------------------
+
+## provenance of data file
+# download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-data/master/data-locations/locations.csv",
+#               destfile=here::here("data-raw/rate-change.csv"))
+
+## read the location crosswalk table from file downloaded from github
+## select columns of interest
+rate_change <-
+  read_csv(here::here("data-raw/rate-change.csv"), col_types="cccddd") %>%
+  select(location, count_rate1per100k, count_rate2per100k)
 
 # Quantiles ---------------------------------------------------------------
 
@@ -230,6 +241,7 @@ mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
+                  rate_change,
                   q,
                   quidk,
                   historical_severity,

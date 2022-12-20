@@ -13,8 +13,7 @@ ts_fit_forecast(
     "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
   ensemble = TRUE,
-  remove_null_models = TRUE,
-  ...
+  remove_null_models = TRUE
 )
 }
 \arguments{
@@ -26,15 +25,7 @@ ts_fit_forecast(
 
 \item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
 
-\item{models}{A list of right hand side formula contents for models you want to run. See the examples.}
-
-\item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
-
-\item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
-
-\item{remove_null_models}{Should null models be removed? Default \code{TRUE}.}
-
-\item{...}{Further arguments that are passed to \link[fable:ARIMA]{fable::ARIMA}.
+\item{models}{A list of right hand side formula contents for models you want to run. See the examples.
 \itemize{
 \item Defaults to \code{list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)}
 \item Setting the type of model to \code{NULL} turns the model off.
@@ -42,6 +33,12 @@ ts_fit_forecast(
 \item To run a seasonal exponential smoothing: \code{list(ets='season(method=c("A", "M", "N"), period="3 months")')}. See also \link[fable:ETS]{fable::ETS}.
 \item To run an autoregressive neural net with P=1: \code{list(nnetar="AR(P=1)")}. See also \link[fable:NNETAR]{fable::NNETAR}.
 }}
+
+\item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
+
+\item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
+
+\item{remove_null_models}{Should null models be removed? Default \code{TRUE}.}
 }
 \value{
 A list of the time series fit, time series forecast, and model formulas.

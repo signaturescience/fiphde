@@ -45,7 +45,6 @@ prepped_hosp_tsibble <-
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               constrained=TRUE,
                                covariates=c("hosp_rank", "ili_rank"))
 
 # format for submission
