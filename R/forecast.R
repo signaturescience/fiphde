@@ -490,7 +490,7 @@ pois_forc <- function(.data, .location, .var) {
 #' - **type_id**: Categorical label; one of "large decrease", "decrease", "stable", "increase", "large increase"
 #' - **value**: Probability of observing the given "type_id" at the given "location"
 #'
-#' @references [https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md]
+#' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md>
 #' @export
 #'
 #' @examples

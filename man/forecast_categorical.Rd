@@ -49,5 +49,5 @@ forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
 
 }
 \references{
-\link{https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md}
+\url{https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md}
 }
