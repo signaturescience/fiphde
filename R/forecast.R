@@ -474,3 +474,118 @@ pois_forc <- function(.data, .location, .var) {
 
   c(n1ahead,n2ahead,n3ahead,n4ahead)
 }
+
+#' Forecast categorical targets
+#'
+#' @description This function takes probabilistic flu hospitalization forecast input and converts the forecasted values for each location to a categorical "change" indicator. The criteria for each level ("large decrease", "decrease", "stable", "increase", "large increase") was defined by the CDC (see link in references). The algorithm evaluates absolute changes in counts and rates (per 100k individuals) for the most recently observed week and a 2 week ahead forecasted horizon. This procedure runs independently for each location, and results in a formatted tabular output that includes each possible level and its corresponding probability of being observed (calculated from probabilistic quantiles) for every location.
+#'
+#' @param .forecast A tibble with "submission-ready" probabilistic flu hospitalization forecast data (i.e., tibble contained in list element returned from [format_for_submission])
+#' @param .observed A tibble with observed flu admission data (i.e., tibble output from [prep_hdgov_hosp])
+#'
+#' @return Tibble with formatted categorical forecasts that includes the following columns:
+#' - **forecast_date**: Date of forecast
+#' - **target**: Name of target forecasted; fixed at "2 wk flu hosp rate change"
+#' - **location**: FIPS code for the location
+#' - **type**: The type of forecast output; fixed at "category"
+#' - **type_id**: Categorical label; one of "large decrease", "decrease", "stable", "increase", "large increase"
+#' - **value**: Probability of observing the given "type_id" at the given "location"
+#'
+#' @references [https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md]
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'
+#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' prepped_tsibble <- make_tsibble(prepped_hosp,
+#'                                      epiyear = epiyear,
+#'                                      epiweek=epiweek,
+#'                                      key=location)
+#'
+#' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
+#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+#'                                horizon=4L,
+#'                                outcome="flu.admits",
+#'                                covariates=c("hosp_rank", "ili_rank"))
+#'
+#' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+#'
+#' }
+#'
+#'
+
+forecast_categorical <- function(.forecast, .observed) {
+
+  ## prep the .forecast object for experimental target summary
+  forc4exp <-
+    .forecast %>%
+    dplyr::mutate(value = as.numeric(value)) %>%
+    dplyr::mutate(quantile = as.numeric(quantile)) %>%
+    ## only looking at 2 week ahead for now
+    dplyr::filter(target == "2 wk ahead inc flu hosp") %>%
+    ## join to internal locations object that has population data
+    dplyr::left_join(locations, by = "location") %>%
+    ## calculate rate per 100k
+    dplyr::mutate(rate = (value/population)*100000) %>%
+    ## exclude point estimates
+    dplyr::filter(type == "quantile") %>%
+    ## get columns of interest
+    dplyr::select(forecast_date, location, quantile, value, rate)
+
+  hosp4exp <-
+    .observed %>%
+    ## find observed data that is prior to the 1 week ahead forecast
+    dplyr::filter(week_end == min(.forecast$target_end_date) - 7) %>%
+    ## join to internal locations object that has population data
+    dplyr::left_join(locations, by = "location") %>%
+    ## calculate rate per 100k
+    dplyr::mutate(lag_rate = (flu.admits/population)*100000) %>%
+    ## get columns of interest
+    dplyr::select(location, lag_value = flu.admits, lag_rate)
+
+  ## get "probability range" from each quantile ...
+  ## for example: 0.99 and 0.01 quantiles have same prob value (0.01)
+  quants <-
+    forc4exp %>%
+    dplyr::filter(quantile < 0.5) %>%
+    dplyr::pull(quantile) %>%
+    unique(.)
+
+  quant_denom <-
+    c(quants,quants,0.5) %>%
+    sum(.)
+
+  ## join prepped forecast and prepped observed
+  dplyr::left_join(forc4exp,hosp4exp) %>%
+    dplyr::left_join(rate_change) %>%
+    ## calculate component indicators
+    dplyr::mutate(
+      ind_count = abs(value - lag_value),
+      ind_rate = abs(rate - lag_rate),
+      ind_rate2 = ifelse(rate - lag_rate > 0, "positive", "negative")
+    ) %>%
+    ## use component indicators to assess overall type per CDC flowchart
+    dplyr::mutate(type_id =
+                    dplyr::case_when(
+                      ind_count < 20 | ind_count < count_rate1per100k ~ "stable",
+                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "positive" ~ "increase",
+                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "negative" ~ "decrease",
+                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "positive" ~ "large_increase",
+                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "negative" ~ "large_decrease"
+                    )) %>%
+    ## convert quantiles to "probability magnitude"
+    dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
+    dplyr::group_by(location,type_id) %>%
+    ## sum up quantiles as probability magnitude over the total sum of quantiles
+    dplyr::summarise(value = sum(quantile)/ (quant_denom), .groups = "drop") %>%
+    ## fill in any missing type_ids in a given location with 0
+    tidyr::complete(location,type_id, fill = list(value = 0)) %>%
+    ## prep the submission format
+    dplyr::mutate(forecast_date = unique(.forecast$forecast_date),
+                  target = "2 wk flu hosp rate change",
+                  type = "category") %>%
+    dplyr::select(forecast_date, target,location, type, type_id, value)
+
+}

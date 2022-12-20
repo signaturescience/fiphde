@@ -3,6 +3,7 @@
 export("%>%")
 export(clin_nowcast)
 export(fiphde_launcher)
+export(forecast_categorical)
 export(forecast_ili)
 export(format_for_submission)
 export(get_cdc_clin)
