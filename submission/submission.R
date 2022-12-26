@@ -45,7 +45,7 @@ if(!interactive()) {
 ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
 ilidat <- state_replace_ili_nowcast_all(ilidat, state="FL")
 ilidat <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
-ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
 
 ## retrieve data and run "nowcast" to get one week ahead to handle reporting delay
 labdat <- get_cdc_clin()

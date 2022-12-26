@@ -158,7 +158,6 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
 #' @param trim_date Earliest start date you want to use for ILI data. Default `NULL` doesn't trim.
 #' @param models The list of model parameters passed to [ts_fit_forecast]. Defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`. See help for [ts_fit_forecast].
-#' @param ... further arguments passed to [ts_fit_forecast] (which are then passed to [fable::ARIMA].
 #' @return A named list containing:
 #' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
 #' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.
@@ -238,7 +237,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
-forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"), ...) {
+forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
 
   # If trim_date is not null, trim to selected trim_date
   if (!is.null(trim_date)) {
@@ -283,8 +282,7 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
                                  models=models,
                                  trim_date=NULL,
                                  covariates=NULL,
-                                 ensemble=FALSE,
-                                 ...)
+                                 ensemble=FALSE)
 
   # extract the fit
   ili_fit <- ili_fit_for$tsfit
@@ -299,40 +297,6 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
   } else {
     arima_params <- NULL
   }
-
-  # if (type=="arima") {
-  #   # Defaults to constrained, non-seasonal model.
-  #   if (constrained) {
-  #     # Nonseasonal fit: PDQ(0, 0, 0)
-  #     # Nonseasonal components unrestricted: pdq(0:5,0:5,0:5)
-  #     message("Fitting nonseasonal constrained ARIMA model...")
-  #     ili_fit <- fabletools::model(ilidat_tsibble,
-  #                                  arima = fable::ARIMA(ili ~ PDQ(param_space$P,param_space$D,param_space$Q) + pdq(param_space$p,param_space$d, param_space$q),
-  #                                                       stepwise=FALSE,
-  #                                                       approximation=FALSE))
-  #   } else {
-  #     # If unconstrained, need to set stepwise=TRUE and approxmiation=NULL to speed up.
-  #     message("Fitting unconstrained ARIMA model...")
-  #     ili_fit <- fabletools::model(ilidat_tsibble,
-  #                                  arima = fable::ARIMA(ili,
-  #                                                       stepwise=TRUE,
-  #                                                       approximation=NULL))
-  #   }
-  #
-    # # Get arima params if fitting an arima model
-    # arima_params <-
-    #   ili_fit %>%
-    #   dplyr::mutate(x=purrr::map(arima, ~purrr::pluck(., "fit") %>% purrr::pluck("spec"))) %>%
-    #   tidyr::unnest_wider(col=x) %>%
-    #   dplyr::select(-arima)
-  #
-  # } else if (type=="ets") {
-  #   ili_fit <- fabletools::model(ilidat_tsibble, ets=fable::ETS(ili ~ season(method="N")))
-  #   arima_params <- NULL
-  # } else {
-  #   stop("type must be arima or ets")
-  # }
-
 
   # Get the forecast
   ili_forecast <- ili_fit_for$tsfor
