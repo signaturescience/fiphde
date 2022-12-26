@@ -373,11 +373,11 @@ those locations in <code>$nullmodels</code>.</p>
 <span><span class="co">#&gt; $formulas</span></span>
 <span><span class="co">#&gt; $formulas$arima</span></span>
 <span><span class="co">#&gt; flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2a722150&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c35687c0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas$ets</span></span>
 <span><span class="co">#&gt; flu.admits ~ season(method = "N")</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2a722150&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c35687c0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $nullmodels</span></span>
@@ -471,7 +471,7 @@ location to save for posterity or retrospective analysis.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfit</span><span class="op">$</span><span class="va">arima</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map_df</a></span><span class="op">(</span><span class="st">"spec"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_df</a></span><span class="op">(</span><span class="st">"spec"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>location <span class="op">=</span> <span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfit</span><span class="op">$</span><span class="va">location</span>, .before <span class="op">=</span> <span class="st">"p"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 51 × 9</span></span></span>
 <span><span class="co">#&gt;    location     p     d     q     P     D     Q constant period</span></span>
@@ -590,7 +590,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         family = "poisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2f7c24a8&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c21ca350&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -605,7 +605,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         family = "quasipoisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2f7f0be0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c21ae860&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -620,7 +620,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         ili_rank, data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2f826820&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c2195e28&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm_nb" "trending_model"</span></span></code></pre></div>
@@ -701,8 +701,8 @@ aspects of the final fitted model.</p>
 <span><span class="co">#&gt;     }</span></span>
 <span><span class="co">#&gt;     result</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x563d2a5758a8&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x563d2b0ccf08&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x55e2c2bc5fc0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55e2c2fd69e0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_model_fit" "list"</span></span>
@@ -721,16 +721,16 @@ aspects of the final fitted model.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target                  target_en…¹ locat…² type  quant…³ value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-12-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-12-26    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># … with 86 more rows, and abbreviated variable names ¹​target_end_date,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   ²​location, ³​quantile</span></span></span></code></pre></div>
 <p>Finally, we can visualize the forecasted point estimates with the 90%
