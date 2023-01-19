@@ -114,18 +114,18 @@ datl <-
 
 models <-
   list(
-    poisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "poisson"),
-    poisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "poisson"),
-    poisson3 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "poisson"),
-    poisson4 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "poisson"),
+    # poisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "poisson"),
+    # poisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "poisson"),
+    # poisson3 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "poisson"),
+    # poisson4 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "poisson"),
     quasipoisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "quasipoisson"),
     quasipoisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "quasipoisson"),
     quasipoisson3 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "quasipoisson"),
-    quasipoisson4 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "quasipoisson"),
-    negbin1 = trending::glm_nb_model(flu.admits ~ p_positive + ili + smoothed_admits),
-    negbin2 = trending::glm_nb_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits),
-    negbin3 = trending::glm_nb_model(flu.admits ~ ili + smoothed_admits),
-    negbin4 = trending::glm_nb_model(flu.admits ~ p_positive + smoothed_admits)
+    quasipoisson4 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "quasipoisson")
+    # negbin1 = trending::glm_nb_model(flu.admits ~ p_positive + ili + smoothed_admits),
+    # negbin2 = trending::glm_nb_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits),
+    # negbin3 = trending::glm_nb_model(flu.admits ~ ili + smoothed_admits),
+    # negbin4 = trending::glm_nb_model(flu.admits ~ p_positive + smoothed_admits)
   )
 
 
