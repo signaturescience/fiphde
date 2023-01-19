@@ -522,8 +522,9 @@ forecast_categorical <- function(.forecast, .observed) {
     sum(.)
 
   ## join prepped forecast and prepped observed
-  dplyr::left_join(forc4exp,hosp4exp) %>%
-    dplyr::left_join(rate_change) %>%
+  res <-
+    dplyr::left_join(forc4exp,hosp4exp, by="location") %>%
+    dplyr::left_join(rate_change, by="location") %>%
     ## calculate component indicators
     dplyr::mutate(
       ind_count = abs(value - lag_value),
