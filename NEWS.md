@@ -1,3 +1,9 @@
+# fiphde 0.3.4
+
+- Fix issue in `forecast_categorical()` where there were no records for rows having zero probability.
+- Add categorical plots to submission script.
+- Limit submission script to quasipoisson only.
+
 # fiphde 0.3.3
 
 ## New features
