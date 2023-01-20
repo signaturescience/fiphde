@@ -1,6 +1,6 @@
 Package: fiphde
 Title: Forecasting Influenza in Support of Public Health Decision Making
-Version: 0.3.3
+Version: 0.3.4
 Authors@R: 
     c(person(given = "VP",
              family = "Nagraj",
@@ -23,7 +23,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Imports: 
     dplyr,
     fable,

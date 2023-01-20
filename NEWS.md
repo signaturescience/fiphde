@@ -1,3 +1,13 @@
+# fiphde 0.3.4
+
+## New features
+
+This release makes two minor updates to the submission script. The script now includes plots of categorical forecasts to help wit downstream forecast review. Additionally, the script is now configured to only use the quasipoisson model family in the count regression grid search procedure.
+
+## Bug fixes
+
+Previously the `forecast_categorical()` function would only include probabilities for the "type_id" values (e.g., increase, large_decrease, etc.) that were observed in at least one location. As of this release we now include all "type_id" values, assigning those that were not observed in any location to probability of 0.
+
 # fiphde 0.3.3
 
 ## New features

@@ -114,18 +114,18 @@ datl <-
 
 models <-
   list(
-    poisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "poisson"),
-    poisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "poisson"),
-    poisson3 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "poisson"),
-    poisson4 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "poisson"),
+    # poisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "poisson"),
+    # poisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "poisson"),
+    # poisson3 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "poisson"),
+    # poisson4 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "poisson"),
     quasipoisson1 = trending::glm_model(flu.admits ~ p_positive + ili + smoothed_admits, family = "quasipoisson"),
     quasipoisson2 = trending::glm_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits, family = "quasipoisson"),
     quasipoisson3 = trending::glm_model(flu.admits ~ p_positive + smoothed_admits, family = "quasipoisson"),
-    quasipoisson4 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "quasipoisson"),
-    negbin1 = trending::glm_nb_model(flu.admits ~ p_positive + ili + smoothed_admits),
-    negbin2 = trending::glm_nb_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits),
-    negbin3 = trending::glm_nb_model(flu.admits ~ ili + smoothed_admits),
-    negbin4 = trending::glm_nb_model(flu.admits ~ p_positive + smoothed_admits)
+    quasipoisson4 = trending::glm_model(flu.admits ~ ili + smoothed_admits, family = "quasipoisson")
+    # negbin1 = trending::glm_nb_model(flu.admits ~ p_positive + ili + smoothed_admits),
+    # negbin2 = trending::glm_nb_model(flu.admits ~ p_positive + ili + offset(flu.admits.cov) + smoothed_admits),
+    # negbin3 = trending::glm_nb_model(flu.admits ~ ili + smoothed_admits),
+    # negbin4 = trending::glm_nb_model(flu.admits ~ p_positive + smoothed_admits)
   )
 
 
@@ -341,3 +341,26 @@ tsens_exp <- forecast_categorical(tsens_forc, prepped_hosp)
 write_csv(tsens_exp, paste0("submission/SigSci-TSENS/", this_monday(), "-SigSci-TSENS.candidate.experimental.csv"))
 creg_exp <- forecast_categorical(creg_forc, prepped_hosp)
 write_csv(tsens_exp, paste0("submission/SigSci-CREG/", this_monday(), "-SigSci-CREG.candidate.experimental.csv"))
+
+plot_cat <- function(x) {
+  x %>%
+    inner_join(fiphde:::locations, by="location") %>%
+    select(loc=abbreviation, type_id, value) %>%
+    tidyr::spread(type_id, value) %>%
+    mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
+    mutate(loc=factor(loc) %>% reorder(score)) %>%
+    mutate(loc=loc %>% forcats::fct_relevel("US")) %>%
+    select(-score) %>%
+    tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
+    mutate(type_id=factor(type_id, levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"))) %>%
+    ggplot(aes(loc, value)) + geom_col(aes(fill=type_id)) +
+    scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+    theme_classic() +
+    theme(legend.position="bottom", legend.title=element_blank()) +
+    labs(x=NULL, y=NULL)
+}
+
+tsens_catplot <- plot_cat(tsens_exp)
+ggsave(paste0("submission/SigSci-TSENS/artifacts/plots/", this_monday(), "-SigSci-TSENS-cat.png"), plot=tsens_catplot, width=12, height=6)
+creg_catplot <- plot_cat(creg_exp)
+ggsave(paste0("submission/SigSci-CREG/artifacts/plots/", this_monday(), "-SigSci-CREG-cat.png"), plot=creg_catplot, width=12, height=6)
