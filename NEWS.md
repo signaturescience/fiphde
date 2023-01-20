@@ -63,5 +63,3 @@ This release includes code adapted from `cdcfluview` to query ILI and flu hospit
 # fiphde 0.1.0
 
 Initial release !
-
-Built and checked successfully on Ubuntu 20.04, Windows Server 2022, Mac OSX.
