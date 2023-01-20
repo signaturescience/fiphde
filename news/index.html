@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.4</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,17 @@
       
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.4" id="fiphde-034">fiphde 0.3.4<a class="anchor" aria-label="anchor" href="#fiphde-034"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-4">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-4"></a></h3>
+<p>This release makes two minor updates to the submission script. The script now includes plots of categorical forecasts to help wit downstream forecast review. Additionally, the script is now configured to only use the quasipoisson model family in the count regression grid search procedure.</p>
+</div>
+<div class="section level3">
+<h3 id="bug-fixes-0-3-4">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-4"></a></h3>
+<p>Previously the <code><a href="../reference/forecast_categorical.html">forecast_categorical()</a></code> function would only include probabilities for the “type_id” values (e.g., increase, large_decrease, etc.) that were observed in at least one location. As of this release we now include all “type_id” values, assigning those that were not observed in any location to probability of 0.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.3" id="fiphde-033">fiphde 0.3.3<a class="anchor" aria-label="anchor" href="#fiphde-033"></a></h2>
 <div class="section level3">
