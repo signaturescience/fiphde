@@ -13,6 +13,10 @@
 #'- data: Original model fit data as a `tibble` in a list column
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' ##FIXME
+#' }
 glm_fit <- function(.data,
                     .models) {
 
@@ -70,6 +74,10 @@ glm_fit <- function(.data,
 #'
 #' @return A tibble with predicted values at each quantile (lower and upper bound for each value of "alpha")
 #' @export
+#' @examples
+#' \dontrun{
+#' ##FIXME
+#' }
 glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## get the quantiles from the alpha
@@ -101,6 +109,10 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 #'
 #' @return Tibble with forecasts (quantiles and point estimates)
 #' @export
+#' @examples
+#' \dontrun{
+#' ##FIXME
+#' }
 glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## get the last date from the data provided
@@ -163,6 +175,10 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 #' - forecasts: Output from \link[fiphde]{glm_forecast} with forecasts from each horizon combined as a single tibble
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' ##FIXME
+#' }
 glm_wrap <- function(.data, .models, new_covariates = NULL, horizon = 4, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   tmp_fit <- glm_fit(.data, .models = .models)
