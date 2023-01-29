@@ -25,9 +25,9 @@
 #' ## load(file="~/Downloads/h_raw.rd")
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
-#'                                      epiyear = epiyear,
-#'                                      epiweek=epiweek,
-#'                                      key=location)
+#'                                 epiyear = epiyear,
+#'                                 epiweek=epiweek,
+#'                                 key=location)
 #' prepped_tsibble <-
 #'   prepped_tsibble %>%
 #'   dplyr::filter(location %in% c("US", "51"))
