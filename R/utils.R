@@ -508,11 +508,11 @@ to_num <- function(x) {
 }
 
 #' Retrieve a list of valid sub-regions for each surveillance area.
-#'
-#' @md
 #' @export
 #' @examples
-#' sa <- surveillance_areas()
+#' \dontrun{
+#' surveillance_areas()
+#' }
 surveillance_areas <- function() {
   meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
   xdf <- stats::setNames(meta$catchments[,c("name", "area")], c("surveillance_area", "region"))
