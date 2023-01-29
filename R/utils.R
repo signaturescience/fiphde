@@ -272,8 +272,12 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
 #'   dplyr::filter(abbreviation != "DC")
 #'
-#' tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
-#' creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+#' tsens_20220110 <-
+#'   system.file("extdata/2022-01-10-SigSci-TSENS.csv", package="fiphde") %>%
+#'   readr::read_csv(show_col_types = FALSE)
+#' creg_20220110 <-
+#'   system.file("extdata/2022-01-10-SigSci-CREG.csv", package="fiphde") %>%
+#'   readr::read_csv(show_col_types = FALSE)
 #' combo_20220110 <- dplyr::bind_rows(
 #'   dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
 #'   dplyr::mutate(creg_20220110, model = "SigSci-CREG")
