@@ -402,20 +402,14 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' all_clin <- get_cdc_clin()
 #' va_ahead <-
-#' dplyr::tibble(
-#' n_positive = pois_forc(all_clin, .location = "51", n_positive),
-#' total = pois_forc(all_clin, .location = "51", total),
-#' p_positive = n_positive / total
-#' )
-#'
+#'   dplyr::tibble(
+#'     n_positive = pois_forc(all_clin, .location = "51", n_positive),
+#'     total = pois_forc(all_clin, .location = "51", total),
+#'     p_positive = n_positive / total)
 #' va_ahead
-#'
 #' }
-#'
-#'
 pois_forc <- function(.data, .location, .var) {
 
   ## handle for NSE
@@ -459,7 +453,6 @@ pois_forc <- function(.data, .location, .var) {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
@@ -475,11 +468,7 @@ pois_forc <- function(.data, .location, .var) {
 #'
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 #' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
-#'
 #' }
-#'
-#'
-
 forecast_categorical <- function(.forecast, .observed) {
 
   ## prep the .forecast object for experimental target summary
