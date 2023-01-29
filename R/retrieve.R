@@ -196,6 +196,7 @@ get_cdc_hosp <- function(years=NULL) {
 #' @examples
 #' \dontrun{
 #' # Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
+#'
 #' # Defaults to the previous two weeks for all states
 #' get_nowcast_ili()
 #'
@@ -309,22 +310,18 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #'
 #' @examples
 #' \dontrun{
+#' ## get all clinical lab flu positivity data
+#' all_clin <- get_cdc_clin()
 #'
-#'## get all clinical lab flu positivity data
-#'all_clin <- get_cdc_clin()
-#'
-#'## or look at a specific location and time
-#'## note: the year "start" will begin at the first epiweek of the season
-#'## this example 2021 will weekly data ...
-#'## ... starting at beginning of 2021/22 season
-#'## ... ending the week before start of 2022/23 season
-#'va_clin <-
-#'get_cdc_clin(region = "state", years = 2021) %>%
-#'dplyr::filter(location == "51")
-#'
+#' ## or look at a specific location and time
+#' ## note: the year "start" will begin at the first epiweek of the season
+#' ## this example 2021 will weekly data ...
+#' ## ... starting at beginning of 2021/22 season
+#' ## ... ending the week before start of 2022/23 season
+#' va_clin <-
+#'   get_cdc_clin(region = "state", years = 2021) %>%
+#'   dplyr::filter(location == "51")
 #' }
-#'
-#'
 get_cdc_clin <- function(region = "both", years = NULL) {
 
   ## handle incoming arg
