@@ -456,7 +456,7 @@ mnz_replace <- function(x) {
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' @export
 #' @examples
-#' mwd <- mmwr_week_to_date(2016,10,3)
+#' mmwr_week_to_date(2016,10,3)
 mmwr_week_to_date <- function(year, week, day=NULL) {
 
   year <- as.numeric(year)
@@ -472,7 +472,7 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 #' Make clean column names
 #'
-#' This helper function is used
+#' This helper function is used FIXME
 #'
 #' @param tbl Input tibble with columns to rename
 #'
