@@ -71,21 +71,13 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
 #' @param app_token App token from healthdata.gov. If it's `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
 #' @return A tibble
 #' @references API documentation: <https://dev.socrata.com/foundry/data.cdc.gov/k87d-gv3u>.
-#' @examples
-#' \dontrun{
-#' d <- get_cdc_vax()
-#' d
-#' library(ggplot2)
-#' d %>%
-#'   ggplot(aes(date, cumulative_flu_doses_distributed)) +
-#'   geom_line() +
-#'   facet_wrap(~season, scale="free_x") +
-#'   theme_bw()
-#' rm(d)
-#' }
 #' @export
 get_cdc_vax <- function(endpoint="https://data.cdc.gov/api/views/k87d-gv3u/rows.csv",
                         app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
+
+  # This function hasn't worked in some time. Deprecating and removing.
+  .Deprecated("Download and parse data at https://data.cdc.gov/api/views/k87d-gv3u/rows.csv.")
+  return(NA)
 
   api_url <- endpoint
 
