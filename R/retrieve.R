@@ -1,18 +1,14 @@
 #' @title Get hospitalization data
 #' @description Retrieves hospitalization data from the healthdata.gov endpoint with optional filtering on fields, and return the results into a nice tibble.
-#' @param endpoint URL to healthdata.gov endpoint (see references)..
-#' @param limitcols Limit the columns returned to the subjectively defined important ones?
+#' @param endpoint URL to healthdata.gov endpoint (see references).
+#' @param limitcols Limit the columns returned to the subjectively defined important ones? Default `FALSE`.
 #' @param app_token App token from healthdata.gov. If `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
 #' @return A tibble
 #' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
 #' @examples
 #' \dontrun{
+#' get_hdgov_hosp()
 #' get_hdgov_hosp(limitcols=TRUE)
-#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
-#' get_hdgov_hosp(state="VA")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
 #' }
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/rows.csv",
