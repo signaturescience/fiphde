@@ -19,7 +19,6 @@ This function returns weekly state and/or national clinical laboratory percent p
 }
 \examples{
 \dontrun{
-
 ## get all clinical lab flu positivity data
 all_clin <- get_cdc_clin()
 
@@ -29,10 +28,7 @@ all_clin <- get_cdc_clin()
 ## ... starting at beginning of 2021/22 season
 ## ... ending the week before start of 2022/23 season
 va_clin <-
-get_cdc_clin(region = "state", years = 2021) \%>\%
-dplyr::filter(location == "51")
-
+  get_cdc_clin(region = "state", years = 2021) \%>\%
+  dplyr::filter(location == "51")
 }
-
-
 }

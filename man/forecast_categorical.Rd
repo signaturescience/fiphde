@@ -27,7 +27,6 @@ This function takes probabilistic flu hospitalization forecast input and convert
 }
 \examples{
 \dontrun{
-
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
 prepped_hosp <- prep_hdgov_hosp(h_raw)
 prepped_tsibble <- make_tsibble(prepped_hosp,
@@ -43,10 +42,7 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 
 prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
-
 }
-
-
 }
 \references{
 \url{https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md}

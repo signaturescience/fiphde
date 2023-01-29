@@ -33,3 +33,8 @@ Named list with two elements:
 \description{
 This is a wrapper function that pipelines influenza hospitalization modeling (\link[fiphde]{glm_fit}) and forecasting (\link[fiphde]{glm_forecast}).
 }
+\examples{
+\dontrun{
+##FIXME
+}
+}

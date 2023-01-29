@@ -20,19 +20,6 @@ A tibble
 \description{
 Get vaccination data from cdc.gov endpoint.
 }
-\examples{
-\dontrun{
-d <- get_cdc_vax()
-d
-library(ggplot2)
-d \%>\%
-  ggplot(aes(date, cumulative_flu_doses_distributed)) +
-  geom_line() +
-  facet_wrap(~season, scale="free_x") +
-  theme_bw()
-rm(d)
-}
-}
 \references{
 API documentation: \url{https://dev.socrata.com/foundry/data.cdc.gov/k87d-gv3u}.
 }

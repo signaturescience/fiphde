@@ -34,6 +34,7 @@ This only replaces instances of \code{weighted_ili} in the specified \code{state
 }
 \examples{
 \dontrun{
+# Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
 ilidat <- get_cdc_ili(years=2020)
 ilidat <-
   ilidat \%>\%

@@ -12,3 +12,6 @@ Date for the Monday of the current week. For more details see \link[lubridate]{f
 \description{
 This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
 }
+\examples{
+this_monday()
+}

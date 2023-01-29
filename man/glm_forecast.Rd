@@ -26,3 +26,8 @@ Tibble with forecasts (quantiles and point estimates)
 \description{
 This function uses fitted model object from \link[fiphde]{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
 }
+\examples{
+\dontrun{
+##FIXME
+}
+}

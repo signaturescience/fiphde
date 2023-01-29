@@ -23,3 +23,8 @@ A \code{tibble} containing characteristics from the "best" \code{glm} model (i.e
 \description{
 This helper function is used in \link[fiphde]{glm_wrap} to fit a list of models and select the best one.
 }
+\examples{
+\dontrun{
+##FIXME
+}
+}

@@ -10,5 +10,7 @@ surveillance_areas()
 Retrieve a list of valid sub-regions for each surveillance area.
 }
 \examples{
-sa <- surveillance_areas()
+\dontrun{
+surveillance_areas()
+}
 }

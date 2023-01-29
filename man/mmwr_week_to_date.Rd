@@ -21,7 +21,7 @@ of \code{Date} objects that corresponds to the input MMWR year+week or year+week
 vectors. This also adds some parameter checking and cleanup to avoid exceptions.
 }
 \examples{
-mwd <- mmwr_week_to_date(2016,10,3)
+mmwr_week_to_date(2016,10,3)
 }
 \references{
 \itemize{

@@ -23,3 +23,8 @@ A tibble with predicted values at each quantile (lower and upper bound for each 
 \description{
 This function runs the \link[trending]{predict.trending_model_fit} method on a fitted model at specified values of "alpha" in order to create a range of prediction intervals. The processing also includes steps to convert the alpha to corresponding quantile values at upper and lower bounds.
 }
+\examples{
+\dontrun{
+##FIXME
+}
+}
