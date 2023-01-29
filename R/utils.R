@@ -498,9 +498,6 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 #' @param x Input character vector for which special characters should be stripped and converted
 #'
 #' @return Numeric vector
-#'
-#' @md
-#'
 to_num <- function(x) {
   x <- gsub("%", "", x, fixed=TRUE)
   x <- gsub(">", "", x, fixed=TRUE)
