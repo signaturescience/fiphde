@@ -533,7 +533,6 @@ surveillance_areas <- function() {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' ## pull and prep weekly US flu hospitalization data
 #' hosp_us <-
 #' get_hdgov_hosp() %>%
@@ -548,9 +547,7 @@ surveillance_areas <- function() {
 #'
 #' ## try smoothing over last 4 with different weights (exponential this time)
 #' smoothie(hosp_us$flu.admits, n=4, weights=exp(1:4))
-#'
 #' }
-#'
 smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
 
   ## check that n = length(weights)
