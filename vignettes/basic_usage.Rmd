@@ -298,7 +298,3 @@ Finally, we can visualize the forecasted point estimates with the 90% prediction
 ```{r, warning=FALSE}
 plot_forecast(dat_hi, hi_glm_prepped$CREG, location="15", pi=.9)
 ```
-
-```{r, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
-```
