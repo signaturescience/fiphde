@@ -368,7 +368,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
       dplyr::group_by(model) %>%
       dplyr::filter(type == "point") %>%
       dplyr::filter(location %in% loc) %>%
-      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::mutate(quantile=quantile %>% as.character() %>% tidyr::replace_na("point")) %>%
       dplyr::select(-type) %>%
       tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
       dplyr::select(location, date=target_end_date,quantile, value, model) %>%
