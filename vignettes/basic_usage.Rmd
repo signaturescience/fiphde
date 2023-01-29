@@ -214,7 +214,7 @@ ilidat <-
   filter(region == "Hawaii") %>%
   replace_ili_nowcast(., weeks_to_replace=1)
 
-ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
 ```
 
 In the next step we are going to log transform weighted ILI and flu admissions, so in this step we need to remove all the zeros. The fiphde package provides the `mnz_replace` function which replaces zeros in a variable with the smallest non-zero value of that variable.

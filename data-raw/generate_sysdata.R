@@ -191,7 +191,7 @@ vd$ilidat <-
   filter(region == "Hawaii") %>%
   filter(week_start<="2022-06-05")
 
-vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01")
 
 # This stuff is done in the vignette
 ilidat <- vd$ilidat
