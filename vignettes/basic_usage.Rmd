@@ -55,7 +55,7 @@ The fiphde package retrieves current data from HHS and CDC APIs and fits models 
 
 To get started, load the packages that are used in this vignette.
 
-```{r setup,}
+```{r setup}
 library(fiphde)
 library(dplyr)
 library(purrr)
