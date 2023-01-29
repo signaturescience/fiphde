@@ -195,6 +195,7 @@ get_cdc_hosp <- function(years=NULL) {
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
+#' # Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
 #' # Defaults to the previous two weeks for all states
 #' get_nowcast_ili()
 #'
