@@ -7,7 +7,8 @@
 #' @return Date for the Monday of the current week. For more details see \link[lubridate]{floor_date}.
 #' @export
 #' @md
-#'
+#' @examples
+#' this_monday()
 this_monday <- function() {
   tmp <- MMWRweek::MMWRweek(lubridate::today())
   MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 2)
@@ -21,6 +22,8 @@ this_monday <- function() {
 #' @return Logical indicating whether or not today is Monday
 #' @export
 #' @md
+#' @examples
+#' is_monday()
 is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
@@ -37,6 +40,7 @@ is_monday <- function() {
 #' @seealso [replace_ili_nowcast]
 #' @examples
 #' \dontrun{
+#' # Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
 #' ilidat <- get_cdc_ili(years=2020)
 #' ilidat <-
 #'   ilidat %>%
