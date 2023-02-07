@@ -559,4 +559,6 @@ forecast_categorical <- function(.forecast, .observed) {
     dplyr::bind_rows(add_to_res) %>%
     dplyr::arrange(location) %>%
     dplyr::mutate(type_id=factor(type_id, levels=categories))
+
+  res
 }
