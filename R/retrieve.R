@@ -302,10 +302,13 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #'
 #' @description This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument.
 #'
-#' @param region Either "state", "national", or "both". Defaults to "both" to return state and national data combined.
+#' @param region Either "state", "national", or "both". Defaults to `"both"` to return state and national data combined.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
 #'
 #' @return Tibble with prepared data pulled from NREVSS, including columns for total number of positives, percent positive, epiweek, epiyear
+#'
+#' @references https://gis.cdc.gov/grasp/fluview/Phase_6_Cleared_Help.pdf
+#'
 #' @export
 #'
 #' @examples

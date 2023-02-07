@@ -7,7 +7,7 @@
 get_cdc_clin(region = "both", years = NULL)
 }
 \arguments{
-\item{region}{Either "state", "national", or "both". Defaults to "both" to return state and national data combined.}
+\item{region}{Either "state", "national", or "both". Defaults to \code{"both"} to return state and national data combined.}
 
 \item{years}{A vector of years to retrieve data for. CDC has data going back to 1997. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
@@ -31,4 +31,7 @@ va_clin <-
   get_cdc_clin(region = "state", years = 2021) \%>\%
   dplyr::filter(location == "51")
 }
+}
+\references{
+https://gis.cdc.gov/grasp/fluview/Phase_6_Cleared_Help.pdf
 }
