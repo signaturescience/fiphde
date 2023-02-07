@@ -410,10 +410,9 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 }
 
 #' @title Minimum non-zero
-#' @description Get the minimum non-zero positive value from a vector.
-#' @param x a numeric vector
-#' @return The minimum non-zero positive value from `x`.
-#' @seealso [mnz_replace]
+#' @description Helper function to get the minimum non-zero positive value from a vector. Used internally in [mnz_replace]
+#' @param x A numeric vector
+#' @return The minimum non-zero positive value from `x`
 #' @export
 #' @examples
 #' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)

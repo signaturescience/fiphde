@@ -7,19 +7,16 @@
 mnz(x)
 }
 \arguments{
-\item{x}{a numeric vector}
+\item{x}{A numeric vector}
 }
 \value{
-The minimum non-zero positive value from \code{x}.
+The minimum non-zero positive value from \code{x}
 }
 \description{
-Get the minimum non-zero positive value from a vector.
+Helper function to get the minimum non-zero positive value from a vector. Used internally in \link{mnz_replace}
 }
 \examples{
 x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
 x
 mnz(x)
-}
-\seealso{
-\link{mnz_replace}
 }
