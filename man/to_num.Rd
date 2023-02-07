@@ -13,5 +13,5 @@ to_num(x)
 Numeric vector
 }
 \description{
-This helper function used in the \code{ilinet()} function to strip special characters and empty space and convert vector to numeric.
+This helper function used in the \link{ilinet} function to strip special characters and empty space and convert vector to numeric.
 }

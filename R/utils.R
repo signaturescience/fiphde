@@ -472,7 +472,7 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 #' Make clean column names
 #'
-#' This helper function is used FIXME
+#' This helper is used in [ilinet] and [who_nrevss] functions to clean column names of values returned from the APIs.
 #'
 #' @param tbl Input tibble with columns to rename
 #'
@@ -493,7 +493,7 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 #' Clean numeric values
 #'
-#' This helper function used in the `ilinet()` function to strip special characters and empty space and convert vector to numeric.
+#' This helper function used in the [ilinet] function to strip special characters and empty space and convert vector to numeric.
 #'
 #' @param x Input character vector for which special characters should be stripped and converted
 #'

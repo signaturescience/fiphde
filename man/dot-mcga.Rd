@@ -13,5 +13,5 @@
 Tibble with clean column names
 }
 \description{
-This helper function is used FIXME
+This helper is used in \link{ilinet} and \link{who_nrevss} functions to clean column names of values returned from the APIs.
 }
