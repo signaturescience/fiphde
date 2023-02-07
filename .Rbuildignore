@@ -5,7 +5,6 @@
 ^README\.Rmd$
 ^scratch$
 ^data-raw$
-^submission$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
