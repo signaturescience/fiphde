@@ -166,14 +166,12 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
 
 #' Validate forecast submission
 #'
-#' This function will take the prepped forecast data and run a series of tests to validate the format.
+#' This function will take the prepped forecast data from [format_for_submission] and run a series of tests to validate the format.
 #'
 #' @param subdat A `tibble` with submission ready forecasts prepped by and stored in output of [format_for_submission]
 #'
 #' @return Named list with elements for each test (including logical for whether or not test passed and message if failed) and an overall "valid" logical with `TRUE` if all tests passed an `FALSE` if at least one failed
 #' @export
-#'
-#' @md
 #'
 #' @examples
 #' \dontrun{
