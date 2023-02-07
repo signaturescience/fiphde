@@ -410,7 +410,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 }
 
 #' @title Minimum non-zero
-#' @description Helper function to get the minimum non-zero positive value from a vector. Used internally in [mnz_replace]
+#' @description Helper function to get the minimum non-zero positive value from a vector. Used internally in [mnz_replace].
 #' @param x A numeric vector
 #' @return The minimum non-zero positive value from `x`
 #' @export
@@ -425,7 +425,7 @@ mnz <- function(x) {
 
 #' @title Minimum non-zero replacement
 #' @description Replace zeros and negative values with the minimum non-zero positive value from a vector.
-#' @param x a numeric vector
+#' @param x A numeric vector
 #' @return A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.
 #' @examples
 #' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)

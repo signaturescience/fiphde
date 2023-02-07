@@ -13,7 +13,7 @@ mnz(x)
 The minimum non-zero positive value from \code{x}
 }
 \description{
-Helper function to get the minimum non-zero positive value from a vector. Used internally in \link{mnz_replace}
+Helper function to get the minimum non-zero positive value from a vector. Used internally in \link{mnz_replace}.
 }
 \examples{
 x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
