@@ -4,9 +4,8 @@
 #'
 #' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
 #'
-#' @return Date for the Monday of the current week. For more details see \link[lubridate]{floor_date}.
+#' @return Date for the Monday of the current week.
 #' @export
-#' @md
 #' @examples
 #' this_monday()
 this_monday <- function() {
@@ -491,7 +490,7 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 #' Clean numeric values
 #'
-#' This helper function used in the [ilinet] function to strip special characters and empty space and convert vector to numeric.
+#' This helper function is used in the [ilinet] function to strip special characters and empty space and convert a character vector to numeric.
 #'
 #' @param x Input character vector for which special characters should be stripped and converted
 #'
