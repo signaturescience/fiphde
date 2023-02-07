@@ -21,7 +21,6 @@ this_monday <- function() {
 #
 #' @return Logical indicating whether or not today is Monday
 #' @export
-#' @md
 #' @examples
 #' is_monday()
 is_monday <- function() {
