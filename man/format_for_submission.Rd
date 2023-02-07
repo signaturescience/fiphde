@@ -21,7 +21,7 @@ format_for_submission(
 A named list of tibbles, one for each model, formatted for submission.
 }
 \description{
-This function prepares influenza hospitalization forecasts in the format required for submission to FluSight.
+This function prepares forecasts to adhere to probabilistic forecast submission guidelines for consortia such as FluSight.
 }
 \examples{
 \dontrun{

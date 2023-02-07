@@ -1,6 +1,6 @@
 #' Format forecasts for submission
 #'
-#' This function prepares influenza hospitalization forecasts in the format required for submission to FluSight.
+#' This function prepares forecasts to adhere to probabilistic forecast submission guidelines for consortia such as FluSight.
 #'
 #' @param .forecasts Forecasts to be formatted for submission; if method is `"ts"` this should be forecasts from [ts_fit_forecast]; otherwise this must be a `tibble` with forecast output (e.g. output from [glm_forecast]) with a column designating "location"
 #' @param method Method for forecasting; default is `"ts"` which will trigger the use of [ts_format_for_submission] internally
@@ -66,11 +66,14 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 }
 
 #' @title Format time series forecast
-#' @description Format time series forecast for submission.
-#' @details Uses quantiles `c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)` in the built-in `fiphde:::q`, using an accessory table `fiphde:::quidk`. See `data-raw/generate-sysdata.R` for details.
-#' @param tsfor The forecast from [ts_fit_forecast].
-#' @param .target Name of the target in the forecast. Default is `"wk ahead inc flu hosp"`.
-#' @param .counts Logical. Default `TRUE` indicates that the target outcome is a count, and should be rounded off at an integer.
+#' @description
+#'
+#' This function specifically formats time series forecasts generated with [ts_fit_forecast] to adhere to probabilistic forecast submission guidelines for consortia such as FluSight. It is used as a helper in [format_for_submission].
+#'
+#' @details Uses quantiles `c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)` in the built-in `fiphde:::q`, using an accessory table `fiphde:::quidk`.
+#' @param tsfor The forecast from [ts_fit_forecast]
+#' @param .target Name of the target in the forecast; default is `"wk ahead inc flu hosp"`
+#' @param .counts Logical; default `TRUE` indicates that the target outcome is a count, and should be rounded off at an integer
 #' @return A named list of tibbles, one for each model, formatted for submission.
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
 #' @export

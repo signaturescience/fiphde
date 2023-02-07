@@ -11,20 +11,20 @@ ts_format_for_submission(
 )
 }
 \arguments{
-\item{tsfor}{The forecast from \link{ts_fit_forecast}.}
+\item{tsfor}{The forecast from \link{ts_fit_forecast}}
 
-\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
+\item{.target}{Name of the target in the forecast; default is \code{"wk ahead inc flu hosp"}}
 
-\item{.counts}{Logical. Default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer.}
+\item{.counts}{Logical; default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer}
 }
 \value{
 A named list of tibbles, one for each model, formatted for submission.
 }
 \description{
-Format time series forecast for submission.
+This function specifically formats time series forecasts generated with \link{ts_fit_forecast} to adhere to probabilistic forecast submission guidelines for consortia such as FluSight. It is used as a helper in \link{format_for_submission}.
 }
 \details{
-Uses quantiles \code{c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)} in the built-in \code{fiphde:::q}, using an accessory table \code{fiphde:::quidk}. See \code{data-raw/generate-sysdata.R} for details.
+Uses quantiles \code{c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)} in the built-in \code{fiphde:::q}, using an accessory table \code{fiphde:::quidk}.
 }
 \examples{
 \dontrun{
