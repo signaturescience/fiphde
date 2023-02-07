@@ -13,5 +13,9 @@ to_num(x)
 Numeric vector
 }
 \description{
-This helper function is used in the \link{ilinet} function to strip special characters and empty space and convert a character vector to numeric.
+This unexported helper is used in the \link{ilinet} function to strip special characters and empty space and convert a character vector to numeric.
+}
+\examples{
+x <- c(",1", 4, "11", "19  ", "25>")
+fiphde:::to_num(x)
 }

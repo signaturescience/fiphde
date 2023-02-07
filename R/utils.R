@@ -490,11 +490,15 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 #' Clean numeric values
 #'
-#' This helper function is used in the [ilinet] function to strip special characters and empty space and convert a character vector to numeric.
+#' This unexported helper is used in the [ilinet] function to strip special characters and empty space and convert a character vector to numeric.
 #'
 #' @param x Input character vector for which special characters should be stripped and converted
 #'
 #' @return Numeric vector
+#'
+#' @examples
+#' x <- c(",1", 4, "11", "19  ", "25>")
+#' fiphde:::to_num(x)
 to_num <- function(x) {
   x <- gsub("%", "", x, fixed=TRUE)
   x <- gsub(">", "", x, fixed=TRUE)
