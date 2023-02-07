@@ -11,11 +11,11 @@ format_for_submission(
 )
 }
 \arguments{
-\item{.forecasts}{Forecasts to be formatted for submission; if method is "ts" this should be forecasts from \link{ts_fit_forecast}; otherwise this must be a \code{tibble} with forecast output (e.g. output from \link{glm_forecast}) with a colum designating "location"}
+\item{.forecasts}{Forecasts to be formatted for submission; if method is \code{"ts"} this should be forecasts from \link{ts_fit_forecast}; otherwise this must be a \code{tibble} with forecast output (e.g. output from \link{glm_forecast}) with a column designating "location"}
 
-\item{method}{Method for forecasting; default is "ts" which will trigger the use of \link{ts_format_for_submission} internally}
+\item{method}{Method for forecasting; default is \code{"ts"} which will trigger the use of \link{ts_format_for_submission} internally}
 
-\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
+\item{.target}{Name of the target in the forecast; default is \code{"wk ahead inc flu hosp"}}
 }
 \value{
 A named list of tibbles, one for each model, formatted for submission.
@@ -27,8 +27,6 @@ This function prepares influenza hospitalization forecasts in the format require
 \dontrun{
 # Get raw data from healthdata.gov
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
-## save(h_raw, file="~/Downloads/h_raw.rd")
-## load(file="~/Downloads/h_raw.rd")
 
 # Prep, and make a tsibble
 prepped_hosp <- prep_hdgov_hosp(h_raw, statesonly=TRUE)
