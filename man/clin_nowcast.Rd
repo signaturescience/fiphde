@@ -7,9 +7,9 @@
 clin_nowcast(clin, weeks_to_replace = 1)
 }
 \arguments{
-\item{clin}{Data prepared with \code{\link[=get_cdc_clin]{get_cdc_clin()}}}
+\item{clin}{Data prepared with \link{get_cdc_clin}}
 
-\item{weeks_to_replace}{Number of retrospective weeks to replace with nowcast; default is 1}
+\item{weeks_to_replace}{Number of retrospective weeks to replace with nowcast; default is \code{1}}
 }
 \value{
 A tibble formatted the same as that returned with \code{get_cdc_clin()} but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.

@@ -327,8 +327,8 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
 #'
 #' @description This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
 #'
-#' @param clin Data prepared with [get_cdc_clin()]
-#' @param weeks_to_replace Number of retrospective weeks to replace with nowcast; default is 1
+#' @param clin Data prepared with [get_cdc_clin]
+#' @param weeks_to_replace Number of retrospective weeks to replace with nowcast; default is `1`
 #'
 #' @return A tibble formatted the same as that returned with `get_cdc_clin()` but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.
 #' @export
