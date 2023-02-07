@@ -16,9 +16,9 @@ forecast_ili(
 
 \item{horizon}{Optional horizon periods through which the forecasts should be generated; default is \code{4}}
 
-\item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
+\item{trim_date}{Earliest start date you want to use for ILI data; default \code{NULL} doesn't trim.}
 
-\item{models}{The list of model parameters passed to \link{ts_fit_forecast}. Defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}. See help for \link{ts_fit_forecast}.}
+\item{models}{The list of model parameters passed to \link{ts_fit_forecast}; defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}.}
 }
 \value{
 A named list containing:
@@ -35,10 +35,7 @@ A named list containing:
 }
 }
 \description{
-Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
-}
-\details{
-Currently limited to one location only.
+This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see \link{ts_fit_forecast}). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
 }
 \examples{
 \dontrun{
