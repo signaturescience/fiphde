@@ -734,6 +734,8 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #'
 #' Adapted from `cdcfluview::who_nrevss`.
 #'
+#' This unexported helper function leverages the CDC FluView API to pull flu surveillance data collected from U.S. World Health Organization (WHO) Collaborating Laboratories and National Respiratory and Enteric Virus Surveillance System (NREVSS) laboratories. The data retrieved can be parameterized by geographic granularity and/or flu season. The function is used internally by [get_cdc_clin].
+#'
 #' @param region One of "`national`", "`hhs`", "`census`", or "`state`"
 #' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 1997.
@@ -745,10 +747,10 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' @examples
 #' \dontrun{
-#' national_nrevss <- who_nrevss("national")
-#' hhs_who <- who_nrevss("hhs")
-#' census_who <- who_nrevss("census")
-#' state_who <- who_nrevss("state")
+#' natl_nrevss <- who_nrevss("national")
+#' hhs_nrevss <- who_nrevss("hhs")
+#' census_nrevss <- who_nrevss("census")
+#' state_nrevss <- who_nrevss("state")
 #' }
 who_nrevss <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
 
