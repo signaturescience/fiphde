@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{get_nowcast_ili}
 \alias{get_nowcast_ili}
-\title{Get ILI nowcast}
+\title{Retrieve ILI nowcast}
 \usage{
 get_nowcast_ili(
   epiyearweeks = NULL,
@@ -18,13 +18,13 @@ get_nowcast_ili(
 
 \item{state}{A vector of states to retrieve (two-letter abbreviation). Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
 
-\item{boundatzero}{Bound nowcasts at zero? defaults to TRUE.}
+\item{boundatzero}{Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is \code{TRUE}}
 }
 \value{
 A tibble
 }
 \description{
-Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
+This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
 }
 \examples{
 \dontrun{

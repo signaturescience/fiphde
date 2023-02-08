@@ -193,12 +193,16 @@ get_cdc_hosp <- function(years=NULL) {
 }
 
 
-#' @title Get ILI nowcast
-#' @description Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
+#' @title Retrieve ILI nowcast
+#'
+#' @description
+#'
+#' This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
+#'
 #' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
 #' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
-#' @param boundatzero Bound nowcasts at zero? defaults to TRUE.
+#' @param boundatzero Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is `TRUE`
 #' @return A tibble
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
