@@ -200,14 +200,38 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 
 #' Plot forecasts
 #'
-#' This function serves as a plotting mechanism for prepped forecast submission data. Using truth data supplied, the plots show the historical trajectory of weekly flu hospitalizations along with the point estimates for forecasts. Optionally, the user can include 95% prediction interval as well. Plots include trajectories of weekly flu hospitalizations faceted by location.
 #'
-#' @param .data 	Historical truth data for all locations and outcomes in submission targets
-#' @param submission Formatted submission
-#' @param location  Vector specifying locations to filter to; 'US' by default.
+#' @description
+#'
+#' This function serves as a plotting mechanism for prepped forecast submission data. The plots how the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
+#'
+#' Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information requirements for these parameters.
+#'
+#' @param .data A data frame with historical truth data for all locations and outcomes in submission targets
+#' @param submission Formatted submission (e.g., a `tibble` containing forecasts prepped with [format_for_submission])
+#' @param location  Vector specifying locations to filter to; `'US'` by default.
 #' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
-#' @param .outcome The name of the outcome variable you're plotting in the historical data. Defaults to `"flu.admits"`. This may also be `"weighted_ili"`.
+#' @param .outcome The name of the outcome variable you're plotting in the historical data; defaults to `"flu.admits"`
+#'
+#' @details
+#'
+#' To plot the forecasted output alongside the observed historical data, both the ".data" and "submission" data must be prepared at the same geographic and temporal resolutions. The data frame passed to ".data" must include the column specified in the ".outcome" argument as well as the following columns:
+#'
+#' - **location**: FIPS location code
+#' - **week_end**: Date of the last day (Saturday) in the given epidemiological week
+#'
+#' The "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum following columns:
+#'
+#' - **forecast_date**: Date of forecast
+#' - **target**: Horizon and name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: FIPS code for location
+#' - **type**: One of either "point" or "quantile" for the forecasted value
+#' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
+#' The "submission" data may optionally include a column with the name of the model used, such that multiple models can be visualized in the same plot.
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
@@ -216,8 +240,6 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' \dontrun{
 #' # Get some data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' ## save(h_raw, file="~/Downloads/h_raw.rd")
-#' ## load(file="~/Downloads/h_raw.rd")
 #'
 #' # Prep all the data
 #' prepped_hosp_all <- prep_hdgov_hosp(h_raw)
