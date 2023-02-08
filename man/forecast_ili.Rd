@@ -12,26 +12,26 @@ forecast_ili(
 )
 }
 \arguments{
-\item{ilidat}{Data returned from \link{get_cdc_ili}.}
+\item{ilidat}{Data returned from \link{get_cdc_ili}}
 
 \item{horizon}{Optional horizon periods through which the forecasts should be generated; default is \code{4}}
 
-\item{trim_date}{Earliest start date you want to use for ILI data; default \code{NULL} doesn't trim.}
+\item{trim_date}{Earliest start date you want to use for ILI data; default \code{NULL} doesn't trim}
 
-\item{models}{The list of model parameters passed to \link{ts_fit_forecast}; defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}.}
+\item{models}{The list of model parameters passed to \link{ts_fit_forecast}; defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}}
 }
 \value{
 A named list containing:
-\enumerate{
-\item \code{ilidat}: The data sent into the function filtered to the location and the \code{trim_date}. Select columns returned.
-\item \code{ilidat_tsibble}: The \code{tsibble} class object returned by running \link{make_tsibble} on the data above.
-\item \code{ili_fit}: The fit from \link[fabletools:model]{fabletools::model}.
-\item \code{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
-\item \code{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
-\item \code{ili_bound}: The data in 1 bound to the data in 5.
-\item \code{arima_params}: A tibble with ARIMA model parameters for each location (if \code{type="arima"}).
-\item \code{locstats}: A tibble with missing data information on all locations.
-\item \code{removed}: A tibble with locations removed because of high missing ILI data.
+\itemize{
+\item \strong{ilidat}: The data sent into the function filtered to the location and the \code{trim_date}. Select columns returned.
+\item \strong{ilidat_tsibble}: The \code{tsibble} class object returned by running \link{make_tsibble} on the data above.
+\item \strong{ili_fit}: The fit from \link[fabletools:model]{fabletools::model}.
+\item \strong{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
+\item \strong{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
+\item \strong{ili_bound}: The data in 1 bound to the data in 5.
+\item \strong{arima_params}: A tibble with ARIMA model parameters for each location (if \code{type="arima"}).
+\item \strong{locstats}: A tibble with missing data information on all locations.
+\item \strong{removed}: A tibble with locations removed because of high missing ILI data.
 }
 }
 \description{

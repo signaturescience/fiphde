@@ -156,20 +156,20 @@ ts_fit_forecast <- function(prepped_tsibble,
 
 #' @title Forecast ILI
 #' @description This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see [ts_fit_forecast]). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
-#' @param ilidat Data returned from [get_cdc_ili].
+#' @param ilidat Data returned from [get_cdc_ili]
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
-#' @param trim_date Earliest start date you want to use for ILI data; default `NULL` doesn't trim.
-#' @param models The list of model parameters passed to [ts_fit_forecast]; defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`.
+#' @param trim_date Earliest start date you want to use for ILI data; default `NULL` doesn't trim
+#' @param models The list of model parameters passed to [ts_fit_forecast]; defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`
 #' @return A named list containing:
-#' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
-#' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.
-#' 1. `ili_fit`: The fit from [fabletools::model].
-#' 1. `ili_forecast`: The forecast from [fabletools::forecast] at the specified horizon.
-#' 1. `ili_future`: The `horizon`-number of weeks of ILI data forecasted into the future.
-#' 1. `ili_bound`: The data in 1 bound to the data in 5.
-#' 1. `arima_params`: A tibble with ARIMA model parameters for each location (if `type="arima"`).
-#' 1. `locstats`: A tibble with missing data information on all locations.
-#' 1. `removed`: A tibble with locations removed because of high missing ILI data.
+#' - **ilidat**: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
+#' - **ilidat_tsibble**: The `tsibble` class object returned by running [make_tsibble] on the data above.
+#' - **ili_fit**: The fit from [fabletools::model].
+#' - **ili_forecast**: The forecast from [fabletools::forecast] at the specified horizon.
+#' - **ili_future**: The `horizon`-number of weeks of ILI data forecasted into the future.
+#' - **ili_bound**: The data in 1 bound to the data in 5.
+#' - **arima_params**: A tibble with ARIMA model parameters for each location (if `type="arima"`).
+#' - **locstats**: A tibble with missing data information on all locations.
+#' - **removed**: A tibble with locations removed because of high missing ILI data.
 #' @examples
 #' \dontrun{
 #' # Get data
