@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{ilinet}
 \alias{ilinet}
-\title{Retrieve ILINet Surveillance Data}
+\title{Retrieve ILINet surveillance data}
 \usage{
 ilinet(region = c("national", "hhs", "census", "state"), years = NULL)
 }
@@ -20,13 +20,8 @@ to a year.}
 Adapted from \code{cdcfluview::ilinet}.
 }
 \details{
-The CDC FluView Portal provides in-season and past seasons' national, regional,
-and state-level outpatient illness and viral surveillance data from both
-ILINet (Influenza-like Illness Surveillance Network) and WHO/NREVSS
-(National Respiratory and Enteric Virus Surveillance System).
-
-This function retrieves current and historical ILINet surveillance data for
-the identified region. The function is used internally in \link{get_cdc_ili} but is not exported.
+This unexported helper function retrieves current and historical ILINet surveillance data for
+the identified region via the CDC FluView API. The function is used internally in \link{get_cdc_ili}. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 }
 \examples{
 \dontrun{
@@ -43,7 +38,5 @@ all_ili <- suppressWarnings(
 \itemize{
 \item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}
 \item \href{https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html}{CDC FluView Portal}
-\item \href{https://wwwn.cdc.gov/ilinet/}{ILINet Portal} (Login required)
-\item \href{https://www.cdc.gov/surveillance/nrevss/index.html}{WHO/NREVSS}
 }
 }

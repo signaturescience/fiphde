@@ -396,17 +396,12 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 
 }
 
-#' Retrieve ILINet Surveillance Data
+#' Retrieve ILINet surveillance data
 #'
 #' Adapted from `cdcfluview::ilinet`.
 #'
-#' The CDC FluView Portal provides in-season and past seasons' national, regional,
-#' and state-level outpatient illness and viral surveillance data from both
-#' ILINet (Influenza-like Illness Surveillance Network) and WHO/NREVSS
-#' (National Respiratory and Enteric Virus Surveillance System).
-#'
-#' This function retrieves current and historical ILINet surveillance data for
-#' the identified region. The function is used internally in [get_cdc_ili] but is not exported.
+#' This unexported helper function retrieves current and historical ILINet surveillance data for
+#' the identified region via the CDC FluView API. The function is used internally in [get_cdc_ili]. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 #'
 #' @param region One of "`national`", "`hhs`", "`census`", or "`state`"
 #' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
@@ -418,8 +413,6 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' - [CDC FluView Portal](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html)
-#' - [ILINet Portal](https://wwwn.cdc.gov/ilinet/) (Login required)
-#' - [WHO/NREVSS](https://www.cdc.gov/surveillance/nrevss/index.html)
 #' @examples
 #' \dontrun{
 #' national_ili <- ilinet("national", years = 2017)
