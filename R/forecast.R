@@ -1,28 +1,30 @@
 #' @title Fit and forecast with time-series approaches.
-#' @description Fit and forecast with time-series approaches.
-#' @param prepped_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
-#' @param outcome The outcome variable to model (default `"flu.admits"`).
-#' @param horizon Number of weeks ahead
-#' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
-#' @param models A list of right hand side formula contents for models you want to run. See the examples.
-#' - Defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`
-#' - Setting the type of model to `NULL` turns the model off.
-#' - To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')`. See also [fable::ARIMA].
-#' - To run a seasonal exponential smoothing: `list(ets='season(method=c("A", "M", "N"), period="3 months")')`. See also [fable::ETS].
-#' - To run an autoregressive neural net with P=1: `list(nnetar="AR(P=1)")`. See also [fable::NNETAR].
+#' @description
+#'
+#' This function allows the user to fit time series models and forecast values out to a specified horizon. Starting from a `tsibble` object (see [make_tsibble]), the function fits the models specified as a list in the "models" argument. The "Details" section provides more information on how to parameterize the models used. Note that if the input `tsibble` is "keyed" (e.g., grouped by location) then the procedure will fit and forecast independently for each grouping.
+#'
+#' @param prepped_tsibble A `tsibble` with data formatted via [make_tsibble]
+#' @param outcome The outcome variable to model; default is `"flu.admits"`
+#' @param horizon Number of weeks ahead to forecast
+#' @param trim_date The date (YYYY-MM-DD) at which time series models should start fitting; default `"2021-01-01"`; if set to `NULL` the input data will not be trimmed (i.e., all data will be used to fit time series models)
+#' @param models A list of right hand side formula contents for models you want to run; default is `list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)', ets='season(method="N")', nnetar=NULL)` which runs a constrained ARIMA, non-seasonal ETS, and ignores the NNETAR model; see "Details" for more information
 #' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
-#' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
-#' @param remove_null_models Should null models be removed? Default `TRUE`.
+#' @param ensemble Logical as to whether or not the models should be ensembled (using mean); default `TRUE`
+#' @param remove_null_models Logical as to whether or null models should be removed; default `TRUE`
 #' @return A list of the time series fit, time series forecast, and model formulas.
-#' - `tsfit`: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
-#' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
-#' - `formulas`: A list of ARIMA, ETS, and/or NNETAR formulas
+#' - **tsfit**: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
+#' - **tsfor**: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
+#' - **formulas**: A list of ARIMA, ETS, and/or NNETAR formulas
+#'
+#' @details
+#'
+#' When fitting time series models, the set of models used (and their parameters) can be defined via a named list passed to the "models" argument. The list should contain elements that define the right-hand side of model formulas. The function internally uses the [fable::fable] package, and any models provided must be part of the `fable` ecosystem of time series models. The models passed must be named as "arima", "ets", and "nnetar". To skip any one of these models set the named argument for the given model to `NULL`. The "models" argument defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`. To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')` (see [fable::ARIMA]). To run a seasonal exponential smoothing: `list(ets='season(method=c("A", "M", "N"), period="3 months")')` (see [fable::ETS]). To run an autoregressive neural net with P=1: `list(nnetar="AR(P=1)")` (see [fable::NNETAR]).
+#'
+#' @references <https://fable.tidyverts.org/>
 #' @export
 #' @examples
 #' \dontrun{
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' ## save(h_raw, file="~/Downloads/h_raw.rd")
-#' ## load(file="~/Downloads/h_raw.rd")
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                 epiyear = epiyear,
@@ -32,25 +34,26 @@
 #'   prepped_tsibble %>%
 #'   dplyr::filter(location %in% c("US", "51"))
 #' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#' hosp_fitfor1 <- ts_fit_forecast(prepped_tsibble,
+#'                                 horizon=4L,
+#'                                 outcome="flu.admits",
+#'                                 covariates=c("hosp_rank", "ili_rank"))
 #' # Run an unconstrained ARIMA, seasonal ETS, no NNETAR
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"),
-#'                                models=list(arima='PDQ() + pdq()',
-#'                                            ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                            nnetar=NULL))
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"),
-#'                                models=list(arima='PDQ() + pdq()',
-#'                                            ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                            nnetar="AR(P=1)"))
+#' hosp_fitfor2 <- ts_fit_forecast(prepped_tsibble,
+#'                                 horizon=4L,
+#'                                 outcome="flu.admits",
+#'                                 covariates=c("hosp_rank", "ili_rank"),
+#'                                 models=list(arima='PDQ() + pdq()',
+#'                                             ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                             nnetar=NULL))
+#' # Run an unconstrained ARIMA, seasonal ETS, NNETAR
+#' hosp_fitfor3 <- ts_fit_forecast(prepped_tsibble,
+#'                                 horizon=4L,
+#'                                 outcome="flu.admits",
+#'                                 covariates=c("hosp_rank", "ili_rank"),
+#'                                 models=list(arima='PDQ() + pdq()',
+#'                                             ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                             nnetar="AR(P=1)"))
 #' }
 ts_fit_forecast <- function(prepped_tsibble,
                             outcome="flu.admits",
