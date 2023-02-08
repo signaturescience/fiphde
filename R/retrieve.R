@@ -544,14 +544,16 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 
 }
 
-#' Laboratory-Confirmed Influenza Hospitalizations
+#' Laboratory-confirmed influenza hospitalizations
 #'
 #' Adapted from `cdcfluview::hospitalizations`.
+#'
+#' This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by [get_cdc_hosp].
 #'
 #' @param surveillance_area One of "`flusurv`", "`eip`", or "`ihsp`"
 #' @param region Using "`all`" mimics selecting "Entire Network" from the
 #'        CDC FluView application drop down. Individual regions for each
-#'        surveillance area can also be selected. Use [surveillance_areas()] to
+#'        surveillance area can also be selected. Use [surveillance_areas] to
 #'        see a list of valid sub-regions for each surveillance area.
 #' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 2009

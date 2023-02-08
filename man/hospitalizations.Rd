@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{hospitalizations}
 \alias{hospitalizations}
-\title{Laboratory-Confirmed Influenza Hospitalizations}
+\title{Laboratory-confirmed influenza hospitalizations}
 \usage{
 hospitalizations(
   surveillance_area = c("flusurv", "eip", "ihsp"),
@@ -15,7 +15,7 @@ hospitalizations(
 
 \item{region}{Using "\code{all}" mimics selecting "Entire Network" from the
 CDC FluView application drop down. Individual regions for each
-surveillance area can also be selected. Use \code{\link[=surveillance_areas]{surveillance_areas()}} to
+surveillance area can also be selected. Use \link{surveillance_areas} to
 see a list of valid sub-regions for each surveillance area.}
 
 \item{years}{A vector of years to retrieve data for (i.e. \code{2014} for CDC
@@ -28,6 +28,9 @@ to a year.}
 }
 \description{
 Adapted from \code{cdcfluview::hospitalizations}.
+}
+\details{
+This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
 }
 \examples{
 \dontrun{
