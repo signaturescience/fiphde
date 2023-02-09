@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{state_replace_ili_nowcast_all}
 \alias{state_replace_ili_nowcast_all}
-\title{Replace all ILInet data with nowcast data for a state}
+\title{Replace ILINet data with nowcast entirely for a state}
 \usage{
 state_replace_ili_nowcast_all(
   ilidat,
@@ -13,29 +13,39 @@ state_replace_ili_nowcast_all(
 )
 }
 \arguments{
-\item{ilidat}{Data from \link{get_cdc_ili}.}
+\item{ilidat}{ILI data retrieved via \link{get_cdc_ili}}
 
 \item{state}{Two-letter state abbreviation to replace completely}
 
-\item{impute}{Logical; try to mean impute missing values using the immediately preceding and following values. See examples.}
+\item{impute}{Logical as to whether or not to try to mean impute missing values using the immediately preceding and following values; default is \code{TRUE}}
 
 \item{fallback}{Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is \code{TRUE}}
 
-\item{...}{Other arguments passed to \link{get_nowcast_ili}, e.g. \code{boundatzero}, which is \code{TRUE} by default.}
+\item{...}{Other arguments passed to \link{get_nowcast_ili} (e.g., \code{boundatzero}, which is \code{TRUE} by default)}
 }
 \value{
-The same as the \code{ilidat} input, but with \code{state}'s data from \link{get_cdc_ili} replaced by nowcast data from \link{get_nowcast_ili}.
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{location}: FIPS code for the location
+\item \strong{region_type}: The type of location
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{region}: Name of the region
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{weighted_ili}: Population-weighted percentage of ILI outpatient visits
+}
 }
 \description{
-Replaces \code{weighted_ili} from \link{get_cdc_ili} with nowcast data from \link{get_nowcast_ili} for all dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
-}
-\details{
-This only replaces instances of \code{weighted_ili} in the specified \code{state} where \code{weighted_ili} is \code{NA}. \emph{Most} ILI data from FL is missing, but not all.
+This function replaces the weighted ILI retrieved from \link{get_cdc_ili} with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using \link{get_nowcast_ili}. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. Unlike \link{replace_ili_nowcast}, the ILI will be replaced with nowcast for \emph{all} dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
+
+Note that this only replaces weighted ILI in the specified state where the value is \code{NA}. \emph{Most} ILI data from Florida is missing, but not all.
 }
 \examples{
 \dontrun{
-# Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
+
 ilidat <- get_cdc_ili(years=2020)
+
 ilidat <-
   ilidat \%>\%
   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") \%>\%
@@ -66,7 +76,4 @@ ilidat
 state_replace_ili_nowcast_all(ilidat, state="FL")
 state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
 }
-}
-\seealso{
-\link{replace_ili_nowcast}
 }

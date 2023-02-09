@@ -26,20 +26,35 @@ is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
 
-#' @title Replace all ILInet data with nowcast data for a state
-#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for all dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
-#' @details This only replaces instances of `weighted_ili` in the specified `state` where `weighted_ili` is `NA`. _Most_ ILI data from FL is missing, but not all.
-#' @param ilidat Data from [get_cdc_ili].
+#' @title Replace ILINet data with nowcast entirely for a state
+#'
+#' @description
+#'
+#' This function replaces the weighted ILI retrieved from [get_cdc_ili] with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using [get_nowcast_ili]. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. Unlike [replace_ili_nowcast], the ILI will be replaced with nowcast for *all* dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
+#'
+#' Note that this only replaces weighted ILI in the specified state where the value is `NA`. _Most_ ILI data from Florida is missing, but not all.
+#'
+#' @param ilidat ILI data retrieved via [get_cdc_ili]
 #' @param state Two-letter state abbreviation to replace completely
-#' @param impute Logical; try to mean impute missing values using the immediately preceding and following values. See examples.
+#' @param impute Logical as to whether or not to try to mean impute missing values using the immediately preceding and following values; default is `TRUE`
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
-#' @param ... Other arguments passed to [get_nowcast_ili], e.g. `boundatzero`, which is `TRUE` by default.
-#' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
-#' @seealso [replace_ili_nowcast]
+#' @param ... Other arguments passed to [get_nowcast_ili] (e.g., `boundatzero`, which is `TRUE` by default)
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **region_type**: The type of location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
+#'
 #' @examples
 #' \dontrun{
-#' # Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
+#'
 #' ilidat <- get_cdc_ili(years=2020)
+#'
 #' ilidat <-
 #'   ilidat %>%
 #'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
@@ -117,13 +132,27 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
   return(res)
 }
 
-#' @title Replace ILInet with nowcast data
-#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
-#' @param ilidat Data from [get_cdc_ili].
-#' @param start_date Date from which to start nowcasting. Defaults to [lubridate::today].
-#' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
+#' @title Replace ILINet data with nowcast
+#'
+#' @description
+#'
+#' This function replaces the weighted ILI retrieved from [get_cdc_ili] with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using [get_nowcast_ili]. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. The nowcast data will be used to add 1 additional week to the observed ILI data and (optionally) replace the number of weeks specified in the "weeks_to_replace" argument.
+#'
+#' @param ilidat ILI data retrieved via [get_cdc_ili]
+#' @param start_date Date from which to start nowcasting; default is [lubridate::today]
+#' @param weeks_to_replace Number of weeks of `ilidat` to replace; default is `2`
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
-#' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **region_type**: The type of location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -137,16 +166,6 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
 #' ilidat
 #' iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 #' iliaug
-#'
-#' # arrange for comparison
-#' ilidat <- ilidat %>% dplyr::arrange(location, week_start)
-#' iliaug <- iliaug %>% dplyr::arrange(location, week_start)
-#' # Compare US
-#' waldo::compare(ilidat %>% dplyr::filter(location=="US"),
-#'                iliaug %>% dplyr::filter(location=="US"))
-#' # Compare VA
-#' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
-#'                iliaug %>% dplyr::filter(location=="51"))
 #' }
 replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, fallback=TRUE) {
   if (is.null(start_date)) start_date <- lubridate::today()
