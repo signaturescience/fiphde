@@ -1,4 +1,4 @@
-#' @title Fit and forecast with time-series approaches.
+#' @title Fit and forecast with time-series approaches
 #' @description
 #'
 #' This function allows the user to fit time series models and forecast values out to a specified horizon. Starting from a `tsibble` object (see [make_tsibble]), the function fits the models specified as a list in the "models" argument. The "Details" section provides more information on how to parameterize the models used. Note that if the input `tsibble` is "keyed" (e.g., grouped by location) then the procedure will fit and forecast independently for each grouping.
@@ -34,26 +34,26 @@
 #'   prepped_tsibble %>%
 #'   dplyr::filter(location %in% c("US", "51"))
 #' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
-#' hosp_fitfor1 <- ts_fit_forecast(prepped_tsibble,
-#'                                 horizon=4L,
-#'                                 outcome="flu.admits",
-#'                                 covariates=c("hosp_rank", "ili_rank"))
+#' hospfor1 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=c("hosp_rank", "ili_rank"))
 #' # Run an unconstrained ARIMA, seasonal ETS, no NNETAR
-#' hosp_fitfor2 <- ts_fit_forecast(prepped_tsibble,
-#'                                 horizon=4L,
-#'                                 outcome="flu.admits",
-#'                                 covariates=c("hosp_rank", "ili_rank"),
-#'                                 models=list(arima='PDQ() + pdq()',
-#'                                             ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                             nnetar=NULL))
+#' hospfor2 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=c("hosp_rank", "ili_rank"),
+#'                             models=list(arima='PDQ() + pdq()',
+#'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                         nnetar=NULL))
 #' # Run an unconstrained ARIMA, seasonal ETS, NNETAR
-#' hosp_fitfor3 <- ts_fit_forecast(prepped_tsibble,
-#'                                 horizon=4L,
-#'                                 outcome="flu.admits",
-#'                                 covariates=c("hosp_rank", "ili_rank"),
-#'                                 models=list(arima='PDQ() + pdq()',
-#'                                             ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                             nnetar="AR(P=1)"))
+#' hospfor3 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=c("hosp_rank", "ili_rank"),
+#'                             models=list(arima='PDQ() + pdq()',
+#'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                         nnetar="AR(P=1)"))
 #' }
 ts_fit_forecast <- function(prepped_tsibble,
                             outcome="flu.admits",
