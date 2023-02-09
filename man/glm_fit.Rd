@@ -9,22 +9,35 @@ glm_fit(.data, .models)
 \arguments{
 \item{.data}{Data including all explanatory and outcome variables needed for modeling; must include column for "location"}
 
-\item{.models}{List of models defined as \link[trending]{trending_model} objects}
+\item{.models}{List of models defined as \link[trending:trending_model]{trending::trending_model} objects}
 }
 \value{
-A \code{tibble} containing characteristics from the "best" \code{glm} model (i.e., the model from ".models" list with lowest RMSE). The columns in this \code{tibble} include:
+A \code{tibble} containing characteristics from the "best" \code{glm} model including:
 \itemize{
-\item model_class: The "type" of model for the best fit
-\item fit: The fitted model object for the best fit
-\item location: The geographic
-\item data: Original model fit data as a \code{tibble} in a list column
+\item \strong{model_class}: The "type" of model for the best fit
+\item \strong{fit}: The fitted model object for the best fit
+\item \strong{location}: The geographic unit being modeled
+\item \strong{data}: Original model fit data as a \code{tibble} in a list column
 }
 }
 \description{
-This helper function is used in \link[fiphde]{glm_wrap} to fit a list of models and select the best one.
+This helper function is used in \link{glm_wrap} to fit a list of models and select the best one. The model selection procedure will use the root mean square error (RMSE) metric implemented in \link[yardstick:rmse]{yardstick::rmse} to select the best model.
 }
 \examples{
 \dontrun{
-##FIXME
+hosp_va <-
+ get_hdgov_hosp(limitcols=TRUE) \%>\%
+ prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
+ dplyr::filter(abbreviation == "VA")
+
+models <-
+  list(
+    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
+    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
+    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
+  )
+
+va_fit <- glm_fit(.data = hosp_va, .models = models)
+va_fit
 }
 }
