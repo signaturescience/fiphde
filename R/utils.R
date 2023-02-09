@@ -460,22 +460,23 @@ mnz_replace <- function(x) {
   return(x)
 }
 
-#' Convert an MMWR year+week or year+week+day to a Date object
+#' Convert MMWR format to date
 #'
-#' Adapted from cdcfluview::mmwr_week_to_date.
-#' This is a reformat and re-export of a function in the `MMWRweek` package.
-#' It provides a snake case version of its counterpart and produces a vector
-#' of `Date` objects that corresponds to the input MMWR year+week or year+week+day
-#' vectors. This also adds some parameter checking and cleanup to avoid exceptions.
+#' Adapted from `cdcfluview::mmwr_week_to_date`.
 #'
-#' @param year,week,day Year, week and month vectors. All must be the same length
-#'        unless `day` is `NULL`.
-#' @return vector of `Date` objects
+#' This function transforms MMWR epidemiological year+week (or year+week+day) to a date object. This was implemented based on the `cdcfluview::mmwr_week_to_date` function, which adapted similar functionality from the `MMWRweek` package.
+#'
+#' @param year Vector of epidemiological year(s); must be same length as "week" and "day" (unless "day" is `NULL`)
+#' @param week Vector of epidemiological week(s); must be same length as "year" and "day" (unless "day" is `NULL`)
+#' @param day Vector of day(s); must be same length as "week" and "year" (unless set to is `NULL`); default is `NULL` and the day returned will be the first day of the epidemiological week (i.e., Sunday)
+#' @return Vector of date objects as with as many elements as input year(s), week(s), day(s)
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' @export
 #' @examples
-#' mmwr_week_to_date(2016,10,3)
+#' mmwr_week_to_date(2020,1)
+#' mmwr_week_to_date(2020,1,5)
+#' mmwr_week_to_date(c(2020,2021,2022),c(1,2,8), c(1,1,7))
 mmwr_week_to_date <- function(year, week, day=NULL) {
 
   year <- as.numeric(year)
