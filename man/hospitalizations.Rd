@@ -11,12 +11,9 @@ hospitalizations(
 )
 }
 \arguments{
-\item{surveillance_area}{One of "\code{flusurv}", "\code{eip}", or "\code{ihsp}"}
+\item{surveillance_area}{One of \code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}}
 
-\item{region}{Using "\code{all}" mimics selecting "Entire Network" from the
-CDC FluView application drop down. Individual regions for each
-surveillance area can also be selected. Use \link{surveillance_areas} to
-see a list of valid sub-regions for each surveillance area.}
+\item{region}{Individual region within the surveillance area selected; default \code{"all"} mimics selecting "Entire Network" from the CDC FluView application drop down; see "Details" for list of valid region values for each surveillance area}
 
 \item{years}{A vector of years to retrieve data for (i.e. \code{2014} for CDC
 flu season 2014-2015). CDC has data for this API going back to 2009
@@ -31,6 +28,15 @@ Adapted from \code{cdcfluview::hospitalizations}.
 }
 \details{
 This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
+
+Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}) can be further queried by region. The following is a list of valid regions:
+\itemize{
+\item \strong{flusurv}: "Entire Network"
+\item \strong{eip}: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
+\item \strong{ihsp}: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
+}
+
+NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API (https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public).
 }
 \examples{
 \dontrun{

@@ -531,19 +531,6 @@ to_num <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
-#' Retrieve a list of valid sub-regions for each surveillance area.
-#' @export
-#' @examples
-#' \dontrun{
-#' surveillance_areas()
-#' }
-surveillance_areas <- function() {
-  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
-  xdf <- stats::setNames(meta$catchments[,c("name", "area")], c("surveillance_area", "region"))
-  xdf$surveillance_area <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")[xdf$surveillance_area]
-  xdf
-}
-
 #' Calculate smoothed and weighted averages of previous observations
 #'
 #' @description This helper function calculates a weighted average of the last n observations.
