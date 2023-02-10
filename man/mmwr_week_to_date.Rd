@@ -18,8 +18,7 @@ Vector of date objects as with as many elements as input year(s), week(s), day(s
 }
 \description{
 Adapted from \code{cdcfluview::mmwr_week_to_date}.
-}
-\details{
+
 This function transforms MMWR epidemiological year+week (or year+week+day) to a date object. This was implemented based on the \code{cdcfluview::mmwr_week_to_date} function, which adapted similar functionality from the \code{MMWRweek} package.
 }
 \examples{

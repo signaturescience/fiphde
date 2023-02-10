@@ -15,8 +15,7 @@ weighted_interval_score(quantile, value, actual_value)
 }
 \description{
 This function is adapted from the \code{evalcast::weighted_interval_score}.
-}
-\details{
+
 Computes weighted interval score (WIS), a well-known quantile-based
 approximation of the commonly-used continuous ranked probability score
 (CRPS). WIS is a proper score, and can be thought of as a distributional

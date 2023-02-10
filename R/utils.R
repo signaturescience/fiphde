@@ -1,4 +1,4 @@
-#' Get Monday
+#' @title Get Monday
 #'
 #' @description
 #'
@@ -12,7 +12,7 @@ this_monday <- function() {
   tmp <- MMWRweek::MMWRweek(lubridate::today())
   MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 2)
 }
-#' Check Monday
+#' @title Check Monday
 #'
 #' @description
 #'
@@ -217,8 +217,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
   return(res)
 }
 
-#' Plot forecasts
-#'
+#' @title Plot forecasts
 #'
 #' @description
 #'
@@ -479,7 +478,9 @@ mnz_replace <- function(x) {
   return(x)
 }
 
-#' Convert MMWR format to date
+#' @title Convert MMWR format to date
+#'
+#' @description
 #'
 #' Adapted from `cdcfluview::mmwr_week_to_date`.
 #'
@@ -509,13 +510,15 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 }
 
-#' Make clean column names
+#' @title Make clean column names
+#'
+#' @description
 #'
 #' This helper is used in [ilinet] and [who_nrevss] functions to clean column names of values returned from the APIs.
 #'
-#' @param tbl Input tibble with columns to rename
+#' @param tbl Input `tibble` with columns to rename
 #'
-#' @return Tibble with clean column names
+#' @return A `tibble` with clean column names
 #'
 #'
 .mcga <- function(tbl) {
@@ -530,7 +533,9 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
   tbl
 }
 
-#' Clean numeric values
+#' @title Clean numeric values
+#'
+#' @description
 #'
 #' This unexported helper is used in the [ilinet] function to strip special characters and empty space and convert a character vector to numeric.
 #'
@@ -550,9 +555,11 @@ to_num <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
-#' Calculate smoothed and weighted averages of previous observations
+#' @title Calculate smoothed and weighted averages of previous observations
 #'
-#' @description This helper function calculates a weighted average of the last n observations.
+#' @description
+#'
+#' This helper function calculates a weighted average of the last n observations.
 #'
 #' @param x Incoming vector of observations
 #' @param n Number of recent observations to smooth; default is `4`

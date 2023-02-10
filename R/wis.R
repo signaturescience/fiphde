@@ -1,4 +1,6 @@
-#' Compute weighted interval score
+#' @title Compute weighted interval score
+#'
+#' @description
 #'
 #' This function is adapted from the `evalcast::weighted_interval_score`.
 #'
@@ -37,6 +39,7 @@ weighted_interval_score <- function(quantile, value, actual_value) {
 }
 
 #' @title Score function parameter checker
+#'
 #' @description
 #'
 #' This function is adapted from the `evalcast::score_func_param_checker`.
