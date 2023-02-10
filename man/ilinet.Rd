@@ -18,8 +18,7 @@ to a year.}
 }
 \description{
 Adapted from \code{cdcfluview::ilinet}.
-}
-\details{
+
 This unexported helper function retrieves current and historical ILINet surveillance data for
 the identified region via the CDC FluView API. The function is used internally in \link{get_cdc_ili}. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 }

@@ -25,10 +25,10 @@ to a year.}
 }
 \description{
 Adapted from \code{cdcfluview::hospitalizations}.
+
+This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
 }
 \details{
-This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
-
 Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}) can be further queried by region. The following is a list of valid regions:
 \itemize{
 \item \strong{flusurv}: "Entire Network"

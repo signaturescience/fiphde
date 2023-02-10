@@ -21,7 +21,7 @@ get_nowcast_ili(
 \item{boundatzero}{Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is \code{TRUE}}
 }
 \value{
-A tibble
+A \code{tibble}
 }
 \description{
 This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.

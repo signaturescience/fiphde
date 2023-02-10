@@ -1,4 +1,5 @@
 #' @title Retrieve hospitalization data from HHS
+#'
 #' @description
 #'
 #' This function retrieves hospital utilization time series data distributed through healthdata.gov. Data are aggregated to the state granularity from facility level reports via HHS TeleTracking, HHS Protect, and the National Healthcare Safety Network (historically). Users can optionally filter to include all fields or restrict to a prespecified set of fields relevant to COVID and influenza hospital utilization. The results are returned as a `tibble`.
@@ -7,7 +8,7 @@
 #' @param limitcols Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default `FALSE`
 #' @param app_token App token from healthdata.gov; default is to look for environment variable called `"HEALTHDATA_APP_TOKEN"` and if a token is not supplied to proceed with possibility of rate limitation (see "Details" for more information)
 #' @details The data retrieval will proceed whether or not an API token has been supplied via the `app_token` argument. However, to avoid possible rate limits it is recommended to retrieve a token for the healthdata.gov API (<https://healthdata.gov/profile/edit/developer_settings>), and add that token as an entry to `.Renviron` with `HEALTHDATA_APP_TOKEN="yourtokenhere"`.
-#' @return A tibble with at least the following columns:
+#' @return A `tibble` with at least the following columns:
 #'
 #' - **state**: Abbreviation of the state
 #' - **date**: Date of report
@@ -88,13 +89,14 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
 }
 
 #' @title Retrieve ILI data from ILINet
+#'
 #' @description
 #'
 #' This function pulls ILINet data from the CDC FluView API. Data are available historically and can be pulled at the state, national, or HHS region level.
 #'
 #' @param region Either "state", "national", or "hhs"; defaults to `c("national", "state", "hhs")` for all three.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
-#' @return A tibble with the following columns:
+#' @return A `tibble` with the following columns:
 #'
 #' - **location**: FIPS code for the location
 #' - **region_type**: The type of location
@@ -142,11 +144,11 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
   return(d)
 }
 
-#' @title Retrieve hospitalization data from FluServ-NET
+#' @title Retrieve hospitalization data from FluSurv-NET
 #'
 #' @description
 #'
-#' This function retrieves historical FluServ-NET hospitalization data via the CDC FluView API.
+#' This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
 #'
 #' **NOTE**: The function currently does not support queries after the 2019-2020 flu season, and is therefore only recommended to use as a method to query FluSurv-NET for historical flu hospitalization burden.
 #'
@@ -203,7 +205,7 @@ get_cdc_hosp <- function(years=NULL) {
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
 #' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
 #' @param boundatzero Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is `TRUE`
-#' @return A tibble
+#' @return A `tibble`
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
@@ -310,14 +312,16 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   }
 }
 
-#' Retrieve clinical laboratory percent positive flu data
+#' @title Retrieve clinical laboratory percent positive flu data
 #'
-#' @description This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument via the CDC FluView API.
+#' @description
+#'
+#' This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument via the CDC FluView API.
 #'
 #' @param region Either "state", "national", or "both". Defaults to `"both"` to return state and national data combined.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
 #'
-#' @return A tibble with the following columns:
+#' @return A `tibble` with the following columns:
 #'
 #' - **abbreviation**: Abbreviation for the location
 #' - **location**: FIPS code for the location
@@ -400,7 +404,9 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 
 }
 
-#' Retrieve ILINet surveillance data
+#' @title Retrieve ILINet surveillance data
+#'
+#' @description
 #'
 #' Adapted from `cdcfluview::ilinet`.
 #'
@@ -541,7 +547,9 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 
 }
 
-#' Laboratory-confirmed influenza hospitalizations
+#' @title Laboratory-confirmed influenza hospitalizations
+#'
+#' @description
 #'
 #' Adapted from `cdcfluview::hospitalizations`.
 #'
@@ -737,7 +745,9 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 
 }
 
-#' WHO/NREVSS surveillance data
+#' @title WHO/NREVSS clinical lab surveillance data
+#'
+#' @description
 #'
 #' Adapted from `cdcfluview::who_nrevss`.
 #'

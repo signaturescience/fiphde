@@ -18,7 +18,7 @@ get_hdgov_hosp(
 \item{limitcols}{Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default \code{FALSE}}
 }
 \value{
-A tibble with at least the following columns:
+A \code{tibble} with at least the following columns:
 \itemize{
 \item \strong{state}: Abbreviation of the state
 \item \strong{date}: Date of report

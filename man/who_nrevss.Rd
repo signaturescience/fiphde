@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{who_nrevss}
 \alias{who_nrevss}
-\title{WHO/NREVSS surveillance data}
+\title{WHO/NREVSS clinical lab surveillance data}
 \usage{
 who_nrevss(region = c("national", "hhs", "census", "state"), years = NULL)
 }
@@ -18,8 +18,7 @@ to a year.}
 }
 \description{
 Adapted from \code{cdcfluview::who_nrevss}.
-}
-\details{
+
 This unexported helper function leverages the CDC FluView API to pull flu surveillance data collected from U.S. World Health Organization (WHO) Collaborating Laboratories and National Respiratory and Enteric Virus Surveillance System (NREVSS) laboratories. The data retrieved can be parameterized by geographic granularity and/or flu season. The function is used internally by \link{get_cdc_clin}.
 }
 \examples{

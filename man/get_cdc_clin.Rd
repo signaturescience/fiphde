@@ -12,7 +12,7 @@ get_cdc_clin(region = "both", years = NULL)
 \item{years}{A vector of years to retrieve data for. CDC has data going back to 1997. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
 \value{
-A tibble with the following columns:
+A \code{tibble} with the following columns:
 \itemize{
 \item \strong{abbreviation}: Abbreviation for the location
 \item \strong{location}: FIPS code for the location
