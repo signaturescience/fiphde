@@ -1,4 +1,4 @@
-#' Fit glm models
+#' @title Fit glm models
 #'
 #' @description
 #'
@@ -79,7 +79,7 @@ glm_fit <- function(.data,
 }
 
 
-#' Get quantiles from prediction intervals
+#' @title Get quantiles from prediction intervals
 #'
 #' @description
 #'
@@ -150,7 +150,7 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 }
 
 
-#' Forecast glm models
+#' @title Forecast glm models
 #'
 #' @description
 #'
@@ -246,7 +246,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
     dplyr::select(epiweek,epiyear,quantile,value)
 }
 
-#' Run glm modeling and forecasting
+#' @title Run glm modeling and forecasting
 #'
 #' @description
 #'
