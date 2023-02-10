@@ -1,12 +1,24 @@
-#' Format forecasts for submission
+#' @title Format forecasts for submission
+#'
+#' @description
 #'
 #' This function prepares forecasts to adhere to probabilistic forecast submission guidelines for consortia such as FluSight.
 #'
-#' @param .forecasts Forecasts to be formatted for submission; if method is `"ts"` this should be forecasts from [ts_fit_forecast]; otherwise this must be a `tibble` with forecast output (e.g. output from [glm_forecast]) with a column designating "location"
+#' @param .forecasts Forecasts to be formatted for submission; if method is `"ts"` this should be forecasts from [ts_fit_forecast]; otherwise this must be a `tibble` with forecast output (e.g., output from [glm_forecast]) with a column designating "location"
 #' @param method Method for forecasting; default is `"ts"` which will trigger the use of [ts_format_for_submission] internally
 #' @param .target Name of the target in the forecast; default is `"wk ahead inc flu hosp"`
 #'
-#' @return A named list of tibbles, one for each model, formatted for submission.
+#' @return A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+#'
+#' - **forecast_date**: Date of forecast
+#' - **target**: Horizon and name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: FIPS code for location
+#' - **type**: One of either "point" or "quantile" for the forecasted value
+#' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
+#'
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
 #' @export
 #'
@@ -66,6 +78,7 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 }
 
 #' @title Format time series forecast
+#'
 #' @description
 #'
 #' This function specifically formats time series forecasts generated with [ts_fit_forecast] to adhere to probabilistic forecast submission guidelines for consortia such as FluSight. It is used as a helper in [format_for_submission].
@@ -74,7 +87,16 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 #' @param tsfor The forecast from [ts_fit_forecast]
 #' @param .target Name of the target in the forecast; default is `"wk ahead inc flu hosp"`
 #' @param .counts Logical; default `TRUE` indicates that the target outcome is a count, and should be rounded off at an integer
-#' @return A named list of tibbles, one for each model, formatted for submission.
+#' @return A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+#'
+#' - **forecast_date**: Date of forecast
+#' - **target**: Horizon and name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: FIPS code for location
+#' - **type**: One of either "point" or "quantile" for the forecasted value
+#' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
 #' @export
 #' @examples
@@ -164,7 +186,9 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
 
 }
 
-#' Validate forecast submission
+#' @title Validate forecast submission
+#'
+#' @description
 #'
 #' This function will take the prepped forecast data from [format_for_submission] and run a series of tests to validate the format.
 #'

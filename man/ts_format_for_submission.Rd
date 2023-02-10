@@ -18,7 +18,16 @@ ts_format_for_submission(
 \item{.counts}{Logical; default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer}
 }
 \value{
-A named list of tibbles, one for each model, formatted for submission.
+A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+\itemize{
+\item \strong{forecast_date}: Date of forecast
+\item \strong{target}: Horizon and name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: FIPS code for location
+\item \strong{type}: One of either "point" or "quantile" for the forecasted value
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
+}
 }
 \description{
 This function specifically formats time series forecasts generated with \link{ts_fit_forecast} to adhere to probabilistic forecast submission guidelines for consortia such as FluSight. It is used as a helper in \link{format_for_submission}.
