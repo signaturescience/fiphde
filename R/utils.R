@@ -1,18 +1,18 @@
-#' Get Monday
+#' @title Get Monday
 #'
 #' @description
 #'
 #' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
 #'
-#' @return Date for the Monday of the current week. For more details see \link[lubridate]{floor_date}.
+#' @return Date for the Monday of the current week.
 #' @export
-#' @md
-#'
+#' @examples
+#' this_monday()
 this_monday <- function() {
   tmp <- MMWRweek::MMWRweek(lubridate::today())
   MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 2)
 }
-#' Check Monday
+#' @title Check Monday
 #'
 #' @description
 #'
@@ -20,24 +20,41 @@ this_monday <- function() {
 #
 #' @return Logical indicating whether or not today is Monday
 #' @export
-#' @md
+#' @examples
+#' is_monday()
 is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
 
-#' @title Replace all ILInet data with nowcast data for a state
-#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for all dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
-#' @details This only replaces instances of `weighted_ili` in the specified `state` where `weighted_ili` is `NA`. _Most_ ILI data from FL is missing, but not all.
-#' @param ilidat Data from [get_cdc_ili].
+#' @title Replace ILINet data with nowcast entirely for a state
+#'
+#' @description
+#'
+#' This function replaces the weighted ILI retrieved from [get_cdc_ili] with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using [get_nowcast_ili]. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. Unlike [replace_ili_nowcast], the ILI will be replaced with nowcast for *all* dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
+#'
+#' Note that this only replaces weighted ILI in the specified state where the value is `NA`. _Most_ ILI data from Florida is missing, but not all.
+#'
+#' @param ilidat ILI data retrieved via [get_cdc_ili]
 #' @param state Two-letter state abbreviation to replace completely
-#' @param impute Logical; try to mean impute missing values using the immediately preceding and following values. See examples.
+#' @param impute Logical as to whether or not to try to mean impute missing values using the immediately preceding and following values; default is `TRUE`
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
-#' @param ... Other arguments passed to [get_nowcast_ili], e.g. `boundatzero`, which is `TRUE` by default.
-#' @return The same as the `ilidat` input, but with `state`'s data from [get_cdc_ili] replaced by nowcast data from [get_nowcast_ili].
-#' @seealso [replace_ili_nowcast]
+#' @param ... Other arguments passed to [get_nowcast_ili] (e.g., `boundatzero`, which is `TRUE` by default)
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **region_type**: The type of location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
+#'
 #' @examples
 #' \dontrun{
+#'
 #' ilidat <- get_cdc_ili(years=2020)
+#'
 #' ilidat <-
 #'   ilidat %>%
 #'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
@@ -115,13 +132,27 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
   return(res)
 }
 
-#' @title Replace ILInet with nowcast data
-#' @description Replaces `weighted_ili` from [get_cdc_ili] with nowcast data from [get_nowcast_ili] for the number of specified `weeks_to_replace`.
-#' @param ilidat Data from [get_cdc_ili].
-#' @param start_date Date from which to start nowcasting. Defaults to [lubridate::today].
-#' @param weeks_to_replace Number of weeks of `ilidat` to replace. Defaults to 2.
+#' @title Replace ILINet data with nowcast
+#'
+#' @description
+#'
+#' This function replaces the weighted ILI retrieved from [get_cdc_ili] with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using [get_nowcast_ili]. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. The nowcast data will be used to add 1 additional week to the observed ILI data and (optionally) replace the number of weeks specified in the "weeks_to_replace" argument.
+#'
+#' @param ilidat ILI data retrieved via [get_cdc_ili]
+#' @param start_date Date from which to start nowcasting; default is [lubridate::today]
+#' @param weeks_to_replace Number of weeks of `ilidat` to replace; default is `2`
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
-#' @return The same as the `ilidat` input, but with `weeks_to_replace` weeks replaced with nowcasted data.
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **region_type**: The type of location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -135,16 +166,6 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
 #' ilidat
 #' iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 #' iliaug
-#'
-#' # arrange for comparison
-#' ilidat <- ilidat %>% dplyr::arrange(location, week_start)
-#' iliaug <- iliaug %>% dplyr::arrange(location, week_start)
-#' # Compare US
-#' waldo::compare(ilidat %>% dplyr::filter(location=="US"),
-#'                iliaug %>% dplyr::filter(location=="US"))
-#' # Compare VA
-#' waldo::compare(ilidat %>% dplyr::filter(location=="51"),
-#'                iliaug %>% dplyr::filter(location=="51"))
 #' }
 replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, fallback=TRUE) {
   if (is.null(start_date)) start_date <- lubridate::today()
@@ -196,16 +217,39 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
   return(res)
 }
 
-#' Plot forecasts
+#' @title Plot forecasts
 #'
-#' This function serves as a plotting mechanism for prepped forecast submission data. Using truth data supplied, the plots show the historical trajectory of weekly flu hospitalizations along with the point estimates for forecasts. Optionally, the user can include 95% prediction interval as well. Plots include trajectories of weekly flu hospitalizations faceted by location.
+#' @description
 #'
-#' @param .data 	Historical truth data for all locations and outcomes in submission targets
-#' @param submission Formatted submission
-#' @param location  Vector specifying locations to filter to; 'US' by default.
+#' This function serves as a plotting mechanism for prepped forecast submission data. The plots how the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
+#'
+#' Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information requirements for these parameters.
+#'
+#' @param .data A data frame with historical truth data for all locations and outcomes in submission targets
+#' @param submission Formatted submission (e.g., a `tibble` containing forecasts prepped with [format_for_submission])
+#' @param location  Vector specifying locations to filter to; `'US'` by default.
 #' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
-#' @param .outcome The name of the outcome variable you're plotting in the historical data. Defaults to `"flu.admits"`. This may also be `"weighted_ili"`.
+#' @param .outcome The name of the outcome variable you're plotting in the historical data; defaults to `"flu.admits"`
+#'
+#' @details
+#'
+#' To plot the forecasted output alongside the observed historical data, both the ".data" and "submission" data must be prepared at the same geographic and temporal resolutions. The data frame passed to ".data" must include the column specified in the ".outcome" argument as well as the following columns:
+#'
+#' - **location**: FIPS location code
+#' - **week_end**: Date of the last day (Saturday) in the given epidemiological week
+#'
+#' The "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum following columns:
+#'
+#' - **forecast_date**: Date of forecast
+#' - **target**: Horizon and name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: FIPS code for location
+#' - **type**: One of either "point" or "quantile" for the forecasted value
+#' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
+#' The "submission" data may optionally include a column with the name of the model used, such that multiple models can be visualized in the same plot.
 #'
 #' @return A `ggplot2` plot object with line plots for outcome trajectories faceted by location
 #' @export
@@ -214,8 +258,6 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' \dontrun{
 #' # Get some data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' ## save(h_raw, file="~/Downloads/h_raw.rd")
-#' ## load(file="~/Downloads/h_raw.rd")
 #'
 #' # Prep all the data
 #' prepped_hosp_all <- prep_hdgov_hosp(h_raw)
@@ -268,8 +310,12 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
 #'   dplyr::filter(abbreviation != "DC")
 #'
-#' tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
-#' creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+#' tsens_20220110 <-
+#'   system.file("extdata/2022-01-10-SigSci-TSENS.csv", package="fiphde") %>%
+#'   readr::read_csv(show_col_types = FALSE)
+#' creg_20220110 <-
+#'   system.file("extdata/2022-01-10-SigSci-CREG.csv", package="fiphde") %>%
+#'   readr::read_csv(show_col_types = FALSE)
 #' combo_20220110 <- dplyr::bind_rows(
 #'   dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
 #'   dplyr::mutate(creg_20220110, model = "SigSci-CREG")
@@ -360,7 +406,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
       dplyr::group_by(model) %>%
       dplyr::filter(type == "point") %>%
       dplyr::filter(location %in% loc) %>%
-      dplyr::mutate(quantile=tidyr::replace_na(quantile, "point")) %>%
+      dplyr::mutate(quantile=quantile %>% as.character() %>% tidyr::replace_na("point")) %>%
       dplyr::select(-type) %>%
       tidyr::separate(target, into=c("nwk", "target"), sep=" wk ahead ") %>%
       dplyr::select(location, date=target_end_date,quantile, value, model) %>%
@@ -403,10 +449,9 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 }
 
 #' @title Minimum non-zero
-#' @description Get the minimum non-zero positive value from a vector.
-#' @param x a numeric vector
-#' @return The minimum non-zero positive value from `x`.
-#' @seealso [mnz_replace]
+#' @description Helper function to get the minimum non-zero positive value from a vector. Used internally in [mnz_replace].
+#' @param x A numeric vector
+#' @return The minimum non-zero positive value from `x`
 #' @export
 #' @examples
 #' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
@@ -419,7 +464,7 @@ mnz <- function(x) {
 
 #' @title Minimum non-zero replacement
 #' @description Replace zeros and negative values with the minimum non-zero positive value from a vector.
-#' @param x a numeric vector
+#' @param x A numeric vector
 #' @return A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.
 #' @examples
 #' x <- c(.1, 0, -.2, NA, .3, .4, .0001, -.3, NA, 999)
@@ -433,22 +478,25 @@ mnz_replace <- function(x) {
   return(x)
 }
 
-#' Convert an MMWR year+week or year+week+day to a Date object
+#' @title Convert MMWR format to date
 #'
-#' Adapted from cdcfluview::mmwr_week_to_date.
-#' This is a reformat and re-export of a function in the `MMWRweek` package.
-#' It provides a snake case version of its counterpart and produces a vector
-#' of `Date` objects that corresponds to the input MMWR year+week or year+week+day
-#' vectors. This also adds some parameter checking and cleanup to avoid exceptions.
+#' @description
 #'
-#' @param year,week,day Year, week and month vectors. All must be the same length
-#'        unless `day` is `NULL`.
-#' @return vector of `Date` objects
+#' Adapted from `cdcfluview::mmwr_week_to_date`.
+#'
+#' This function transforms MMWR epidemiological year+week (or year+week+day) to a date object. This was implemented based on the `cdcfluview::mmwr_week_to_date` function, which adapted similar functionality from the `MMWRweek` package.
+#'
+#' @param year Vector of epidemiological year(s); must be same length as "week" and "day" (unless "day" is `NULL`)
+#' @param week Vector of epidemiological week(s); must be same length as "year" and "day" (unless "day" is `NULL`)
+#' @param day Vector of day(s); must be same length as "week" and "year" (unless set to is `NULL`); default is `NULL` and the day returned will be the first day of the epidemiological week (i.e., Sunday)
+#' @return Vector of date objects as with as many elements as input year(s), week(s), day(s)
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' @export
 #' @examples
-#' mwd <- mmwr_week_to_date(2016,10,3)
+#' mmwr_week_to_date(2020,1)
+#' mmwr_week_to_date(2020,1,5)
+#' mmwr_week_to_date(c(2020,2021,2022),c(1,2,8), c(1,1,7))
 mmwr_week_to_date <- function(year, week, day=NULL) {
 
   year <- as.numeric(year)
@@ -462,13 +510,15 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 
 }
 
-#' Make clean column names
+#' @title Make clean column names
 #'
-#' This helper function is used
+#' @description
 #'
-#' @param tbl Input tibble with columns to rename
+#' This helper is used in [ilinet] and [who_nrevss] functions to clean column names of values returned from the APIs.
 #'
-#' @return Tibble with clean column names
+#' @param tbl Input `tibble` with columns to rename
+#'
+#' @return A `tibble` with clean column names
 #'
 #'
 .mcga <- function(tbl) {
@@ -483,16 +533,19 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
   tbl
 }
 
-#' Clean numeric values
+#' @title Clean numeric values
 #'
-#' This helper function used in the `ilinet()` function to strip special characters and empty space and convert vector to numeric.
+#' @description
+#'
+#' This unexported helper is used in the [ilinet] function to strip special characters and empty space and convert a character vector to numeric.
 #'
 #' @param x Input character vector for which special characters should be stripped and converted
 #'
 #' @return Numeric vector
 #'
-#' @md
-#'
+#' @examples
+#' x <- c(",1", 4, "11", "19  ", "25>")
+#' fiphde:::to_num(x)
 to_num <- function(x) {
   x <- gsub("%", "", x, fixed=TRUE)
   x <- gsub(">", "", x, fixed=TRUE)
@@ -502,22 +555,11 @@ to_num <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
-#' Retrieve a list of valid sub-regions for each surveillance area.
+#' @title Calculate smoothed and weighted averages of previous observations
 #'
-#' @md
-#' @export
-#' @examples
-#' sa <- surveillance_areas()
-surveillance_areas <- function() {
-  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
-  xdf <- stats::setNames(meta$catchments[,c("name", "area")], c("surveillance_area", "region"))
-  xdf$surveillance_area <- c(`FluSurv-NET` = "flusurv", EIP = "eip", IHSP = "ihsp")[xdf$surveillance_area]
-  xdf
-}
-
-#' Calculate smoothed and weighted averages of previous observations
+#' @description
 #'
-#' @description This helper function calculates a weighted average of the last n observations.
+#' This helper function calculates a weighted average of the last n observations.
 #'
 #' @param x Incoming vector of observations
 #' @param n Number of recent observations to smooth; default is `4`
@@ -528,7 +570,6 @@ surveillance_areas <- function() {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' ## pull and prep weekly US flu hospitalization data
 #' hosp_us <-
 #' get_hdgov_hosp() %>%
@@ -543,9 +584,7 @@ surveillance_areas <- function() {
 #'
 #' ## try smoothing over last 4 with different weights (exponential this time)
 #' smoothie(hosp_us$flu.admits, n=4, weights=exp(1:4))
-#'
 #' }
-#'
 smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
 
   ## check that n = length(weights)

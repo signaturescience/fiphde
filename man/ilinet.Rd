@@ -2,14 +2,14 @@
 % Please edit documentation in R/retrieve.R
 \name{ilinet}
 \alias{ilinet}
-\title{Retrieve ILINet Surveillance Data}
+\title{Retrieve ILINet surveillance data}
 \usage{
 ilinet(region = c("national", "hhs", "census", "state"), years = NULL)
 }
 \arguments{
-\item{region}{one of "\code{national}", "\code{hhs}", "\code{census}", or "\code{state}"}
+\item{region}{One of "\code{national}", "\code{hhs}", "\code{census}", or "\code{state}"}
 
-\item{years}{a vector of years to retrieve data for (i.e. \code{2014} for CDC
+\item{years}{A vector of years to retrieve data for (i.e. \code{2014} for CDC
 flu season 2014-2015). CDC has data for this API going back to 1997.
 Default value (\code{NULL}) means retrieve \strong{all} years. NOTE: if you
 happen to specify a 2-digit season value (i.e. \code{57} == 2017-2018)
@@ -17,16 +17,10 @@ the function is smart enough to retrieve by season ID vs convert that
 to a year.}
 }
 \description{
-Adapted from cdcfluview::ilinet.
-}
-\details{
-The CDC FluView Portal provides in-season and past seasons' national, regional,
-and state-level outpatient illness and viral surveillance data from both
-ILINet (Influenza-like Illness Surveillance Network) and WHO/NREVSS
-(National Respiratory and Enteric Virus Surveillance System).
+Adapted from \code{cdcfluview::ilinet}.
 
-This function retrieves current and historical ILINet surveillance data for
-the identified region. The function is used internally in \code{get_cdc_ili()} but is not exported.
+This unexported helper function retrieves current and historical ILINet surveillance data for
+the identified region via the CDC FluView API. The function is used internally in \link{get_cdc_ili}. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 }
 \examples{
 \dontrun{
@@ -43,7 +37,5 @@ all_ili <- suppressWarnings(
 \itemize{
 \item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}
 \item \href{https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html}{CDC FluView Portal}
-\item \href{https://wwwn.cdc.gov/ilinet/}{ILINet Portal} (Login required)
-\item \href{https://www.cdc.gov/surveillance/nrevss/index.html}{WHO/NREVSS}
 }
 }

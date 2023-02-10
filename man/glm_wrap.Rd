@@ -15,21 +15,51 @@ glm_wrap(
 \arguments{
 \item{.data}{Data including all explanatory and outcome variables needed for modeling}
 
-\item{.models}{List of models defined as \link[trending]{trending_model} objects}
+\item{.models}{List of models defined as \link[trending:trending_model]{trending::trending_model} objects}
 
-\item{new_covariates}{Tibble with one column per covariate, and n rows for n horizons being forecasted}
+\item{new_covariates}{A \code{tibble} with one column per covariate, and n rows for n horizons being forecasted}
 
 \item{horizon}{Number of weeks ahead for forecasting}
 
-\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to range of intervals}
+\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals (PI); alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to create a range of intervals}
 }
 \value{
 Named list with two elements:
 \itemize{
-\item model: Output from \link[fiphde]{glm_fit} with selected model fit
-\item forecasts: Output from \link[fiphde]{glm_forecast} with forecasts from each horizon combined as a single tibble
+\item \strong{model}: Output from \link{glm_fit} with selected model fit
+\item \strong{forecasts}: Output from \link{glm_forecast} with forecasts from each horizon combined as a single tibble
 }
 }
 \description{
-This is a wrapper function that pipelines influenza hospitalization modeling (\link[fiphde]{glm_fit}) and forecasting (\link[fiphde]{glm_forecast}).
+This is a wrapper function that pipelines influenza hospitalization modeling (\link{glm_fit}) and forecasting (\link{glm_forecast}).
+}
+\examples{
+\dontrun{
+hosp_va <-
+ get_hdgov_hosp(limitcols=TRUE) \%>\%
+ prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
+ dplyr::filter(abbreviation == "VA")
+
+models <-
+ list(
+   poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
+   quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
+   negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
+ )
+
+new_cov <-
+  dplyr::tibble(
+    date = max(hosp_va$week_start) + c(7,14,21,28),
+    epiweek = lubridate::epiweek(date),
+    epiyear = lubridate::epiyear(date)
+  ) \%>\%
+  left_join(
+    fiphde:::historical_severity, by="epiweek"
+  ) \%>\%
+  dplyr::select(-epiweek,-epiyear)
+
+va_glm_res <- glm_wrap(.data = hosp_va, .models = models, new_covariates = new_cov, horizon = 4)
+va_glm_res
+
+}
 }

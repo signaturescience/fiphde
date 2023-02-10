@@ -22,3 +22,10 @@ test_that("wis works, median only", {
 
   expect_identical(actual, expected)
 })
+
+test_that("Score parameter checking", {
+  expect_invisible(score_func_param_checker(.01, 10, 42, "wis"))
+  expect_invisible(score_func_param_checker(c(.01, .02), c(10, 20), 1, "wis"))
+  expect_error(score_func_param_checker(c(.01, .01), c(10, 20), 1, "wis"))
+})
+

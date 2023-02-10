@@ -11,15 +11,54 @@ glm_quibble(
 )
 }
 \arguments{
-\item{fit}{Fitted model object from \link[fiphde]{glm_fit}}
+\item{fit}{Fitted model object from \link{glm_fit}}
 
-\item{new_data}{Tibble with new data on which the \link[trending]{predict.trending_model_fit} method should run}
+\item{new_data}{A \code{tibble} with new data on which the \link[trending:trending_model_fit-prediction]{trending::predict.trending_model_fit} method should run}
 
-\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to range of intervals}
+\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals (PI); alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to create a range of intervals}
 }
 \value{
-A tibble with predicted values at each quantile (lower and upper bound for each value of "alpha")
+A \code{tibble} with forecasted data including the following columns:
+\itemize{
+\item \strong{epiweek}: The epidemiological week for the forecasted horizon
+\item \strong{epiyear}: The epidemiological year for the forecasted horizon
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} for point estimate
+\item \strong{value}: The forecasted value
+}
 }
 \description{
-This function runs the \link[trending]{predict.trending_model_fit} method on a fitted model at specified values of "alpha" in order to create a range of prediction intervals. The processing also includes steps to convert the alpha to corresponding quantile values at upper and lower bounds.
+This helper function runs the \link[trending:trending_model_fit-prediction]{trending::predict.trending_model_fit} method on a fitted model at specified values of "alpha" in order to create a range of prediction intervals. The processing also includes steps to convert the alpha to corresponding quantile values at upper and lower bounds. See "Details" for more information on the translation of "alpha" to quantile values. This function is used internally in \link{glm_forecast}.
+}
+\details{
+The "alpha" parameter defines the width of prediction interval (PI). For example, an alpha = 0.05 would correspond to a 95\% PI. This function uses the PI(s) (per the alpha value(s) specified) to construct a range of quantiles that fall at lower and upper bound of each PI. Continuing from the example of alpha = 0.05, the quantile estimates returned would fall at 0.025 (lower bound of PI) and 0.975 (upper bound of PI).
+}
+\examples{
+\dontrun{
+hosp_va <-
+  get_hdgov_hosp(limitcols=TRUE) \%>\%
+  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
+  dplyr::filter(abbreviation == "VA")
+
+models <-
+  list(
+    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
+    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
+    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
+  )
+
+va_fit <- glm_fit(.data = hosp_va, .models = models)
+
+new_cov <-
+  dplyr::tibble(
+    date = max(hosp_va$week_start) + c(7,14,21,28),
+    epiweek = lubridate::epiweek(date),
+    epiyear = lubridate::epiyear(date)
+  ) \%>\%
+ left_join(
+   fiphde:::historical_severity, by="epiweek"
+  )
+
+glm_quibble(fit = va_fit$fit, new_data = new_cov[1,], alpha = 0.05)
+
+}
 }

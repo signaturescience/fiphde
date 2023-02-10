@@ -11,24 +11,31 @@ format_for_submission(
 )
 }
 \arguments{
-\item{.forecasts}{Forecasts to be formatted for submission; if method is "ts" this should be forecasts from \link{ts_fit_forecast}; otherwise this must be a \code{tibble} with forecast output (e.g. output from \link{glm_forecast}) with a colum designating "location"}
+\item{.forecasts}{Forecasts to be formatted for submission; if method is \code{"ts"} this should be forecasts from \link{ts_fit_forecast}; otherwise this must be a \code{tibble} with forecast output (e.g., output from \link{glm_forecast}) with a column designating "location"}
 
-\item{method}{Method for forecasting; default is "ts" which will trigger the use of \link{ts_format_for_submission} internally}
+\item{method}{Method for forecasting; default is \code{"ts"} which will trigger the use of \link{ts_format_for_submission} internally}
 
-\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
+\item{.target}{Name of the target in the forecast; default is \code{"wk ahead inc flu hosp"}}
 }
 \value{
-A named list of tibbles, one for each model, formatted for submission.
+A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+\itemize{
+\item \strong{forecast_date}: Date of forecast
+\item \strong{target}: Horizon and name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: FIPS code for location
+\item \strong{type}: One of either "point" or "quantile" for the forecasted value
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
+}
 }
 \description{
-This function prepares influenza hospitalization forecasts in the format required for submission to FluSight.
+This function prepares forecasts to adhere to probabilistic forecast submission guidelines for consortia such as FluSight.
 }
 \examples{
 \dontrun{
 # Get raw data from healthdata.gov
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
-## save(h_raw, file="~/Downloads/h_raw.rd")
-## load(file="~/Downloads/h_raw.rd")
 
 # Prep, and make a tsibble
 prepped_hosp <- prep_hdgov_hosp(h_raw, statesonly=TRUE)

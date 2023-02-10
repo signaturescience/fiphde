@@ -55,7 +55,7 @@ The fiphde package retrieves current data from HHS and CDC APIs and fits models 
 
 To get started, load the packages that are used in this vignette.
 
-```{r setup,}
+```{r setup}
 library(fiphde)
 library(dplyr)
 library(purrr)
@@ -214,7 +214,7 @@ ilidat <-
   filter(region == "Hawaii") %>%
   replace_ili_nowcast(., weeks_to_replace=1)
 
-ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
 ```
 
 In the next step we are going to log transform weighted ILI and flu admissions, so in this step we need to remove all the zeros. The fiphde package provides the `mnz_replace` function which replaces zeros in a variable with the smallest non-zero value of that variable.
@@ -297,8 +297,4 @@ Finally, we can visualize the forecasted point estimates with the 90% prediction
 
 ```{r, warning=FALSE}
 plot_forecast(dat_hi, hi_glm_prepped$CREG, location="15", pi=.9)
-```
-
-```{r, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
 ```

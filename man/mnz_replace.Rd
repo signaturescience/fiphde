@@ -7,7 +7,7 @@
 mnz_replace(x)
 }
 \arguments{
-\item{x}{a numeric vector}
+\item{x}{A numeric vector}
 }
 \value{
 A vector of the same length with negatives and zeros replaced with the minimum nonzero value of that vector.

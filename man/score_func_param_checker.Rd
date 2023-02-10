@@ -7,17 +7,22 @@
 score_func_param_checker(quantiles, values, actual_value, id = "")
 }
 \arguments{
-\item{quantiles}{vector of forecasted quantiles}
+\item{quantiles}{Vector of forecasted quantiles}
 
-\item{values}{vector of forecasted values}
+\item{values}{Vector of forecasted values}
 
-\item{actual_value}{Actual value.}
+\item{actual_value}{Actual value}
 
-\item{id}{name of the score function, e.g. "weighted_interval_score".}
+\item{id}{Name of the score function, e.g. "weighted_interval_score"}
 }
 \value{
 Nothing. Called for side effects.
 }
 \description{
-Unexported utility function to check parameters of a score function. See \link{weighted_interval_score}.
+This function is adapted from the \code{evalcast::score_func_param_checker}.
+
+Unexported utility function to check parameters of a score function. Used in \link{weighted_interval_score}.
+}
+\references{
+\url{https://github.com/cmu-delphi/covidcast/tree/main/R-packages/evalcast}
 }
