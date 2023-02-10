@@ -1,5 +1,9 @@
 #' @title Prep hospitalization data
-#' @description This function prepares hospitalization data retrieved using [get_hdgov_hosp] for downstream forecasting. The function optionally limits to states only, trims to a given date, removes incomplete weeks, and removes locations with little reporting over the last month.
+#'
+#' @description
+#'
+#' This function prepares hospitalization data retrieved using [get_hdgov_hosp] for downstream forecasting. The function optionally limits to states only, trims to a given date, removes incomplete weeks, and removes locations with little reporting over the last month.
+#'
 #' @param hdgov_hosp Daily hospital utilization data from [get_hdgov_hosp]
 #' @param statesonly Logical as to whether or not to limit to US+DC+States only (i.e., drop territories); default is `TRUE`
 #' @param trim Named list with elements for epiyear and epiweek corresponding to the minimum epidemiological week to retain; defaults to `list(epiyear=2020, epiweek=43)`, which is the first date of report in the healthdata.gov hospitalization data; if set to `NULL` the data will not be trimmed
@@ -113,7 +117,9 @@ prep_hdgov_hosp <- function(hdgov_hosp,
 
 
 #' @title Make `tsibble`
-#' @description This function converts an input `tibble` with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+#'
+#' @description This function converts an input `tibble` with columns for [lubridate::epiyear] and [lubridate::epiweek]  into a [tsibble::tsibble] object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+#'
 #' @param df A `tibble` containing columns `epiyear` and `epiweek`.
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.

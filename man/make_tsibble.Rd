@@ -21,7 +21,7 @@ for the Monday of that epiweek, and \code{yweek} (a yearweek vctr class object)
 that indexes the \code{tsibble} in 1 week increments.
 }
 \description{
-This function converts an input \code{tibble} with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The \code{tsibble} has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+This function converts an input \code{tibble} with columns for \link[lubridate:year]{lubridate::epiyear} and \link[lubridate:week]{lubridate::epiweek}  into a \link[tsibble:tsibble]{tsibble::tsibble} object. The \code{tsibble} has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
 }
 \examples{
 d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
