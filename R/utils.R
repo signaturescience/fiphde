@@ -140,7 +140,7 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
 #'
 #' @param ilidat ILI data retrieved via [get_cdc_ili]
 #' @param start_date Date from which to start nowcasting; default is [lubridate::today]
-#' @param weeks_to_replace Number of weeks of `ilidat` to replace; default is `2`
+#' @param weeks_to_replace Number of weeks of `ilidat` to replace; default is `1`
 #' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
 #' @return A `tibble` with the following columns:
 #'
