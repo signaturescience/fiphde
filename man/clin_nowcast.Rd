@@ -7,40 +7,50 @@
 clin_nowcast(clin, weeks_to_replace = 1)
 }
 \arguments{
-\item{clin}{Data prepared with \code{\link[=get_cdc_clin]{get_cdc_clin()}}}
+\item{clin}{Data prepared with \link{get_cdc_clin}}
 
-\item{weeks_to_replace}{Number of retrospective weeks to replace with nowcast; default is 1}
+\item{weeks_to_replace}{Number of retrospective weeks to replace with nowcast; default is \code{1}}
 }
 \value{
-A tibble formatted the same as that returned with \code{get_cdc_clin()} but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{location}: FIPS code for the location
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{p_positive}: Percentage of positive specimens
+\item \strong{n_positive}: Total number of positive specimens
+\item \strong{total}: Total number of specimens tested
+}
 }
 \description{
-This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
+This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. The function will always add 1 additional week to the observed data and (optionally) replace the number of weeks specified in the "weeks_to_replace" argument. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
 }
 \examples{
 \dontrun{
 
 ## get data for Texas
 tx_clin <-
-get_cdc_clin(region = "state") \%>\%
-dplyr::filter(location == "48")
+  get_cdc_clin(region = "state") \%>\%
+  dplyr::filter(location == "48")
 
 ## look at most recent observations
 tx_clin \%>\%
-dplyr::arrange(week_start) \%>\%
-tail()
+  dplyr::arrange(week_start) \%>\%
+  tail()
 
 ## now augment with default 1 week nowcast
 tx_clin \%>\%
-clin_nowcast(., weeks_to_replace = 1) \%>\%
-dplyr::arrange(week_start) \%>\%
-tail()
+  clin_nowcast(., weeks_to_replace = 1) \%>\%
+  dplyr::arrange(week_start) \%>\%
+  tail()
 
 ## and again augmented with 2 week nowcast instead
 tx_clin \%>\%
- clin_nowcast(., weeks_to_replace = 2) \%>\%
- dplyr::arrange(week_start) \%>\%
- tail()
+  clin_nowcast(., weeks_to_replace = 2) \%>\%
+  dplyr::arrange(week_start) \%>\%
+  tail()
 
 }
 

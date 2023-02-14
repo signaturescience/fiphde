@@ -1,19 +1,36 @@
 #' @title Prep hospitalization data
-#' @description Prep healthdata.gov hospitalization data retrieved using [get_hdgov_hosp] for downstream forecasting. Limits to states only, trims to where you have data, removes the incomplete week, and removes locations with little reporting over the last month.
-#' @param hdgov_hosp Raw hospitalization data from [get_hdgov_hosp]
-#' @param statesonly Limit to US+DC+States only (i.e., drop territories)? Defaults to `TRUE`.
-#' @param trim list with epiyear and epiweek to trim on. Defaults to October 25, 2020 (2020:43). There isn't any data before this.
-#' @param remove_incomplete Remove the last week if incomplete? Defaults to `TRUE`.
+#'
+#' @description
+#'
+#' This function prepares hospitalization data retrieved using [get_hdgov_hosp] for downstream forecasting. The function optionally limits to states only, trims to a given date, removes incomplete weeks, and removes locations with little reporting over the last month.
+#'
+#' @param hdgov_hosp Daily hospital utilization data from [get_hdgov_hosp]
+#' @param statesonly Logical as to whether or not to limit to US+DC+States only (i.e., drop territories); default is `TRUE`
+#' @param trim Named list with elements for epiyear and epiweek corresponding to the minimum epidemiological week to retain; defaults to `list(epiyear=2020, epiweek=43)`, which is the first date of report in the healthdata.gov hospitalization data; if set to `NULL` the data will not be trimmed
+#' @param remove_incomplete Logical as to whether or not to remove the last week if incomplete; defaults is `TRUE`.
 #' @param min_per_week The minimum number of flu.admits per week needed to retain that state. Default removes states with less than 1 flu admission per week over the last 30 days.
-#' @return A tibble; hospitalization data ready for downstream forecasting.
+#' @return A `tibble` with hospitalization data summarized to epiyear/epiweek with the following columns:
+#'
+#' - **abbreviation**: Abbreviation for the location
+#' - **location**: FIPS code for the location
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **monday**: Date of Monday of the given epidemiological week
+#' - **week_end**: Date of end (Saturday) of the given epidemiological week
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **flu.admits**: Count of flu cases among admitted patients on previous day
+#' - **flu.admits.cov**: Coverage (number of hospitals reporting) for incident flu cases
+#' - **ili_mean**: Estimate of historical ILI activity for the given epidemiological week
+#' - **ili_rank**: Rank of the given epidemiological week in terms of ILI activity across season (1 being highest average activity)
+#' - **hosp_mean**: Estimate of historical flu hospitalization rate for the given epidemiological week
+#' - **hosp_rank**: Rank of the given epidemiological week in terms of flu hospitalizations across season (1 being highest average activity)
+#'
 #' @export
 #' @examples
 #' \dontrun{
 #' hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
 #' h <- prep_hdgov_hosp(hdgov_hosp)
 #' h
-#' hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
-#' hts
 #' }
 prep_hdgov_hosp <- function(hdgov_hosp,
                             statesonly=TRUE,
@@ -100,7 +117,9 @@ prep_hdgov_hosp <- function(hdgov_hosp,
 
 
 #' @title Make `tsibble`
-#' @description This function converts an input `tibble` with columns for \link[lubridate]{epiyear} and \link[lubridate]{epiweek} into a \link[tsibble]{tsibble} object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+#'
+#' @description This function converts an input `tibble` with columns for [lubridate::epiyear] and [lubridate::epiweek]  into a [tsibble::tsibble] object. The `tsibble` has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
+#'
 #' @param df A `tibble` containing columns `epiyear` and `epiweek`.
 #' @param epiyear Unquoted variable name containing the MMWR epiyear.
 #' @param epiweek Unquoted variable name containing the MMWR epiweek.

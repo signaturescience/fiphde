@@ -2,14 +2,14 @@
 % Please edit documentation in R/retrieve.R
 \name{who_nrevss}
 \alias{who_nrevss}
-\title{WHO/NREVSS surveillance data}
+\title{WHO/NREVSS clinical lab surveillance data}
 \usage{
 who_nrevss(region = c("national", "hhs", "census", "state"), years = NULL)
 }
 \arguments{
-\item{region}{one of "\code{national}", "\code{hhs}", "\code{census}", or "\code{state}"}
+\item{region}{One of "\code{national}", "\code{hhs}", "\code{census}", or "\code{state}"}
 
-\item{years}{a vector of years to retrieve data for (i.e. \code{2014} for CDC
+\item{years}{A vector of years to retrieve data for (i.e. \code{2014} for CDC
 flu season 2014-2015). CDC has data for this API going back to 1997.
 Default value (\code{NULL}) means retrieve \strong{all} years. NOTE: if you
 happen to specify a 2-digit season value (i.e. \code{57} == 2017-2018)
@@ -17,14 +17,16 @@ the function is smart enough to retrieve by season ID vs convert that
 to a year.}
 }
 \description{
-Adapted from cdcfluview::who_nrevss.
+Adapted from \code{cdcfluview::who_nrevss}.
+
+This unexported helper function leverages the CDC FluView API to pull flu surveillance data collected from U.S. World Health Organization (WHO) Collaborating Laboratories and National Respiratory and Enteric Virus Surveillance System (NREVSS) laboratories. The data retrieved can be parameterized by geographic granularity and/or flu season. The function is used internally by \link{get_cdc_clin}.
 }
 \examples{
 \dontrun{
-national_nrevss <- who_nrevss("national")
-hhs_who <- who_nrevss("hhs")
-census_who <- who_nrevss("census")
-state_who <- who_nrevss("state")
+natl_nrevss <- who_nrevss("national")
+hhs_nrevss <- who_nrevss("hhs")
+census_nrevss <- who_nrevss("census")
+state_nrevss <- who_nrevss("state")
 }
 }
 \references{

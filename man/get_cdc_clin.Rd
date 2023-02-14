@@ -2,20 +2,30 @@
 % Please edit documentation in R/retrieve.R
 \name{get_cdc_clin}
 \alias{get_cdc_clin}
-\title{Retrieve and prep clinical laboratory percent positive flu data}
+\title{Retrieve clinical laboratory percent positive flu data}
 \usage{
 get_cdc_clin(region = "both", years = NULL)
 }
 \arguments{
-\item{region}{Either "state", "national", or "both". Defaults to "both" to return state and national data combined.}
+\item{region}{Either "state", "national", or "both". Defaults to \code{"both"} to return state and national data combined.}
 
 \item{years}{A vector of years to retrieve data for. CDC has data going back to 1997. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
 \value{
-Tibble with prepared data pulled from NREVSS, including columns for total number of positives, percent positive, epiweek, epiyear
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{location}: FIPS code for the location
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{p_positive}: Percentage of positive specimens
+\item \strong{n_positive}: Total number of positive specimens
+\item \strong{total}: Total number of specimens tested
+}
 }
 \description{
-This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument.
+This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument via the CDC FluView API.
 }
 \examples{
 \dontrun{
@@ -31,4 +41,7 @@ va_clin <-
   get_cdc_clin(region = "state", years = 2021) \%>\%
   dplyr::filter(location == "51")
 }
+}
+\references{
+\url{https://gis.cdc.gov/grasp/fluview/Phase_6_Cleared_Help.pdf}
 }

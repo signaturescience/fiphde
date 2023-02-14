@@ -1,4 +1,8 @@
-#' Compute weighted interval score
+#' @title Compute weighted interval score
+#'
+#' @description
+#'
+#' This function is adapted from the `evalcast::weighted_interval_score`.
 #'
 #' Computes weighted interval score (WIS), a well-known quantile-based
 #' approximation of the commonly-used continuous ranked probability score
@@ -7,11 +11,11 @@
 #' al. (2020)](https://arxiv.org/abs/2005.12881) for discussion in the context
 #' of COVID-19 forecasting.
 #'
-#' @param quantile vector of forecasted quantiles
-#' @param value vector of forecasted values
-#' @param actual_value Actual value.
+#' @param quantile Vector of forecasted quantiles
+#' @param value Vector of forecasted values
+#' @param actual_value Actual value
 #'
-#' @references <https://cmu-delphi.github.io/covidcast/evalcastR/>.
+#' @references <https://github.com/cmu-delphi/covidcast/tree/main/R-packages/evalcast>
 #'
 #' @export
 weighted_interval_score <- function(quantile, value, actual_value) {
@@ -22,14 +26,6 @@ weighted_interval_score <- function(quantile, value, actual_value) {
   value <- value[!is.na(quantile)]
   quantile <- quantile[!is.na(quantile)]
 
-  # per Ryan: WIS is equivalent to quantile loss modulo an extra 0.5 AE term
-  # for the median forecast (counted twice).
-  #
-  # update: WIS is now being redefined to match exactly, still some question
-  # about the correct denominator but the formula seems to be  1 / (K + 0.5)
-  #
-  # Finally, the multiplication by 2 is because alpha_k = 2*quantile_k
-  #
   med <- value[dplyr::near(quantile, 0.5)]
 
   if (length(med) > 1L) return(NA)
@@ -43,11 +39,18 @@ weighted_interval_score <- function(quantile, value, actual_value) {
 }
 
 #' @title Score function parameter checker
-#' @description Unexported utility function to check parameters of a score function. See [weighted_interval_score].
-#' @param quantiles vector of forecasted quantiles
-#' @param values vector of forecasted values
-#' @param actual_value Actual value.
-#' @param id name of the score function, e.g. "weighted_interval_score".
+#'
+#' @description
+#'
+#' This function is adapted from the `evalcast::score_func_param_checker`.
+#'
+#' Unexported utility function to check parameters of a score function. Used in [weighted_interval_score].
+#'
+#' @param quantiles Vector of forecasted quantiles
+#' @param values Vector of forecasted values
+#' @param actual_value Actual value
+#' @param id Name of the score function, e.g. "weighted_interval_score"
+#' @references <https://github.com/cmu-delphi/covidcast/tree/main/R-packages/evalcast>
 #' @return Nothing. Called for side effects.
 score_func_param_checker <- function(quantiles, values, actual_value, id = "") {
   id_str = paste0(id, ": ")
@@ -67,23 +70,3 @@ score_func_param_checker <- function(quantiles, values, actual_value, id = "") {
     stop(paste0(id_str, "quantiles must be unique."))
   }
 }
-
-
-#' Calculate WIS score
-#'
-#' Helper function to calculate weighted interval score (WIS) for prepped forecasts
-#'
-#' @param .forecasts Tibble with prepped foreacsts
-#' @param .test Tibble with test data including observed value for flu admissions stored in "flu.admits" column
-#'
-#' @return Tibble with the WIS for each combination of epiweek and epiyear
-#' @export
-#'
-wis_score <- function(.forecasts, .test) {
-  .forecasts %>%
-    dplyr::left_join(.test) %>%
-    dplyr::select(epiweek,epiyear,quantile,value,flu.admits) %>%
-    dplyr::group_by(epiweek, epiyear) %>%
-    dplyr::summarise(wis = fiphde::weighted_interval_score(quantile = quantile, value = value, actual_value = flu.admits))
-}
-

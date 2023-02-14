@@ -7,13 +7,15 @@
 weighted_interval_score(quantile, value, actual_value)
 }
 \arguments{
-\item{quantile}{vector of forecasted quantiles}
+\item{quantile}{Vector of forecasted quantiles}
 
-\item{value}{vector of forecasted values}
+\item{value}{Vector of forecasted values}
 
-\item{actual_value}{Actual value.}
+\item{actual_value}{Actual value}
 }
 \description{
+This function is adapted from the \code{evalcast::weighted_interval_score}.
+
 Computes weighted interval score (WIS), a well-known quantile-based
 approximation of the commonly-used continuous ranked probability score
 (CRPS). WIS is a proper score, and can be thought of as a distributional
@@ -21,5 +23,5 @@ generalization of absolute error. For example, see \href{https://arxiv.org/abs/2
 of COVID-19 forecasting.
 }
 \references{
-\url{https://cmu-delphi.github.io/covidcast/evalcastR/}.
+\url{https://github.com/cmu-delphi/covidcast/tree/main/R-packages/evalcast}
 }

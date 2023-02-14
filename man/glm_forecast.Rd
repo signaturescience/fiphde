@@ -18,16 +18,49 @@ glm_forecast(
 
 \item{fit}{Fitted model object from \link[fiphde]{glm_fit}}
 
-\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to range of intervals}
+\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to create a range of intervals}
 }
 \value{
-Tibble with forecasts (quantiles and point estimates)
+A \code{tibble} with forecasted data including the following columns:
+\itemize{
+\item \strong{epiweek}: The epidemiological week for the forecasted horizon
+\item \strong{epiyear}: The epidemiological year for the forecasted horizon
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} for point estimate
+\item \strong{value}: The forecasted value
+}
 }
 \description{
-This function uses fitted model object from \link[fiphde]{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
+This function uses fitted model object from \link{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
 }
 \examples{
 \dontrun{
-##FIXME
+hosp_va <-
+ get_hdgov_hosp(limitcols=TRUE) \%>\%
+ prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
+ dplyr::filter(abbreviation == "VA")
+
+models <-
+ list(
+   poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
+   quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
+   negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
+ )
+
+va_fit <- glm_fit(.data = hosp_va, .models = models)
+
+new_cov <-
+  dplyr::tibble(
+    date = max(hosp_va$week_start) + c(7,14,21,28),
+    epiweek = lubridate::epiweek(date),
+    epiyear = lubridate::epiyear(date)
+  ) \%>\%
+  left_join(
+    fiphde:::historical_severity, by="epiweek"
+  ) \%>\%
+  dplyr::select(-epiweek,-epiyear)
+
+## NOTE: for this example just look at 1 week ahead (first row only) for new covariates
+va_forc <- glm_forecast(.data = hosp_va, new_covariates = new_cov[1,], fit = va_fit$fit)
+va_forc
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{get_hdgov_hosp}
 \alias{get_hdgov_hosp}
-\title{Get hospitalization data}
+\title{Retrieve hospitalization data from HHS}
 \usage{
 get_hdgov_hosp(
   endpoint = "https://healthdata.gov/api/views/g62h-syeh/rows.csv",
@@ -11,17 +11,38 @@ get_hdgov_hosp(
 )
 }
 \arguments{
-\item{endpoint}{URL to healthdata.gov endpoint (see references).}
+\item{endpoint}{URL to healthdata.gov endpoint}
 
-\item{app_token}{App token from healthdata.gov. If \code{NULL} you might get rate limited. Add an entry to your \verb{~/.Renviron} with \code{HEALTHDATA_APP_TOKEN="tokenhere"} that you got from \url{https://healthdata.gov/profile/edit/developer_settings}.}
+\item{app_token}{App token from healthdata.gov; default is to look for environment variable called \code{"HEALTHDATA_APP_TOKEN"} and if a token is not supplied to proceed with possibility of rate limitation (see "Details" for more information)}
 
-\item{limitcols}{Limit the columns returned to the subjectively defined important ones? Default \code{FALSE}.}
+\item{limitcols}{Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default \code{FALSE}}
 }
 \value{
-A tibble
+A \code{tibble} with at least the following columns:
+\itemize{
+\item \strong{state}: Abbreviation of the state
+\item \strong{date}: Date of report
+\item \strong{flu.admits}: Count of flu cases among admitted patients on previous day
+\item \strong{flu.admits.cov}: Coverage (number of hospitals reporting) for incident flu cases
+\item \strong{flu.deaths}: Count of flu deaths on previous day
+\item \strong{flu.deaths.cov}: Coverage (number of hospitals reporting) for flu deaths
+\item \strong{flu.icu}: Count of flu cases among ICU patients on previous day
+\item \strong{flu.icu.cov}: Coverage (number of hospitals reporting) for flu ICU cases
+\item \strong{flu.tot}: Count of total flu cases among admitted patients
+\item \strong{flu.tot.cov}: Coverage (number of hospitals reporting) for total flu cases
+\item \strong{cov.admits}: Count of COVID cases among admitted patients on previous day
+\item \strong{cov.admits.cov}: Coverage (number of hospitals reporting) for incident COVID cases
+\item \strong{cov.deaths}: Count of COVID deaths on previous day
+\item \strong{cov.deaths.cov}: Coverage (number of hospitals reporting) for COVID deaths
+}
+
+If \code{limitcols=TRUE} then the only columns returned will be those listed above. However, if \code{limitcols=FALSE} then the function will additionally return \emph{all} other fields in the state-aggregated hospitalization data.
 }
 \description{
-Retrieves hospitalization data from the healthdata.gov endpoint with optional filtering on fields, and return the results into a nice tibble.
+This function retrieves hospital utilization time series data distributed through healthdata.gov. Data are aggregated to the state granularity from facility level reports via HHS TeleTracking, HHS Protect, and the National Healthcare Safety Network (historically). Users can optionally filter to include all fields or restrict to a prespecified set of fields relevant to COVID and influenza hospital utilization. The results are returned as a \code{tibble}.
+}
+\details{
+The data retrieval will proceed whether or not an API token has been supplied via the \code{app_token} argument. However, to avoid possible rate limits it is recommended to retrieve a token for the healthdata.gov API (\url{https://healthdata.gov/profile/edit/developer_settings}), and add that token as an entry to \code{.Renviron} with \code{HEALTHDATA_APP_TOKEN="yourtokenhere"}.
 }
 \examples{
 \dontrun{
@@ -30,5 +51,7 @@ get_hdgov_hosp(limitcols=TRUE)
 }
 }
 \references{
-API documentation: \url{http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh}.
+\url{https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh}
+
+\url{https://dev.socrata.com/foundry/healthdata.gov/g62h-syeh}
 }

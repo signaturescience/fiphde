@@ -11,20 +11,29 @@ ts_format_for_submission(
 )
 }
 \arguments{
-\item{tsfor}{The forecast from \link{ts_fit_forecast}.}
+\item{tsfor}{The forecast from \link{ts_fit_forecast}}
 
-\item{.target}{Name of the target in the forecast. Default is \code{"wk ahead inc flu hosp"}.}
+\item{.target}{Name of the target in the forecast; default is \code{"wk ahead inc flu hosp"}}
 
-\item{.counts}{Logical. Default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer.}
+\item{.counts}{Logical; default \code{TRUE} indicates that the target outcome is a count, and should be rounded off at an integer}
 }
 \value{
-A named list of tibbles, one for each model, formatted for submission.
+A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+\itemize{
+\item \strong{forecast_date}: Date of forecast
+\item \strong{target}: Horizon and name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: FIPS code for location
+\item \strong{type}: One of either "point" or "quantile" for the forecasted value
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
+}
 }
 \description{
-Format time series forecast for submission.
+This function specifically formats time series forecasts generated with \link{ts_fit_forecast} to adhere to probabilistic forecast submission guidelines for consortia such as FluSight. It is used as a helper in \link{format_for_submission}.
 }
 \details{
-Uses quantiles \code{c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)} in the built-in \code{fiphde:::q}, using an accessory table \code{fiphde:::quidk}. See \code{data-raw/generate-sysdata.R} for details.
+Uses quantiles \code{c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)} in the built-in \code{fiphde:::q}, using an accessory table \code{fiphde:::quidk}.
 }
 \examples{
 \dontrun{
