@@ -285,7 +285,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   resjson <- jsonlite::read_json(api_url, simplifyVector = TRUE)
 
   ## check that epidata returns nowcast values for *all* weeks
-  if(purrr::is_empty(resjson$epidata) | !all(epiyearweeks %in% resjson$epidata$epiweek)) {
+  if(purrr::is_empty(resjson$epidata) | !all(strsplit(epiyearweeks, split=",")[[1]] %in% resjson$epidata$epiweek)) {
     message("The nowcast data returned is missing some or all of the query weeks. Returning NA.")
     return(NA)
   } else {
