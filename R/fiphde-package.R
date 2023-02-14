@@ -109,5 +109,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "type_id",
                                                         "lag_rate",
                                                         "lag_value",
+                                                        "race_label",
+                                                        "sexid",
+                                                        "name",
+                                                        "weeknumber",
+                                                        "weekend",
+                                                        "weekstart",
+                                                        "season_label",
+                                                        "catchmentid",
                                                         "."))
 

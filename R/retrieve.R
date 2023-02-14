@@ -645,13 +645,13 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
   ## create a tibble with age metadata and labels
   age_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
   age_df <- age_df[(age_df$variable == "Age" | age_df$value_id == 0) & !is.na(age_df$value_id),]
-  age_df <- setNames(age_df[,c("value_id", "label")], c("ageid", "age_label"))
+  age_df <- stats::setNames(age_df[,c("value_id", "label")], c("ageid", "age_label"))
   age_df <- age_df[order(age_df$ageid),]
 
   ## cerate a tibble with race metadata
   race_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
   race_df <- race_df[(race_df$variable == "Race" | race_df$value_id == 0) & !is.na(race_df$value_id),]
-  race_df <- setNames(race_df[,c("value_id", "label")], c("raceid", "race_label"))
+  race_df <- stats::setNames(race_df[,c("value_id", "label")], c("raceid", "race_label"))
 
   ## create a tibble with season metadata
   season_df <-
