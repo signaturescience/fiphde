@@ -150,7 +150,6 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #'
 #' This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
 #'
-#' **NOTE**: The function currently does not support queries after the 2019-2020 flu season, and is therefore only recommended to use as a method to query FluSurv-NET for historical flu hospitalization burden.
 #'
 #' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
 #'
@@ -168,25 +167,29 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' - **season**: The flu season to which the given epidemiological week belongs
 #'
 #' @references <https://gis.cdc.gov/GRASP/fluview/FluViewPhase3QuickReferenceGuide.pdf>
+#' @export
 #' @examples
 #' \dontrun{
 #' get_cdc_hosp(years=2019)
 #' }
 get_cdc_hosp <- function(years=NULL) {
-  warning("CDC hospitalization should only be used for historical analysis. Use get_hdgov_hosp() for flusight forecasting.")
-  d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)
+  d <- hospitalizations(surveillance_area="flusurv", region="all", years=NULL)
   d <- d %>%
     dplyr::filter(age_label=="Overall") %>%
+    dplyr::filter(race_label=="Overall") %>%
+    dplyr::filter(sexid == 0) %>%
+    dplyr::filter(name == "FluSurv-NET") %>%
+    dplyr::filter(!is.na(weeklyrate)) %>%
     dplyr::transmute(location="US",
                      abbreviation="US",
                      region="US",
                      epiyear=year,
-                     epiweek=year_wk_num,
-                     week_start=wk_start,
-                     week_end=wk_end,
+                     epiweek=weeknumber,
+                     week_start=weekend,
+                     week_end=weekstart,
                      rate,
                      weeklyrate,
-                     season=sea_label)
+                     season=season_label)
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
                   unique(d$epiyear[d$week_start==max(d$week_start)]),
@@ -591,8 +594,36 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
   sarea <- match.arg(tolower(surveillance_area), choices = c("flusurv", "eip", "ihsp"))
   sarea <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")[sarea]
 
-  ## get metadata from CDC fluview API
-  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
+  ## establish user agent for query
+  ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
+
+  body <-
+    list(
+      appversion = jsonlite::unbox("Public"),
+      key = jsonlite::unbox(""),
+      injson = I(list())
+    )
+
+  ## submit query to API
+  tmp_q <-
+    httr::POST(
+      httr::user_agent(ua),
+      url = "https://gis.cdc.gov/GRASP/Flu3/PostPhase03DataTool",
+      body = jsonlite::toJSON(body),
+      encode = "raw",
+      httr::accept_json(),
+      httr::add_headers(
+        `content-type` = "application/json;charset=UTF-8",
+        origin = "https://gis.cdc.gov",
+        referer = "https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html"
+      ),
+      httr::timeout(120)
+    )
+
+  httr::stop_for_status(tmp_q)
+
+  meta <- jsonlite::fromJSON(httr::content(tmp_q, as = "text"))
+
   ## use metadata to establish catchment data
   areas <- stats::setNames(meta$catchments[,c("networkid", "name", "area", "catchmentid")],
                            c("networkid", "surveillance_area", "region", "id"))
@@ -608,112 +639,55 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
          call.=FALSE)
   }
 
-  ## establish user agent for query
-  ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
-
-  ## submit query to API
-  tmp_q <-
-    httr::POST(
-      url = "https://gis.cdc.gov/GRASP/Flu3/PostPhase03GetData",
-      httr::user_agent(ua),
-      httr::add_headers(
-        Origin = "https://gis.cdc.gov",
-        Accept = "application/json, text/plain, */*",
-        Referer = "https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html"
-      ),
-      encode = "json",
-      body = list(
-        appversion = "Public",
-        networkid = tgt$networkid,
-        cacthmentid = tgt$id
-      ),
-      httr::timeout(120)
-    )
-
-  httr::stop_for_status(tmp_q)
-
-  ## parse query
-  res <- httr::content(tmp_q)
-
   ## create a list object with metadata returned and the http query response
-  hosp <- list(res = res, meta = meta)
+  hosp <- list(res = meta$default_data, meta = meta)
 
   ## create a tibble with age metadata and labels
-  age_df <- stats::setNames(hosp$meta$ages, c("age_label", "age", "color"))
-  age_df <- age_df[,c("age", "age_label")]
+  age_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
+  age_df <- age_df[(age_df$variable == "Age" | age_df$value_id == 0) & !is.na(age_df$value_id),]
+  age_df <- setNames(age_df[,c("value_id", "label")], c("ageid", "age_label"))
+  age_df <- age_df[order(age_df$ageid),]
+
+  ## cerate a tibble with race metadata
+  race_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
+  race_df <- race_df[(race_df$variable == "Race" | race_df$value_id == 0) & !is.na(race_df$value_id),]
+  race_df <- setNames(race_df[,c("value_id", "label")], c("raceid", "race_label"))
 
   ## create a tibble with season metadata
-  sea_df <- stats::setNames(
-    hosp$meta$seasons,
-    c("sea_description", "sea_endweek", "sea_label", "seasonid", "sea_startweek", "color", "color_hexvalue")
-  )
-  sea_df <- sea_df[,c("seasonid", "sea_label", "sea_description", "sea_startweek", "sea_endweek")]
+  season_df <-
+    hosp$meta$seasons %>%
+    purrr::set_names(c("season_description", "season_enabled", "season_endweek", "season_label", "seasonid", "season_startweek", "include_weekly"))
 
-  ## variable names for hospital data
-  ser_names <- unlist(hosp$res$busdata$datafields, use.names = FALSE)
-
-  ## create tibble with hospital data
-  suppressWarnings(
-    suppressMessages(
-      mmwr_df <- dplyr::bind_rows(hosp$res$mmwr)
-    )
-  )
+  season_df <- season_df[,c("seasonid", "season_label", "season_description", "season_startweek", "season_endweek")]
 
   ## create tibble that maps mmwr week to season
+  mmwr_df <- hosp$meta$mmwr
   mmwr_df <- mmwr_df[,c("mmwrid", "weekend", "weeknumber", "weekstart", "year",
                         "yearweek", "seasonid", "weekendlabel", "weekendlabel2")]
+  mmwr_df$seasonid <- NULL
 
-  ## start binding actual hospitalization data to information about season and age groups queried
-  suppressMessages(
-    suppressWarnings(
+  ## create tibble with catchment metadata
+  catchments_df <- hosp$meta$catchments[,c("catchmentid", "beginseasonid", "endseasonid", "networkid", "name", "area")]
+  catchments_df$catchmentid <- as.character(catchments_df$catchmentid)
+  catchments_df$networkid <- NULL
 
-      xdf <-
-        dplyr::bind_rows(
-          lapply(hosp$res$busdata$dataseries, function(.x) {
-            tdf <-
-              dplyr::bind_rows(
-                lapply(.x$data, function(.x) stats::setNames(.x, ser_names))
-              )
-
-            tdf$age <- .x$age
-            tdf$season <- .x$season
-            tdf
-          })
-        )
-
-    )
-  )
-
-  ## create age labels as factors
-  if (length(unique(xdf$age)) > 9) {
-    age_df <-
-      data.frame(
-        age = 1:12,
-        age_label = c("0-4 yr", "5-17 yr", "18-49 yr", "50-64 yr", "65+ yr", "Overall",
-                      "65-74 yr", "75-84 yr", "85+", "18-29 yr", "30-39 yr", "40-49 yr"
-        )
-      )
-    age_df$age_label <- factor(age_df$age_label, levels = age_df$age_label)
-  }
-
-  ## join results data to information about mmwr week / season / age group and labels
+  ## join results data to information about mmwr week / season / age group / race and labels
   ## add a column for the surveillance area based on choice of "flusurv", "eip", or "ihsp"
   ## and add a column for region based on region argument value
   ## lastly join to mmwrid_map to get week start and week end
   xdf <-
-    dplyr::left_join(xdf, mmwr_df, c("mmwrid", "weeknumber")) %>%
-    dplyr::left_join(age_df, "age") %>%
-    dplyr::left_join(sea_df, "seasonid") %>%
+    hosp$res %>%
+    dplyr::left_join(mmwr_df, "mmwrid") %>%
+    dplyr::left_join(age_df, "ageid") %>%
+    dplyr::left_join(race_df, "raceid") %>%
+    dplyr::left_join(season_df, "seasonid") %>%
+    dplyr::mutate(catchmentid = as.character(catchmentid)) %>%
+    dplyr::left_join(catchments_df, "catchmentid") %>%
     dplyr::mutate(
       surveillance_area = sarea,
       region = reg
-    ) %>%
-    dplyr::left_join(mmwrid_map, "mmwrid")
+    )
 
-  ## subset to columns of interest
-  xdf <- xdf[,c("surveillance_area", "region", "year", "season", "wk_start", "wk_end",
-                "year_wk_num", "rate", "weeklyrate", "age", "age_label", "sea_label",
-                "sea_description", "mmwrid")]
 
   ## make sure that the data returned is for years selected
   ## based on available seasons
