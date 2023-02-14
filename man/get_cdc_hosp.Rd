@@ -26,8 +26,6 @@ A tibble with the following columns:
 }
 \description{
 This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
-
-\strong{NOTE}: The function currently does not support queries after the 2019-2020 flu season, and is therefore only recommended to use as a method to query FluSurv-NET for historical flu hospitalization burden.
 }
 \examples{
 \dontrun{

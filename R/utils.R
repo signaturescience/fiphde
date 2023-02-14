@@ -604,4 +604,3 @@ smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
     mean(.)
 
 }
-
