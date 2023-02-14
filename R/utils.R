@@ -91,7 +91,7 @@ state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=T
   ilinow <- get_nowcast_ili(dates=dates, state=state, ...)
 
   ## handle case when delphi ili nowcast api doesnt return all of the nowcast data
-  if(is.na(ilinow)) {
+  if(all(is.na(ilinow))) {
     if(fallback) {
 
       message("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'TRUE'. Using 4 most recent weeks of available data to generate pseudo nowcast for each location.")
