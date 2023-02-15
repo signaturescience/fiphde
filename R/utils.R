@@ -448,10 +448,10 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
   return(p)
 }
 
-#' @title fixme
-#' @descrtion fixme
+#' @title Plot categorical forecasts
+#' @description Creates a bar plot for categorical forecasts. See examples.
 #' @param categorical_forecast A forecast from [forecast_categorical]
-#' @return A plot
+#' @return A ggplot2 object with categorical forecasts shown as a stacked bar plot.
 #' @export
 #' @examples
 #' \dontrun{

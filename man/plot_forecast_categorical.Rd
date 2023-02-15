@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{plot_forecast_categorical}
 \alias{plot_forecast_categorical}
-\title{fixme}
+\title{Plot categorical forecasts}
 \usage{
 plot_forecast_categorical(categorical_forecast)
 }
@@ -10,10 +10,10 @@ plot_forecast_categorical(categorical_forecast)
 \item{categorical_forecast}{A forecast from \link{forecast_categorical}}
 }
 \value{
-A plot
+A ggplot2 object with categorical forecasts shown as a stacked bar plot.
 }
 \description{
-fixme
+Creates a bar plot for categorical forecasts. See examples.
 }
 \examples{
 \dontrun{
