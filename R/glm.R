@@ -14,7 +14,6 @@
 #'- **location**: The geographic unit being modeled
 #'- **data**: Original model fit data as a `tibble` in a list column
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #' hosp_va <-
@@ -100,7 +99,6 @@ glm_fit <- function(.data,
 #' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
 #' - **value**: The forecasted value
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #' hosp_va <-
@@ -123,7 +121,7 @@ glm_fit <- function(.data,
 #'     epiweek = lubridate::epiweek(date),
 #'     epiyear = lubridate::epiyear(date)
 #'   ) %>%
-#'  left_join(
+#'  dplyr::left_join(
 #'    fiphde:::historical_severity, by="epiweek"
 #'   )
 #'
@@ -168,7 +166,6 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 #' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
 #' - **value**: The forecasted value
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #' hosp_va <-
@@ -191,7 +188,7 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 #'     epiweek = lubridate::epiweek(date),
 #'     epiyear = lubridate::epiyear(date)
 #'   ) %>%
-#'   left_join(
+#'   dplyr::left_join(
 #'     fiphde:::historical_severity, by="epiweek"
 #'   ) %>%
 #'   dplyr::select(-epiweek,-epiyear)
@@ -284,7 +281,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 #'     epiweek = lubridate::epiweek(date),
 #'     epiyear = lubridate::epiyear(date)
 #'   ) %>%
-#'   left_join(
+#'   dplyr::left_join(
 #'     fiphde:::historical_severity, by="epiweek"
 #'   ) %>%
 #'   dplyr::select(-epiweek,-epiyear)

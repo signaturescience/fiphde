@@ -53,7 +53,7 @@ new_cov <-
     epiweek = lubridate::epiweek(date),
     epiyear = lubridate::epiyear(date)
   ) \%>\%
-  left_join(
+  dplyr::left_join(
     fiphde:::historical_severity, by="epiweek"
   ) \%>\%
   dplyr::select(-epiweek,-epiyear)
