@@ -36,14 +36,20 @@ hosp_fitfor
 prepped_forecast_ts <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 prepped_forecast_ts
 
+prepped_forecast_ts_cat <- forecast_categorical(prepped_forecast_ts$ensemble, prepped_hosp)
+prepped_forecast_ts_cat
+
+forcplot <- plot_forecast(prepped_tsibble, prepped_forecast_ts$ensemble)
+forcplot
+
 save(hosp_fitfor,
      hosp_raw,
      ilidat,
      ilifor,
      prepped_forecast_ts,
+     prepped_forecast_ts_cat,
      prepped_hosp,
      prepped_tsibble,
+     forcplot,
      file=here::here("inst/testdata/testdata.rd"))
 
-forcplot <- plot_forecast(prepped_tsibble, prepped_forecast_ts$ensemble)
-saveRDS(forcplot, file=here::here("inst/testdata/forcplot.rds"))

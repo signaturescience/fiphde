@@ -14,7 +14,6 @@ test_that("Utility functions", {
   # test forecast plots
   # FIXME: this should probably actually use the forecasts that you produce, rather than the precomputed values.
   p <- plot_forecast(prepped_hosp, prepped_forecast_ts$ensemble)
-  forcplot <- readRDS(system.file("testdata/forcplot.rds", package="fiphde", mustWork=TRUE))
   expect_true(inherits(p, "gg"))
   expect_equal(p$data, forcplot$data)
   # FIXME: This doesn't work
