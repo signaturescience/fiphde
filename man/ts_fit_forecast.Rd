@@ -12,8 +12,7 @@ ts_fit_forecast(
   models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
     "season(method=\\"N\\")", nnetar = NULL),
   covariates = c("hosp_rank", "ili_rank"),
-  ensemble = TRUE,
-  remove_null_models = TRUE
+  ensemble = TRUE
 )
 }
 \arguments{
@@ -30,8 +29,6 @@ ts_fit_forecast(
 \item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
 
 \item{ensemble}{Logical as to whether or not the models should be ensembled (using mean); default \code{TRUE}}
-
-\item{remove_null_models}{Logical as to whether or null models should be removed; default \code{TRUE}}
 }
 \value{
 A list of the time series fit, time series forecast, and model formulas.

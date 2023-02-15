@@ -136,7 +136,7 @@ prepped_hosp_tsibble
 
 Next, let's fit a time series model and create forecasts using the `ts_fit_forecast` function. This function takes a tsibble created as above, a forecast horizon in weeks, the name of the outcome variable to forecast, and optional covariates to use in the ARIMA model. 
 
-Here we fit a non-seasonal ARIMA model with the autoregressive term (p) restricted to 1:2, order of integration for differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an autoregressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We can also trim the data used in modeling, and here we restrict to only include hospitalization data reported after January 1, 2021. By setting `ensemble=TRUE` we create an ensemble model that averages the ARIMA and exponential smoothing models. The `remove_null_models=TRUE` specification identifies models that did not converge and removes those from downstream processing.
+Here we fit a non-seasonal ARIMA model with the autoregressive term (p) restricted to 1:2, order of integration for differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an autoregressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We can also trim the data used in modeling, and here we restrict to only include hospitalization data reported after January 1, 2021. By setting `ensemble=TRUE` we create an ensemble model that averages the ARIMA and exponential smoothing models.
 
 ```{r, eval=FALSE}
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
@@ -147,8 +147,7 @@ hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
                                            ets='season(method="N")',
                                            nnetar=NULL), 
-                               ensemble=TRUE, 
-                               remove_null_models=TRUE)
+                               ensemble=TRUE)
 ```
 
 The function will output messages describing the ARIMA and ETS model formulas passed to `fable::ARIMA` and `fable::ETS`.

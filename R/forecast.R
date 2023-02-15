@@ -11,7 +11,6 @@
 #' @param models A list of right hand side formula contents for models you want to run; default is `list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)', ets='season(method="N")', nnetar=NULL)` which runs a constrained ARIMA, non-seasonal ETS, and ignores the NNETAR model; see "Details" for more information
 #' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
 #' @param ensemble Logical as to whether or not the models should be ensembled (using mean); default `TRUE`
-#' @param remove_null_models Logical as to whether or null models should be removed; default `TRUE`
 #' @return A list of the time series fit, time series forecast, and model formulas.
 #' - **tsfit**: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
 #' - **tsfor**: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
@@ -64,8 +63,7 @@ ts_fit_forecast <- function(prepped_tsibble,
                                         ets='season(method="N")',
                                         nnetar=NULL),
                             covariates=c("hosp_rank", "ili_rank"),
-                            ensemble=TRUE,
-                            remove_null_models=TRUE) {
+                            ensemble=TRUE) {
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
