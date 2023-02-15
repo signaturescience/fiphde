@@ -44,3 +44,6 @@ save(hosp_fitfor,
      prepped_hosp,
      prepped_tsibble,
      file=here::here("inst/testdata/testdata.rd"))
+
+forcplot <- plot_forecast(prepped_tsibble, prepped_forecast_ts$ensemble)
+saveRDS(forcplot, file=here::here("inst/testdata/forcplot.rds"))
