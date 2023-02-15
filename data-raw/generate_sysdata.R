@@ -257,6 +257,27 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
     filter(!is.na(weighted_ili_now)) %>%
     arrange(eyw) %>%
     select(-eyw)
+  # Fix FL 2020:53
+  missing_fl202053 <-
+    ilinearby %>%
+    filter(abbreviation=="FL") %>%
+    filter(epiyear==2020 & epiweek==53) %>%
+    nrow() %>%
+    identical(0L)
+  if (missing_fl202053) {
+    message("fixing florida 2020:53")
+    wilinow_fl202053 <-
+      ilinearby %>%
+      filter(abbreviation=="FL") %>%
+      filter((epiyear==2020 & epiweek==52) | (epiyear==2021 & epiweek==1)) %>%
+      pull(weighted_ili_now) %>%
+      median()
+    ilinearby <-
+      ilinearby %>%
+      add_row(location="12", abbreviation="FL", epiyear=2020L, epiweek=53L, weighted_ili_now=wilinow_fl202053) %>%
+      arrange(epiyear, epiweek, location)
+  }
+  # write to file
   ilinearby %>% write_csv(here::here("data-raw/ilinearby.csv"))
 } else {
   message("Reading in ili nearby csv previously archived in data-raw/ilinearby.csv")
