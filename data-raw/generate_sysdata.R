@@ -3,6 +3,7 @@ library(readr)
 library(tidyr)
 library(ggplot2)
 library(fiphde)
+library(purrr)
 theme_set(theme_bw())
 
 # Location metadata -------------------------------------------------------
@@ -238,6 +239,30 @@ vd$res <- res
 mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="DDii")
 
 
+# Get ILI Nearby data -----------------------------------------------------
+
+# Last updated: 2023-02-15
+if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
+  message("Archiving ilinearby data in data-raw/ilinearby.csv")
+  ilinearby <-
+    crossing(years=as.character(2010:2022),
+             weeks=stringr::str_pad(1:53, width=2, pad="0")) %>%
+    unite(eyw, years, weeks, sep="") %>%
+    mutate(data=map(eyw, ~fiphde::get_nowcast_ili(epiyearweeks=., dates=NULL)))
+  ilinearby <-
+    ilinearby %>%
+    # mutate(missing=map_lgl(data, identical, NA)) %>%
+    # filter(missing) %>%
+    unnest(cols=data) %>%
+    filter(!is.na(weighted_ili_now)) %>%
+    arrange(eyw) %>%
+    select(-eyw)
+  ilinearby %>% write_csv(here::here("data-raw/ilinearby.csv"))
+} else {
+  message("Reading in ili nearby csv previously archived in data-raw/ilinearby.csv")
+  ilinearby <- read_csv(here::here("data-raw/ilinearby.csv"), col_types="cciid")
+}
+
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
@@ -248,4 +273,5 @@ usethis::use_data(locations,
                   hospstats,
                   vd,
                   mmwrid_map,
+                  ilinearby,
                   internal = TRUE, overwrite = TRUE)
