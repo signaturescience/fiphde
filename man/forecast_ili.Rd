@@ -26,7 +26,7 @@ A named list containing:
 \item \strong{ilidat}: The data sent into the function filtered to the location and the \code{trim_date}. Select columns returned.
 \item \strong{ilidat_tsibble}: The \code{tsibble} class object returned by running \link{make_tsibble} on the data above.
 \item \strong{ili_fit}: The fit from \link[fabletools:model]{fabletools::model}.
-\item \strong{ili_forecast}: The forecast from \link[fabletools:reexports]{fabletools::forecast} at the specified horizon.
+\item \strong{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
 \item \strong{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
 \item \strong{ili_bound}: The data in 1 bound to the data in 5.
 \item \strong{arima_params}: A tibble with ARIMA model parameters for each location (if \code{type="arima"}).
