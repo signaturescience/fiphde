@@ -448,6 +448,47 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
   return(p)
 }
 
+#' @title fixme
+#' @descrtion fixme
+#' @param categorical_forecast A forecast from [forecast_categorical]
+#' @return A plot
+#' @export
+#' @examples
+#' \dontrun{
+#' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' prepped_tsibble <- make_tsibble(prepped_hosp,
+#'                                      epiyear = epiyear,
+#'                                      epiweek=epiweek,
+#'                                      key=location)
+#' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
+#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+#'                                horizon=4L,
+#'                                outcome="flu.admits")
+#' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+#' plot_forecast_categorical(categorical_forecast)
+#' }
+plot_forecast_categorical <- function(categorical_forecast) {
+  categorical_forecast %>%
+    dplyr::inner_join(locations, by="location") %>%
+    dplyr::select(loc=abbreviation, type_id, value) %>%
+    tidyr::spread(type_id, value) %>%
+    dplyr::mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
+    dplyr::mutate(loc=factor(loc) %>% stats::reorder(score)) %>%
+    dplyr::mutate(loc=stats::relevel(loc, ref="US")) %>%
+    dplyr::select(-score) %>%
+    tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
+    dplyr::mutate(type_id=factor(type_id,
+                                 levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
+                                 labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
+    ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=type_id)) +
+    ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
+    ggplot2::labs(x=NULL, y=NULL)
+}
+
 #' @title Minimum non-zero
 #' @description Helper function to get the minimum non-zero positive value from a vector. Used internally in [mnz_replace].
 #' @param x A numeric vector
