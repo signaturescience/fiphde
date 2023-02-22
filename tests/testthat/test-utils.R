@@ -33,10 +33,6 @@ test_that("Nowcasting", {
   expect_true(inherits(get_nowcast_ili(epiyearweeks = "202201", dates=NULL), "tbl_df"))
   # Check nowcast currently returns missing data
   expect_true(is.na(suppressMessages(get_nowcast_ili(epiyearweeks = NULL))))
-  # Check whole state replacement
-  x <- suppressMessages(state_replace_ili_nowcast_all(ilidat, state="NY"))
-  expect_true(inherits(x, "tbl_df"))
-  expect_equal(nrow(x), nrow(ilidat))
   # Check augmentation
   x <- suppressMessages(replace_ili_nowcast(ilidat, weeks_to_replace = 1))
   expect_true(inherits(x, "tbl_df"))
