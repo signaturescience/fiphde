@@ -75,6 +75,9 @@ ts_fit_forecast <- function(prepped_tsibble,
     stop("This shouldn't happen. Problem with covariates reassignment.")
   }
 
+  # Make model names case-insensitive)
+  names(models) <- tolower(names(models))
+
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
     prepped_tsibble <-
