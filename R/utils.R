@@ -184,7 +184,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
 #'                                trim_date=NULL,
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' # Format for submission
 #' hosp_formatted <- ts_format_for_submission(hosp_fitfor$tsfor)
