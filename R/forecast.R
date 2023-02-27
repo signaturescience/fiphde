@@ -65,8 +65,15 @@ ts_fit_forecast <- function(prepped_tsibble,
                             covariates=TRUE,
                             ensemble=TRUE) {
 
-  # If covariates is TRUE, make it covariates=c("hosp_rank", "ili_rank"), otherwise make NULL
-  covariates <- ifelse(covariates, c("hosp_rank", "ili_rank"), NULL)
+  # If covariates is NULL or FALSE, make covariates NULL.
+  # If covariates is TRUE, make it covariates=c("hosp_rank", "ili_rank")
+  if (is.null(covariates) || !covariates) {
+    covariates <- NULL
+  } else if (covariates) {
+    covariates <- c("hosp_rank", "ili_rank")
+  } else {
+    stop("This shouldn't happen. Problem with covariates reassignment.")
+  }
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
