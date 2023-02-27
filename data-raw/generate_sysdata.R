@@ -175,7 +175,7 @@ vd$prepped_hosp_tsibble <- make_tsibble(vd$prepped_hosp,
 vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=TRUE)
 
 # Format for submission
 vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)

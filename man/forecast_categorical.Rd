@@ -38,7 +38,7 @@ prepped_tsibble <- make_tsibble(prepped_hosp,
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=TRUE)
 
 prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
