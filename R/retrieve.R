@@ -242,6 +242,8 @@ get_cdc_hosp <- function(years=NULL) {
 #' @export
 get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL, boundatzero=TRUE) {
 
+  warning("As of October 2022 ILInearby was no longer being updated. This will likely return 'NA'. See https://github.com/cmu-delphi/delphi-epidata/issues/993")
+
   # Check that you're not supplying both. If you are, error out.
   if (!xor(is.null(epiyearweeks), is.null(dates))) {
     stop("Either epiyearweeks or dates must be defined, but not both. Set one to NULL.")
