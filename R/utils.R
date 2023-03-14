@@ -26,111 +26,6 @@ is_monday <- function() {
   lubridate::wday(lubridate::today(), label=TRUE) %in% c("Mon")
 }
 
-#' @title Replace ILINet data with nowcast entirely for a state
-#'
-#' @description
-#'
-#' This function replaces the weighted ILI retrieved from [get_cdc_ili] with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using [get_nowcast_ili]. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. Unlike [replace_ili_nowcast], the ILI will be replaced with nowcast for *all* dates for a specified location. This is useful for getting data for states where most or all ILI data is missing (e.g., Florida).
-#'
-#' Note that this only replaces weighted ILI in the specified state where the value is `NA`. _Most_ ILI data from Florida is missing, but not all.
-#'
-#' @param ilidat ILI data retrieved via [get_cdc_ili]
-#' @param state Two-letter state abbreviation to replace completely
-#' @param impute Logical as to whether or not to try to mean impute missing values using the immediately preceding and following values; default is `TRUE`
-#' @param fallback Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is `TRUE`
-#' @param ... Other arguments passed to [get_nowcast_ili] (e.g., `boundatzero`, which is `TRUE` by default)
-#' @return A `tibble` with the following columns:
-#'
-#' - **location**: FIPS code for the location
-#' - **region_type**: The type of location
-#' - **abbreviation**: Abbreviation for the location
-#' - **region**: Name of the region
-#' - **epiyear**: Year of reporting (in epidemiological week calendar)
-#' - **epiweek**: Week of reporting (in epidemiological week calendar)
-#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
-#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
-#'
-#' @examples
-#' \dontrun{
-#'
-#' ilidat <- get_cdc_ili(years=2020)
-#'
-#' ilidat <-
-#'   ilidat %>%
-#'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
-#'   dplyr::group_by(location) %>%
-#'   dplyr::slice_max(week_start, n=4) %>%
-#'   dplyr::select(location:weighted_ili) %>%
-#'   dplyr::arrange(location, epiyear, epiweek)
-#' ilidat
-#' state_replace_ili_nowcast_all(ilidat, state="FL")
-#' # Example with Florida, which has a negative value for nowcasted ILI
-#' ilidat <- get_cdc_ili(years=2019)
-#' ilidat <- ilidat %>%
-#'   dplyr::filter(location=="US" | abbreviation=="VA" | abbreviation=="FL") %>%
-#'   dplyr::filter(epiyear==2020 & epiweek %in% c(20, 21, 22)) %>%
-#'   dplyr::select(location:weighted_ili) %>%
-#'   dplyr::arrange(location, epiyear, epiweek)
-#' ilidat
-#' # defaults to bound at zero
-#' state_replace_ili_nowcast_all(ilidat, state="FL")
-#' # show results when you don't bound at zero
-#' state_replace_ili_nowcast_all(ilidat, state="FL", boundatzero=FALSE)
-#' # example with missing data in florida
-#' ilidat <- get_cdc_ili(region=c("national","state"), years=2019:lubridate::year(lubridate::today()))
-#' ilidat <- ilidat %>%
-#'   dplyr::filter(abbreviation=="FL") %>%
-#'   dplyr::filter(week_start>="2020-12-13" & week_start<="2021-01-10")
-#' ilidat
-#' state_replace_ili_nowcast_all(ilidat, state="FL")
-#' state_replace_ili_nowcast_all(ilidat, state="FL", impute=FALSE)
-#' }
-#' @export
-state_replace_ili_nowcast_all <- function(ilidat, state, impute=TRUE, fallback=TRUE, ...) {
-  dates <- sort(unique(ilidat$week_start))
-  ilinow <- get_nowcast_ili(dates=dates, state=state, ...)
-
-  ## handle case when delphi ili nowcast api doesnt return all of the nowcast data
-  if(all(is.na(ilinow))) {
-    if(fallback) {
-
-      message("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'TRUE'. Using 4 most recent weeks of available data to generate pseudo nowcast for each location.")
-      ilinow <-
-        ilidat %>%
-        dplyr::filter(abbreviation == state) %>%
-        dplyr::group_by(location) %>%
-        dplyr::arrange(location,week_start) %>%
-        ## get last 4 rows for ilidat for each location
-        dplyr::filter(dplyr::row_number() > dplyr::n()-4) %>%
-        ## compute weighted ili "nowcast" as average of last 4
-        dplyr::summarise(weighted_ili_now = mean(weighted_ili, na.rm = TRUE)) %>%
-        ## join to locations object to get abbreviation
-        dplyr::left_join(dplyr::select(locations, abbreviation, location), by = "location") %>%
-        ## create combinations of pseudo nowcast value and all dates / locations
-        ## pseudo nowcast value will be same for all weeks specfied
-        tidyr::crossing(dates, .) %>%
-        ## get epiyear and epiweek
-        dplyr::mutate(epiweek = lubridate::epiweek(dates),
-                      epiyear = lubridate::epiyear(dates)) %>%
-        dplyr::select(-dates)
-    } else {
-      stop("There was an issue retrieving the ILI nowcast data from the API. The fallback option is set to 'FALSE'. Cannot proceed.")
-    }
-  }
-
-  res <- ilidat %>%
-    dplyr::left_join(ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
-    dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili) & abbreviation==state, weighted_ili_now, weighted_ili)) %>%
-    dplyr::select(-weighted_ili_now)
-  # Quick fix for FL 2020:53: mean impute a missing value using the immediately preceding and following values
-  if (impute) {
-    res <- res %>%
-      dplyr::mutate(weighted_ili=ifelse(is.na(weighted_ili),
-                                        yes = (dplyr::lead(weighted_ili) + dplyr::lag(weighted_ili))/2,
-                                        no  = weighted_ili))
-  }
-  return(res)
-}
 
 #' @title Replace ILINet data with nowcast
 #'
@@ -289,7 +184,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
 #'                                trim_date=NULL,
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' # Format for submission
 #' hosp_formatted <- ts_format_for_submission(hosp_fitfor$tsfor)

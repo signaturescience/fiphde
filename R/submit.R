@@ -42,7 +42,7 @@
 #' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' # format for submission
 #' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
@@ -119,7 +119,7 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 #' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' # format for submission
 #' formatted_list <- ts_format_for_submission(hosp_fitfor$tsfor)
@@ -217,7 +217,7 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
 #' hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' # format for submission
 #' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")

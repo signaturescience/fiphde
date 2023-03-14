@@ -9,7 +9,7 @@
 #' @param horizon Number of weeks ahead to forecast
 #' @param trim_date The date (YYYY-MM-DD) at which time series models should start fitting; default `"2021-01-01"`; if set to `NULL` the input data will not be trimmed (i.e., all data will be used to fit time series models)
 #' @param models A list of right hand side formula contents for models you want to run; default is `list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)', ets='season(method="N")', nnetar=NULL)` which runs a constrained ARIMA, non-seasonal ETS, and ignores the NNETAR model; see "Details" for more information
-#' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
+#' @param covariates Logical. Should flu hospitalization-specific covariates that should be modeled with the time series? If so, historical hospitalization and ILI rank for each epidemiological week, brought in with [prep_hdgov_hosp], is added to the ARIMA model.
 #' @param ensemble Logical as to whether or not the models should be ensembled (using mean); default `TRUE`
 #' @return A list of the time series fit, time series forecast, and model formulas.
 #' - **tsfit**: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
@@ -37,12 +37,12 @@
 #' hospfor1 <- ts_fit_forecast(prepped_tsibble,
 #'                             horizon=4L,
 #'                             outcome="flu.admits",
-#'                             covariates=c("hosp_rank", "ili_rank"))
+#'                             covariates=TRUE)
 #' # Run an unconstrained ARIMA, seasonal ETS, no NNETAR
 #' hospfor2 <- ts_fit_forecast(prepped_tsibble,
 #'                             horizon=4L,
 #'                             outcome="flu.admits",
-#'                             covariates=c("hosp_rank", "ili_rank"),
+#'                             covariates=TRUE,
 #'                             models=list(arima='PDQ() + pdq()',
 #'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
 #'                                         nnetar=NULL))
@@ -50,7 +50,7 @@
 #' hospfor3 <- ts_fit_forecast(prepped_tsibble,
 #'                             horizon=4L,
 #'                             outcome="flu.admits",
-#'                             covariates=c("hosp_rank", "ili_rank"),
+#'                             covariates=TRUE,
 #'                             models=list(arima='PDQ() + pdq()',
 #'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
 #'                                         nnetar="AR(P=1)"))
@@ -62,8 +62,21 @@ ts_fit_forecast <- function(prepped_tsibble,
                             models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
                                         ets='season(method="N")',
                                         nnetar=NULL),
-                            covariates=c("hosp_rank", "ili_rank"),
+                            covariates=TRUE,
                             ensemble=TRUE) {
+
+  # If covariates is NULL or FALSE, make covariates NULL.
+  # If covariates is TRUE, make it covariates=c("hosp_rank", "ili_rank")
+  if (is.null(covariates) || !covariates) {
+    covariates <- NULL
+  } else if (covariates) {
+    covariates <- c("hosp_rank", "ili_rank")
+  } else {
+    stop("This shouldn't happen. Problem with covariates reassignment.")
+  }
+
+  # Make model names case-insensitive)
+  names(models) <- tolower(names(models))
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -485,7 +498,7 @@ pois_forc <- function(.data, .location, .var) {
 #' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#'                                covariates=TRUE)
 #'
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 #' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
