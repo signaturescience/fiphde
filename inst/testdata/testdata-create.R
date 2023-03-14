@@ -1,4 +1,4 @@
-library(tidyverse)
+library(dplyr)
 library(fiphde)
 
 set.seed(2023-01-30)
@@ -14,11 +14,13 @@ ilifor
 
 hosp_raw <-
   get_hdgov_hosp(limitcols=TRUE) %>%
-  filter(state %in% c("US", "NY")) %>%
   filter(date>="2020-10-18" & date<="2022-06-18")
 hosp_raw
 
-prepped_hosp <- prep_hdgov_hosp(hosp_raw)
+prepped_hosp <-
+  prep_hdgov_hosp(hosp_raw) %>%
+  filter(location %in% c("US", "36"))
+
 prepped_hosp
 
 prepped_tsibble <- make_tsibble(prepped_hosp,
