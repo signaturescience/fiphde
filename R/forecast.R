@@ -439,8 +439,11 @@ pois_forc <- function(.data, .location, .var) {
 #'
 #' @examples
 #' \dontrun{
+#' # Retrieve
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' # Create a keyed time series tibble with only locations of interest
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                      epiyear = epiyear,
 #'                                      epiweek=epiweek,
@@ -451,8 +454,9 @@ pois_forc <- function(.data, .location, .var) {
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
 #'                                covariates=TRUE)
-#'
+#' # Prepare forecast for quantile submission format
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' # Run categorical summary of quantiles for the time series ensemble
 #' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
 #' }
 forecast_categorical <- function(.forecast, .observed) {
