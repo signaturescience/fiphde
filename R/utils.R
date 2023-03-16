@@ -361,8 +361,11 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 #' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits")
+#' # Prepare forecast for quantile submission format
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' # Run categorical summary of quantiles for the time series ensemble
 #' categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+#' # Plot the categorical forecast
 #' plot_forecast_categorical(categorical_forecast)
 #' }
 plot_forecast_categorical <- function(categorical_forecast) {
@@ -480,9 +483,6 @@ mmwr_week_to_date <- function(year, week, day=NULL) {
 #'
 #' @return Numeric vector
 #'
-#' @examples
-#' x <- c(",1", 4, "11", "19  ", "25>")
-#' fiphde:::to_num(x)
 to_num <- function(x) {
   x <- gsub("%", "", x, fixed=TRUE)
   x <- gsub(">", "", x, fixed=TRUE)
@@ -509,9 +509,9 @@ to_num <- function(x) {
 #' \dontrun{
 #' ## pull and prep weekly US flu hospitalization data
 #' hosp_us <-
-#' get_hdgov_hosp() %>%
-#' prep_hdgov_hosp() %>%
-#' dplyr::filter(location == "US")
+#'   get_hdgov_hosp() %>%
+#'   prep_hdgov_hosp() %>%
+#'   dplyr::filter(location == "US")
 #'
 #' ## what do the last 4 observations look like?
 #' tail(hosp_us$flu.admits, 4)
