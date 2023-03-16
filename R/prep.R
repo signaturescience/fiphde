@@ -28,7 +28,9 @@
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data
 #' hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
+#' # Prepare and summarize to weekly resolution
 #' h <- prep_hdgov_hosp(hdgov_hosp)
 #' h
 #' }
@@ -128,10 +130,12 @@ prep_hdgov_hosp <- function(hdgov_hosp,
 #'   for the Monday of that epiweek, and `yweek` (a yearweek vctr class object)
 #'   that indexes the `tsibble` in 1 week increments.
 #' @examples
+#' # Create an example tibble
 #' d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
 #'                     epiweek=c(52, 53, 1, 2),
 #'                     location="US",
 #'                     somedata=101:104)
+#' # Convert to tsibble (keyed time series tibble)
 #' make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
 #' @export
 make_tsibble <- function(df, epiyear, epiweek, key=location) {
