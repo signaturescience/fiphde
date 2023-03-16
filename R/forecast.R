@@ -24,15 +24,17 @@
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' # Create a keyed time series tibble with only locations of interest
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                 epiyear = epiyear,
 #'                                 epiweek=epiweek,
-#'                                 key=location)
-#' prepped_tsibble <-
-#'   prepped_tsibble %>%
+#'                                 key=location) %>%
 #'   dplyr::filter(location %in% c("US", "51"))
+#'
 #' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
 #' hospfor1 <- ts_fit_forecast(prepped_tsibble,
 #'                             horizon=4L,
@@ -188,7 +190,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' - **removed**: A tibble with locations removed because of high missing ILI data.
 #' @examples
 #' \dontrun{
-#' # Get data
+#' # Retrieve ILI data
 #' ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
 #'                       years = 2010:lubridate::year(lubridate::today()))
 #'
@@ -197,62 +199,12 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' # Replace most recent week with nowcast data, and nowcast last week
 #' ilidat_us <- ilidat_us %>% replace_ili_nowcast(weeks_to_replace=1)
 #' ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+#' # Take a look at objects that come out ILI forecasting procedure
 #' ilifor_us$ili_fit
 #' ilifor_us$arima_params
 #' ilifor_us$ili_forecast
 #' head(ilifor_us$ili_bound)
 #' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_us$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-03-01") %>%
-#'   ggplot(aes(date, ili)) +
-#'   geom_line(lwd=.3, alpha=.5) +
-#'   geom_point(aes(col=forecasted), size=2)
-#'
-#' # At the state level
-#' ilidat_st <- ilidat %>% dplyr::filter(region_type=="States")
-#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
-#'                           models=list(ets="season(method='N')"))
-#' ilifor_st$ili_fit
-#' ilifor_st$arima_params
-#' ilifor_st$ili_forecast
-#' head(ilifor_us$ili_bound)
-#' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_st$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-08-01") %>%
-#'   ggplot(aes(date, ili, col=forecasted)) +
-#'   geom_line(lwd=.3) +
-#'   geom_point(aes(col=forecasted), size=.7) +
-#'   facet_wrap(~abbreviation, scale="free_y")
-#'
-#' ## At the HHS regional level
-#' ilidat_hhs <- ilidat %>% dplyr::filter(region_type=="HHS Regions")
-#' ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, trim_date="2020-03-01")
-#' ilifor_hhs$ili_fit
-#' ilifor_hhs$arima_params
-#' ilifor_hhs$ili_forecast
-#' head(ilifor_us$ili_bound)
-#' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_hhs$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-08-01") %>%
-#'   ggplot(aes(date, ili, col=forecasted)) +
-#'   geom_line(lwd=.3) +
-#'   geom_point(aes(col=forecasted), size=.7) +
-#'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
 forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
@@ -366,23 +318,23 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
 #' @examples
 #' \dontrun{
 #'
-#' ## get data for Texas
+#' # Get data for Texas
 #' tx_clin <-
 #'   get_cdc_clin(region = "state") %>%
 #'   dplyr::filter(location == "48")
 #'
-#' ## look at most recent observations
+#' # Look at most recent observations
 #' tx_clin %>%
 #'   dplyr::arrange(week_start) %>%
 #'   tail()
 #'
-#' ## now augment with default 1 week nowcast
+#' # Now augment with default 1 week nowcast
 #' tx_clin %>%
 #'   clin_nowcast(., weeks_to_replace = 1) %>%
 #'   dplyr::arrange(week_start) %>%
 #'   tail()
 #'
-#' ## and again augmented with 2 week nowcast instead
+#' # And again augmented with 2 week nowcast instead
 #' tx_clin %>%
 #'   clin_nowcast(., weeks_to_replace = 2) %>%
 #'   dplyr::arrange(week_start) %>%
