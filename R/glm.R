@@ -1,20 +1,18 @@
-#' Fit glm models
+#' @title Fit glm models
 #'
-#' This helper function is used in \link[fiphde]{glm_wrap} to fit a list of models and select the best one.
+#' @description
+#'
+#' This helper function is used in [glm_wrap] to fit a list of models and select the best one. The model selection procedure will use the root mean square error (RMSE) metric implemented in [yardstick::rmse] to select the best model.
 #'
 #' @param .data Data including all explanatory and outcome variables needed for modeling; must include column for "location"
-#' @param .models List of models defined as \link[trending]{trending_model} objects
+#' @param .models List of models defined as [trending::trending_model] objects
 #'
-#' @return A `tibble` containing characteristics from the "best" `glm` model (i.e., the model from ".models" list with lowest RMSE). The columns in this `tibble` include:
+#' @return A `tibble` containing characteristics from the "best" `glm` model including:
 #'
-#'- model_class: The "type" of model for the best fit
-#'- fit: The fitted model object for the best fit
-#'- location: The geographic
-#'- data: Original model fit data as a `tibble` in a list column
-#'
-#' @export
-#'
-#' @md
+#'- **model_class**: The "type" of model for the best fit
+#'- **fit**: The fitted model object for the best fit
+#'- **location**: The geographic unit being modeled
+#'- **data**: Original model fit data as a `tibble` in a list column
 #'
 glm_fit <- function(.data,
                     .models) {
@@ -63,17 +61,26 @@ glm_fit <- function(.data,
 }
 
 
-#' Get quantiles from prediction intervals
+#' @title Get quantiles from prediction intervals
 #'
-#' This function runs the \link[trending]{predict.trending_model_fit} method on a fitted model at specified values of "alpha" in order to create a range of prediction intervals. The processing also includes steps to convert the alpha to corresponding quantile values at upper and lower bounds.
+#' @description
 #'
-#' @param fit Fitted model object from \link[fiphde]{glm_fit}
-#' @param new_data Tibble with new data on which the \link[trending]{predict.trending_model_fit} method should run
-#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals; alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to range of intervals
+#' This helper function runs the [trending::predict.trending_model_fit] method on a fitted model at specified values of "alpha" in order to create a range of prediction intervals. The processing also includes steps to convert the alpha to corresponding quantile values at upper and lower bounds. See "Details" for more information on the translation of "alpha" to quantile values. This function is used internally in [glm_forecast].
 #'
-#' @return A tibble with predicted values at each quantile (lower and upper bound for each value of "alpha")
-#' @export
-#' @md
+#' @param fit Fitted model object from [glm_fit]
+#' @param new_data A `tibble` with new data on which the [trending::predict.trending_model_fit] method should run
+#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals (PI); alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to create a range of intervals
+#'
+#' @details
+#'
+#' The "alpha" parameter defines the width of prediction interval (PI). For example, an alpha = 0.05 would correspond to a 95% PI. This function uses the PI(s) (per the alpha value(s) specified) to construct a range of quantiles that fall at lower and upper bound of each PI. Continuing from the example of alpha = 0.05, the quantile estimates returned would fall at 0.025 (lower bound of PI) and 0.975 (upper bound of PI).
+#'
+#' @return A `tibble` with forecasted data including the following columns:
+#'
+#' - **epiweek**: The epidemiological week for the forecasted horizon
+#' - **epiyear**: The epidemiological year for the forecasted horizon
+#' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
+#' - **value**: The forecasted value
 #'
 glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
@@ -95,18 +102,23 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 }
 
 
-#' Forecast glm models
+#' @title Forecast glm models
 #'
-#' This function uses fitted model object from \link[fiphde]{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
+#' @description
+#'
+#' This function uses fitted model object from [glm_fit] and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
 #'
 #' @param .data Data including all explanatory and outcome variables needed for modeling
 #' @param new_covariates Tibble with one column per covariate, and n rows for n horizons being forecasted
 #' @param fit Fitted model object from \link[fiphde]{glm_fit}
-#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals; alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to range of intervals
+#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals; alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to create a range of intervals
 #'
-#' @return Tibble with forecasts (quantiles and point estimates)
-#' @export
-#' @md
+#' @return A `tibble` with forecasted data including the following columns:
+#'
+#' - **epiweek**: The epidemiological week for the forecasted horizon
+#' - **epiyear**: The epidemiological year for the forecasted horizon
+#' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
+#' - **value**: The forecasted value
 #'
 glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
@@ -154,23 +166,57 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
     dplyr::select(epiweek,epiyear,quantile,value)
 }
 
-#' Run glm modeling and forecasting
+#' @title Run glm modeling and forecasting
 #'
-#' This is a wrapper function that pipelines influenza hospitalization modeling (\link[fiphde]{glm_fit}) and forecasting (\link[fiphde]{glm_forecast}).
+#' @description
+#'
+#' This is a wrapper function that pipelines influenza hospitalization modeling ([glm_fit]) and forecasting ([glm_forecast]).
 #'
 #' @param .data Data including all explanatory and outcome variables needed for modeling
-#' @param .models List of models defined as \link[trending]{trending_model} objects
-#' @param new_covariates Tibble with one column per covariate, and n rows for n horizons being forecasted
+#' @param .models List of models defined as [trending::trending_model] objects
+#' @param new_covariates A `tibble` with one column per covariate, and n rows for n horizons being forecasted
 #' @param horizon Number of weeks ahead for forecasting
-#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals; alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to range of intervals
+#' @param alpha Vector specifying the threshold(s) to be used for prediction intervals (PI); alpha of `0.05` would correspond to 95% PI; default is `c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2` to create a range of intervals
 #'
 #' @return Named list with two elements:
 #'
-#' - model: Output from \link[fiphde]{glm_fit} with selected model fit
-#' - forecasts: Output from \link[fiphde]{glm_forecast} with forecasts from each horizon combined as a single tibble
+#' - **model**: Output from [glm_fit] with selected model fit
+#' - **forecasts**: Output from [glm_forecast] with forecasts from each horizon combined as a single tibble
 #'
 #' @export
-#' @md
+#' @examples
+#' \dontrun{
+#' # Retrieve data to be used in fitting models
+#' hosp_va <-
+#'  get_hdgov_hosp(limitcols=TRUE) %>%
+#'  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
+#'  dplyr::filter(abbreviation == "VA")
+#'
+#' # Define list of models
+#' models <-
+#'  list(
+#'    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
+#'    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
+#'    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
+#'  )
+#'
+#' # Create new covariate data to feed into forecast procedure
+#' new_cov <-
+#'   dplyr::tibble(
+#'     date = max(hosp_va$week_start) + c(7,14,21,28),
+#'     epiweek = lubridate::epiweek(date),
+#'     epiyear = lubridate::epiyear(date)
+#'   ) %>%
+#'   dplyr::left_join(
+#'     fiphde:::historical_severity, by="epiweek"
+#'   ) %>%
+#'   dplyr::select(-epiweek,-epiyear)
+#'
+#' # Run the glm wrapper to fit and forecast
+#' va_glm_res <- glm_wrap(.data = hosp_va, .models = models, new_covariates = new_cov, horizon = 4)
+#' va_glm_res
+#'
+#' }
 glm_wrap <- function(.data, .models, new_covariates = NULL, horizon = 4, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   tmp_fit <- glm_fit(.data, .models = .models)

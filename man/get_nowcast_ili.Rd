@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{get_nowcast_ili}
 \alias{get_nowcast_ili}
-\title{Get ILI nowcast}
+\title{Retrieve ILI nowcast}
 \usage{
 get_nowcast_ili(
   epiyearweeks = NULL,
@@ -18,13 +18,13 @@ get_nowcast_ili(
 
 \item{state}{A vector of states to retrieve (two-letter abbreviation). Default \code{NULL} retrieves all states, national, and hhs regions. See examples.}
 
-\item{boundatzero}{Bound nowcasts at zero? defaults to TRUE.}
+\item{boundatzero}{Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is \code{TRUE}}
 }
 \value{
-A tibble
+A \code{tibble}
 }
 \description{
-Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
+This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
 }
 \examples{
 \dontrun{
@@ -39,19 +39,6 @@ get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
 get_nowcast_ili(epiyearweeks=NULL,
                 dates=lubridate::today()-seq(52*7, 7, -7),
                 state="FL")
-
-# Compare to ilinet
-library(dplyr)
-library(ggplot2)
-ilidat <- get_cdc_ili(years=2021)
-ilinow <- get_nowcast_ili()
-ilijoined <-
-  inner_join(ilidat, ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) \%>\%
-  select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
-ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
-ilijoined \%>\%
-  mutate(diff=weighted_ili_now-weighted_ili) \%>\%
-  arrange(desc(abs(diff)))
 }
 }
 \references{

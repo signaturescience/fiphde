@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{get_cdc_hosp}
 \alias{get_cdc_hosp}
-\title{Get hospitalization data from CDC FluView}
+\title{Retrieve hospitalization data from FluSurv-NET}
 \usage{
 get_cdc_hosp(years = NULL)
 }
@@ -10,16 +10,29 @@ get_cdc_hosp(years = NULL)
 \item{years}{A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the \emph{previous} flu season. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
 \value{
-A tibble
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{location}: FIPS code for the location
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{region}: Name of the region
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{week_end}: Date of end (Saturday) of the given epidemiological week
+\item \strong{rate}: The cumulative rate per 100k
+\item \strong{weekly_rate}: The weekly rate per 100k
+\item \strong{season}: The flu season to which the given epidemiological week belongs
+}
 }
 \description{
-Get hospitalization data from CDC FluView. See \link{hospitalizations}.
+This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
 }
 \examples{
 \dontrun{
+# Retrieve FluSurv-Net hospitalization data for specific year(s)
 get_cdc_hosp(years=2019)
 }
 }
 \references{
-cdcfluview documentation: \url{https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data}.
+\url{https://gis.cdc.gov/GRASP/fluview/FluViewPhase3QuickReferenceGuide.pdf}
 }

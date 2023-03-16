@@ -3,6 +3,7 @@ library(readr)
 library(tidyr)
 library(ggplot2)
 library(fiphde)
+library(purrr)
 theme_set(theme_bw())
 
 # Location metadata -------------------------------------------------------
@@ -174,7 +175,7 @@ vd$prepped_hosp_tsibble <- make_tsibble(vd$prepped_hosp,
 vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=TRUE)
 
 # Format for submission
 vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
@@ -191,7 +192,7 @@ vd$ilidat <-
   filter(region == "Hawaii") %>%
   filter(week_start<="2022-06-05")
 
-vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+vd$ilifor <- forecast_ili(vd$ilidat, horizon=4L, trim_date="2020-03-01")
 
 # This stuff is done in the vignette
 ilidat <- vd$ilidat
@@ -238,6 +239,51 @@ vd$res <- res
 mmwrid_map <- readr::read_csv(here::here("data-raw/mmwrid_map.csv"), col_types="DDii")
 
 
+# Get ILI Nearby data -----------------------------------------------------
+
+# Last updated: 2023-02-15
+if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
+  message("Archiving ilinearby data in data-raw/ilinearby.csv")
+  ilinearby <-
+    crossing(years=as.character(2010:2022),
+             weeks=stringr::str_pad(1:53, width=2, pad="0")) %>%
+    unite(eyw, years, weeks, sep="") %>%
+    mutate(data=map(eyw, ~fiphde::get_nowcast_ili(epiyearweeks=., dates=NULL)))
+  ilinearby <-
+    ilinearby %>%
+    # mutate(missing=map_lgl(data, identical, NA)) %>%
+    # filter(missing) %>%
+    unnest(cols=data) %>%
+    filter(!is.na(weighted_ili_now)) %>%
+    arrange(eyw) %>%
+    select(-eyw)
+  # Fix FL 2020:53
+  missing_fl202053 <-
+    ilinearby %>%
+    filter(abbreviation=="FL") %>%
+    filter(epiyear==2020 & epiweek==53) %>%
+    nrow() %>%
+    identical(0L)
+  if (missing_fl202053) {
+    message("fixing florida 2020:53")
+    wilinow_fl202053 <-
+      ilinearby %>%
+      filter(abbreviation=="FL") %>%
+      filter((epiyear==2020 & epiweek==52) | (epiyear==2021 & epiweek==1)) %>%
+      pull(weighted_ili_now) %>%
+      median()
+    ilinearby <-
+      ilinearby %>%
+      add_row(location="12", abbreviation="FL", epiyear=2020L, epiweek=53L, weighted_ili_now=wilinow_fl202053) %>%
+      arrange(epiyear, epiweek, location)
+  }
+  # write to file
+  ilinearby %>% write_csv(here::here("data-raw/ilinearby.csv"))
+} else {
+  message("Reading in ili nearby csv previously archived in data-raw/ilinearby.csv")
+  ilinearby <- read_csv(here::here("data-raw/ilinearby.csv"), col_types="cciid")
+}
+
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
@@ -248,4 +294,5 @@ usethis::use_data(locations,
                   hospstats,
                   vd,
                   mmwrid_map,
+                  ilinearby,
                   internal = TRUE, overwrite = TRUE)

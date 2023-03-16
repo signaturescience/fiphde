@@ -13,28 +13,43 @@ prep_hdgov_hosp(
 )
 }
 \arguments{
-\item{hdgov_hosp}{Raw hospitalization data from \link{get_hdgov_hosp}}
+\item{hdgov_hosp}{Daily hospital utilization data from \link{get_hdgov_hosp}}
 
-\item{statesonly}{Limit to US+DC+States only (i.e., drop territories)? Defaults to \code{TRUE}.}
+\item{statesonly}{Logical as to whether or not to limit to US+DC+States only (i.e., drop territories); default is \code{TRUE}}
 
-\item{trim}{list with epiyear and epiweek to trim on. Defaults to October 25, 2020 (2020:43). There isn't any data before this.}
+\item{trim}{Named list with elements for epiyear and epiweek corresponding to the minimum epidemiological week to retain; defaults to \code{list(epiyear=2020, epiweek=43)}, which is the first date of report in the healthdata.gov hospitalization data; if set to \code{NULL} the data will not be trimmed}
 
-\item{remove_incomplete}{Remove the last week if incomplete? Defaults to \code{TRUE}.}
+\item{remove_incomplete}{Logical as to whether or not to remove the last week if incomplete; defaults is \code{TRUE}.}
 
 \item{min_per_week}{The minimum number of flu.admits per week needed to retain that state. Default removes states with less than 1 flu admission per week over the last 30 days.}
 }
 \value{
-A tibble; hospitalization data ready for downstream forecasting.
+A \code{tibble} with hospitalization data summarized to epiyear/epiweek with the following columns:
+\itemize{
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{location}: FIPS code for the location
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{monday}: Date of Monday of the given epidemiological week
+\item \strong{week_end}: Date of end (Saturday) of the given epidemiological week
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{flu.admits}: Count of flu cases among admitted patients on previous day
+\item \strong{flu.admits.cov}: Coverage (number of hospitals reporting) for incident flu cases
+\item \strong{ili_mean}: Estimate of historical ILI activity for the given epidemiological week
+\item \strong{ili_rank}: Rank of the given epidemiological week in terms of ILI activity across season (1 being highest average activity)
+\item \strong{hosp_mean}: Estimate of historical flu hospitalization rate for the given epidemiological week
+\item \strong{hosp_rank}: Rank of the given epidemiological week in terms of flu hospitalizations across season (1 being highest average activity)
+}
 }
 \description{
-Prep healthdata.gov hospitalization data retrieved using \link{get_hdgov_hosp} for downstream forecasting. Limits to states only, trims to where you have data, removes the incomplete week, and removes locations with little reporting over the last month.
+This function prepares hospitalization data retrieved using \link{get_hdgov_hosp} for downstream forecasting. The function optionally limits to states only, trims to a given date, removes incomplete weeks, and removes locations with little reporting over the last month.
 }
 \examples{
 \dontrun{
+# Retrieve hospitalization data
 hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
+# Prepare and summarize to weekly resolution
 h <- prep_hdgov_hosp(hdgov_hosp)
 h
-hts <- make_tsibble(h, epiyear=epiyear, epiweek=epiweek, key=location)
-hts
 }
 }

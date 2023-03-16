@@ -14,30 +14,50 @@ plot_forecast(
 )
 }
 \arguments{
-\item{.data}{Historical truth data for all locations and outcomes in submission targets}
+\item{.data}{A data frame with historical truth data for all locations and outcomes in submission targets}
 
-\item{submission}{Formatted submission}
+\item{submission}{Formatted submission (e.g., a \code{tibble} containing forecasts prepped with \link{format_for_submission})}
 
-\item{location}{Vector specifying locations to filter to; 'US' by default.}
+\item{location}{Vector specifying locations to filter to; \code{'US'} by default.}
 
 \item{pi}{Width of prediction interval to plot; default is \code{0.95} for 95\% PI; if set to \code{NULL} the PI will not be plotted}
 
 \item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
 
-\item{.outcome}{The name of the outcome variable you're plotting in the historical data. Defaults to \code{"flu.admits"}. This may also be \code{"weighted_ili"}.}
+\item{.outcome}{The name of the outcome variable you're plotting in the historical data; defaults to \code{"flu.admits"}}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location
 }
 \description{
-This function serves as a plotting mechanism for prepped forecast submission data. Using truth data supplied, the plots show the historical trajectory of weekly flu hospitalizations along with the point estimates for forecasts. Optionally, the user can include 95\% prediction interval as well. Plots include trajectories of weekly flu hospitalizations faceted by location.
+This function serves as a plotting mechanism for prepped forecast submission data. The plots how the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
+
+Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information requirements for these parameters.
+}
+\details{
+To plot the forecasted output alongside the observed historical data, both the ".data" and "submission" data must be prepared at the same geographic and temporal resolutions. The data frame passed to ".data" must include the column specified in the ".outcome" argument as well as the following columns:
+\itemize{
+\item \strong{location}: FIPS location code
+\item \strong{week_end}: Date of the last day (Saturday) in the given epidemiological week
+}
+
+The "submission" data should be a probabilistic forecast prepared as a \code{tibble} with at minimum following columns:
+\itemize{
+\item \strong{forecast_date}: Date of forecast
+\item \strong{target}: Horizon and name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: FIPS code for location
+\item \strong{type}: One of either "point" or "quantile" for the forecasted value
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
+}
+
+The "submission" data may optionally include a column with the name of the model used, such that multiple models can be visualized in the same plot.
 }
 \examples{
 \dontrun{
 # Get some data
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
-## save(h_raw, file="~/Downloads/h_raw.rd")
-## load(file="~/Downloads/h_raw.rd")
 
 # Prep all the data
 prepped_hosp_all <- prep_hdgov_hosp(h_raw)
@@ -69,7 +89,7 @@ hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
                                trim_date=NULL,
-                               covariates=c("hosp_rank", "ili_rank"))
+                               covariates=TRUE)
 
 # Format for submission
 hosp_formatted <- ts_format_for_submission(hosp_fitfor$tsfor)
@@ -88,10 +108,15 @@ plot_forecast(prepped_hosp_all, hosp_formatted$arima)
 prepped_hosp <-
   h_raw \%>\%
   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
-  dplyr::filter(abbreviation != "DC")
+  dplyr::filter(abbreviation != "DC") \%>\%
+  dplyr::filter(week_start < as.Date("2022-01-08", format = "\%Y-\%m-\%d"))
 
-tsens_20220110 <- readr::read_csv(here::here("submission/SigSci-TSENS/2022-01-10-SigSci-TSENS.csv"))
-creg_20220110 <- readr::read_csv(here::here("submission/SigSci-CREG/2022-01-10-SigSci-CREG.csv"))
+tsens_20220110 <-
+  system.file("extdata/2022-01-10-SigSci-TSENS.csv", package="fiphde") \%>\%
+  readr::read_csv(show_col_types = FALSE)
+creg_20220110 <-
+  system.file("extdata/2022-01-10-SigSci-CREG.csv", package="fiphde") \%>\%
+  readr::read_csv(show_col_types = FALSE)
 combo_20220110 <- dplyr::bind_rows(
   dplyr::mutate(tsens_20220110, model = "SigSci-TSENS"),
   dplyr::mutate(creg_20220110, model = "SigSci-CREG")

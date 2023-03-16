@@ -2,7 +2,7 @@
 % Please edit documentation in R/forecast.R
 \name{ts_fit_forecast}
 \alias{ts_fit_forecast}
-\title{Fit and forecast with time-series approaches.}
+\title{Fit and forecast with time-series approaches}
 \usage{
 ts_fit_forecast(
   prepped_tsibble,
@@ -11,78 +11,75 @@ ts_fit_forecast(
   trim_date = "2021-01-01",
   models = list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets =
     "season(method=\\"N\\")", nnetar = NULL),
-  covariates = c("hosp_rank", "ili_rank"),
-  ensemble = TRUE,
-  remove_null_models = TRUE
+  covariates = TRUE,
+  ensemble = TRUE
 )
 }
 \arguments{
-\item{prepped_tsibble}{A tsibble with data retrieved from \link{get_hdgov_hosp}, prepped by \link{prep_hdgov_hosp}, and made into a tsibble with \link{make_tsibble}.}
+\item{prepped_tsibble}{A \code{tsibble} with data formatted via \link{make_tsibble}}
 
-\item{outcome}{The outcome variable to model (default \code{"flu.admits"}).}
+\item{outcome}{The outcome variable to model; default is \code{"flu.admits"}}
 
-\item{horizon}{Number of weeks ahead}
+\item{horizon}{Number of weeks ahead to forecast}
 
-\item{trim_date}{The date (YYYY-MM-DD) at which point ts modeling should be started. Default \code{"2021-01-01"}. Set to \code{NULL} to stop trimming.}
+\item{trim_date}{The date (YYYY-MM-DD) at which time series models should start fitting; default \code{"2021-01-01"}; if set to \code{NULL} the input data will not be trimmed (i.e., all data will be used to fit time series models)}
 
-\item{models}{A list of right hand side formula contents for models you want to run. See the examples.
-\itemize{
-\item Defaults to \code{list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)}
-\item Setting the type of model to \code{NULL} turns the model off.
-\item To run an unconstrained ARIMA: \code{list(arima='PDQ() + pdq()')}. See also \link[fable:ARIMA]{fable::ARIMA}.
-\item To run a seasonal exponential smoothing: \code{list(ets='season(method=c("A", "M", "N"), period="3 months")')}. See also \link[fable:ETS]{fable::ETS}.
-\item To run an autoregressive neural net with P=1: \code{list(nnetar="AR(P=1)")}. See also \link[fable:NNETAR]{fable::NNETAR}.
-}}
+\item{models}{A list of right hand side formula contents for models you want to run; default is \code{list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)', ets='season(method="N")', nnetar=NULL)} which runs a constrained ARIMA, non-seasonal ETS, and ignores the NNETAR model; see "Details" for more information}
 
-\item{covariates}{Covariates that should be modeled with the time series. Defaults to \code{c("hosp_rank", "ili_rank")}, from the historical data brought in with \link{prep_hdgov_hosp}.}
+\item{covariates}{Logical. Should flu hospitalization-specific covariates that should be modeled with the time series? If so, historical hospitalization and ILI rank for each epidemiological week, brought in with \link{prep_hdgov_hosp}, is added to the ARIMA model.}
 
-\item{ensemble}{Should ARIMA and ETS models be ensembled? Default \code{TRUE}.}
-
-\item{remove_null_models}{Should null models be removed? Default \code{TRUE}.}
+\item{ensemble}{Logical as to whether or not the models should be ensembled (using mean); default \code{TRUE}}
 }
 \value{
 A list of the time series fit, time series forecast, and model formulas.
 \itemize{
-\item \code{tsfit}: A \code{mdl_df} class "mable" with one row for each location, columns for arima and ets models.
-\item \code{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
-\item \code{formulas}: A list of ARIMA, ETS, and/or NNETAR formulas
+\item \strong{tsfit}: A \code{mdl_df} class "mable" with one row for each location, columns for arima and ets models.
+\item \strong{tsfor}: A \code{fbl_ts} class "fable" with one row per location-model-timepoint up to \code{horizon} number of time points.
+\item \strong{formulas}: A list of ARIMA, ETS, and/or NNETAR formulas
 }
 }
 \description{
-Fit and forecast with time-series approaches.
+This function allows the user to fit time series models and forecast values out to a specified horizon. Starting from a \code{tsibble} object (see \link{make_tsibble}), the function fits the models specified as a list in the "models" argument. The "Details" section provides more information on how to parameterize the models used. Note that if the input \code{tsibble} is "keyed" (e.g., grouped by location) then the procedure will fit and forecast independently for each grouping.
+}
+\details{
+When fitting time series models, the set of models used (and their parameters) can be defined via a named list passed to the "models" argument. The list should contain elements that define the right-hand side of model formulas. The function internally uses the \link[fable:fable-package]{fable::fable} package, and any models provided must be part of the \code{fable} ecosystem of time series models. The models passed must be named as "arima", "ets", and "nnetar". To skip any one of these models set the named argument for the given model to \code{NULL}. The "models" argument defaults to \code{list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)}. To run an unconstrained ARIMA: \code{list(arima='PDQ() + pdq()')} (see \link[fable:ARIMA]{fable::ARIMA}). To run a seasonal exponential smoothing: \code{list(ets='season(method=c("A", "M", "N"), period="3 months")')} (see \link[fable:ETS]{fable::ETS}). To run an autoregressive neural net with P=1: \code{list(nnetar="AR(P=1)")} (see \link[fable:NNETAR]{fable::NNETAR}).
 }
 \examples{
 \dontrun{
+# Retrieve hospitalization data
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
-## save(h_raw, file="~/Downloads/h_raw.rd")
-## load(file="~/Downloads/h_raw.rd")
+# Prepare and summarize hospitalization data to weekly resolution
 prepped_hosp <- prep_hdgov_hosp(h_raw)
+# Create a keyed time series tibble with only locations of interest
 prepped_tsibble <- make_tsibble(prepped_hosp,
-                                     epiyear = epiyear,
-                                     epiweek=epiweek,
-                                     key=location)
-prepped_tsibble <-
-  prepped_tsibble \%>\%
+                                epiyear = epiyear,
+                                epiweek=epiweek,
+                                key=location) \%>\%
   dplyr::filter(location \%in\% c("US", "51"))
+
 # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
-hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-                               horizon=4L,
-                               outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
+hospfor1 <- ts_fit_forecast(prepped_tsibble,
+                            horizon=4L,
+                            outcome="flu.admits",
+                            covariates=TRUE)
 # Run an unconstrained ARIMA, seasonal ETS, no NNETAR
-hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-                               horizon=4L,
-                               outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"),
-                               models=list(arima='PDQ() + pdq()',
-                                           ets='season(method=c("A", "M", "N"), period="3 months")',
-                                           nnetar=NULL))
-hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-                               horizon=4L,
-                               outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"),
-                               models=list(arima='PDQ() + pdq()',
-                                           ets='season(method=c("A", "M", "N"), period="3 months")',
-                                           nnetar="AR(P=1)"))
+hospfor2 <- ts_fit_forecast(prepped_tsibble,
+                            horizon=4L,
+                            outcome="flu.admits",
+                            covariates=TRUE,
+                            models=list(arima='PDQ() + pdq()',
+                                        ets='season(method=c("A", "M", "N"), period="3 months")',
+                                        nnetar=NULL))
+# Run an unconstrained ARIMA, seasonal ETS, NNETAR
+hospfor3 <- ts_fit_forecast(prepped_tsibble,
+                            horizon=4L,
+                            outcome="flu.admits",
+                            covariates=TRUE,
+                            models=list(arima='PDQ() + pdq()',
+                                        ets='season(method=c("A", "M", "N"), period="3 months")',
+                                        nnetar="AR(P=1)"))
 }
+}
+\references{
+\url{https://fable.tidyverts.org/}
 }

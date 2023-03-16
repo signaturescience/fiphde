@@ -7,11 +7,11 @@
 .mcga(tbl)
 }
 \arguments{
-\item{tbl}{Input tibble with columns to rename}
+\item{tbl}{Input \code{tibble} with columns to rename}
 }
 \value{
-Tibble with clean column names
+A \code{tibble} with clean column names
 }
 \description{
-This helper function is used
+This helper is used in \link{ilinet} and \link{who_nrevss} functions to clean column names of values returned from the APIs.
 }

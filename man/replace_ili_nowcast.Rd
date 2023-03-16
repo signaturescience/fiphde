@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{replace_ili_nowcast}
 \alias{replace_ili_nowcast}
-\title{Replace ILInet with nowcast data}
+\title{Replace ILINet data with nowcast}
 \usage{
 replace_ili_nowcast(
   ilidat,
@@ -12,19 +12,29 @@ replace_ili_nowcast(
 )
 }
 \arguments{
-\item{ilidat}{Data from \link{get_cdc_ili}.}
+\item{ilidat}{ILI data retrieved via \link{get_cdc_ili}}
 
-\item{start_date}{Date from which to start nowcasting. Defaults to \link[lubridate:now]{lubridate::today}.}
+\item{start_date}{Date from which to start nowcasting; default is \link[lubridate:now]{lubridate::today}}
 
-\item{weeks_to_replace}{Number of weeks of \code{ilidat} to replace. Defaults to 2.}
+\item{weeks_to_replace}{Number of weeks of \code{ilidat} to replace; default is \code{1}}
 
 \item{fallback}{Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is \code{TRUE}}
 }
 \value{
-The same as the \code{ilidat} input, but with \code{weeks_to_replace} weeks replaced with nowcasted data.
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{location}: FIPS code for the location
+\item \strong{region_type}: The type of location
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{region}: Name of the region
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{weighted_ili}: Population-weighted percentage of ILI outpatient visits
+}
 }
 \description{
-Replaces \code{weighted_ili} from \link{get_cdc_ili} with nowcast data from \link{get_nowcast_ili} for the number of specified \code{weeks_to_replace}.
+This function replaces the weighted ILI retrieved from \link{get_cdc_ili} with nowcast data for each of the locations in the original data. The function will first attempt to use ILI Nearby nowcasts pulled using \link{get_nowcast_ili}. If the ILI Nearby nowcasts are unavailable, the function will optionally fallback to a pseudo nowcast method that averages the observed ILI for the 4 most recent weeks. The nowcast data will be used to add 1 additional week to the observed ILI data and (optionally) replace the number of weeks specified in the "weeks_to_replace" argument.
 }
 \examples{
 \dontrun{
@@ -38,15 +48,5 @@ ilidat <-
 ilidat
 iliaug <- replace_ili_nowcast(ilidat, weeks_to_replace=1)
 iliaug
-
-# arrange for comparison
-ilidat <- ilidat \%>\% dplyr::arrange(location, week_start)
-iliaug <- iliaug \%>\% dplyr::arrange(location, week_start)
-# Compare US
-waldo::compare(ilidat \%>\% dplyr::filter(location=="US"),
-               iliaug \%>\% dplyr::filter(location=="US"))
-# Compare VA
-waldo::compare(ilidat \%>\% dplyr::filter(location=="51"),
-               iliaug \%>\% dplyr::filter(location=="51"))
 }
 }

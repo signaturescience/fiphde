@@ -27,9 +27,11 @@ This function takes probabilistic flu hospitalization forecast input and convert
 }
 \examples{
 \dontrun{
-
+# Retrieve hospitalization data
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
+# Prepare and summarize hospitalization data to weekly resolution
 prepped_hosp <- prep_hdgov_hosp(h_raw)
+# Create a keyed time series tibble with only locations of interest
 prepped_tsibble <- make_tsibble(prepped_hosp,
                                      epiyear = epiyear,
                                      epiweek=epiweek,
@@ -39,14 +41,12 @@ prepped_tsibble <- make_tsibble(prepped_hosp,
 hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
-                               covariates=c("hosp_rank", "ili_rank"))
-
+                               covariates=TRUE)
+# Prepare forecast for quantile submission format
 prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+# Run categorical summary of quantiles for the time series ensemble
 forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
-
 }
-
-
 }
 \references{
 \url{https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md}

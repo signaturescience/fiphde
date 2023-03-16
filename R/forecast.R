@@ -1,56 +1,61 @@
-#' @title Fit and forecast with time-series approaches.
-#' @description Fit and forecast with time-series approaches.
-#' @param prepped_tsibble A tsibble with data retrieved from [get_hdgov_hosp], prepped by [prep_hdgov_hosp], and made into a tsibble with [make_tsibble].
-#' @param outcome The outcome variable to model (default `"flu.admits"`).
-#' @param horizon Number of weeks ahead
-#' @param trim_date The date (YYYY-MM-DD) at which point ts modeling should be started. Default `"2021-01-01"`. Set to `NULL` to stop trimming.
-#' @param models A list of right hand side formula contents for models you want to run. See the examples.
-#' - Defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`
-#' - Setting the type of model to `NULL` turns the model off.
-#' - To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')`. See also [fable::ARIMA].
-#' - To run a seasonal exponential smoothing: `list(ets='season(method=c("A", "M", "N"), period="3 months")')`. See also [fable::ETS].
-#' - To run an autoregressive neural net with P=1: `list(nnetar="AR(P=1)")`. See also [fable::NNETAR].
-#' @param covariates Covariates that should be modeled with the time series. Defaults to `c("hosp_rank", "ili_rank")`, from the historical data brought in with [prep_hdgov_hosp].
-#' @param ensemble Should ARIMA and ETS models be ensembled? Default `TRUE`.
-#' @param remove_null_models Should null models be removed? Default `TRUE`.
+#' @title Fit and forecast with time-series approaches
+#'
+#' @description
+#'
+#' This function allows the user to fit time series models and forecast values out to a specified horizon. Starting from a `tsibble` object (see [make_tsibble]), the function fits the models specified as a list in the "models" argument. The "Details" section provides more information on how to parameterize the models used. Note that if the input `tsibble` is "keyed" (e.g., grouped by location) then the procedure will fit and forecast independently for each grouping.
+#'
+#' @param prepped_tsibble A `tsibble` with data formatted via [make_tsibble]
+#' @param outcome The outcome variable to model; default is `"flu.admits"`
+#' @param horizon Number of weeks ahead to forecast
+#' @param trim_date The date (YYYY-MM-DD) at which time series models should start fitting; default `"2021-01-01"`; if set to `NULL` the input data will not be trimmed (i.e., all data will be used to fit time series models)
+#' @param models A list of right hand side formula contents for models you want to run; default is `list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)', ets='season(method="N")', nnetar=NULL)` which runs a constrained ARIMA, non-seasonal ETS, and ignores the NNETAR model; see "Details" for more information
+#' @param covariates Logical. Should flu hospitalization-specific covariates that should be modeled with the time series? If so, historical hospitalization and ILI rank for each epidemiological week, brought in with [prep_hdgov_hosp], is added to the ARIMA model.
+#' @param ensemble Logical as to whether or not the models should be ensembled (using mean); default `TRUE`
 #' @return A list of the time series fit, time series forecast, and model formulas.
-#' - `tsfit`: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
-#' - `tsfor`: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
-#' - `formulas`: A list of ARIMA, ETS, and/or NNETAR formulas
+#' - **tsfit**: A `mdl_df` class "mable" with one row for each location, columns for arima and ets models.
+#' - **tsfor**: A `fbl_ts` class "fable" with one row per location-model-timepoint up to `horizon` number of time points.
+#' - **formulas**: A list of ARIMA, ETS, and/or NNETAR formulas
+#'
+#' @details
+#'
+#' When fitting time series models, the set of models used (and their parameters) can be defined via a named list passed to the "models" argument. The list should contain elements that define the right-hand side of model formulas. The function internally uses the [fable::fable] package, and any models provided must be part of the `fable` ecosystem of time series models. The models passed must be named as "arima", "ets", and "nnetar". To skip any one of these models set the named argument for the given model to `NULL`. The "models" argument defaults to `list(arima = "PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)", ets = "season(method='N')", nnetar = NULL)`. To run an unconstrained ARIMA: `list(arima='PDQ() + pdq()')` (see [fable::ARIMA]). To run a seasonal exponential smoothing: `list(ets='season(method=c("A", "M", "N"), period="3 months")')` (see [fable::ETS]). To run an autoregressive neural net with P=1: `list(nnetar="AR(P=1)")` (see [fable::NNETAR]).
+#'
+#' @references <https://fable.tidyverts.org/>
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
-#' ## save(h_raw, file="~/Downloads/h_raw.rd")
-#' ## load(file="~/Downloads/h_raw.rd")
+#' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' # Create a keyed time series tibble with only locations of interest
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
-#'                                      epiyear = epiyear,
-#'                                      epiweek=epiweek,
-#'                                      key=location)
-#' prepped_tsibble <-
-#'   prepped_tsibble %>%
+#'                                 epiyear = epiyear,
+#'                                 epiweek=epiweek,
+#'                                 key=location) %>%
 #'   dplyr::filter(location %in% c("US", "51"))
+#'
 #' # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
+#' hospfor1 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=TRUE)
 #' # Run an unconstrained ARIMA, seasonal ETS, no NNETAR
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"),
-#'                                models=list(arima='PDQ() + pdq()',
-#'                                            ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                            nnetar=NULL))
-#' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
-#'                                horizon=4L,
-#'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"),
-#'                                models=list(arima='PDQ() + pdq()',
-#'                                            ets='season(method=c("A", "M", "N"), period="3 months")',
-#'                                            nnetar="AR(P=1)"))
+#' hospfor2 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=TRUE,
+#'                             models=list(arima='PDQ() + pdq()',
+#'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                         nnetar=NULL))
+#' # Run an unconstrained ARIMA, seasonal ETS, NNETAR
+#' hospfor3 <- ts_fit_forecast(prepped_tsibble,
+#'                             horizon=4L,
+#'                             outcome="flu.admits",
+#'                             covariates=TRUE,
+#'                             models=list(arima='PDQ() + pdq()',
+#'                                         ets='season(method=c("A", "M", "N"), period="3 months")',
+#'                                         nnetar="AR(P=1)"))
 #' }
 ts_fit_forecast <- function(prepped_tsibble,
                             outcome="flu.admits",
@@ -59,9 +64,21 @@ ts_fit_forecast <- function(prepped_tsibble,
                             models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
                                         ets='season(method="N")',
                                         nnetar=NULL),
-                            covariates=c("hosp_rank", "ili_rank"),
-                            ensemble=TRUE,
-                            remove_null_models=TRUE) {
+                            covariates=TRUE,
+                            ensemble=TRUE) {
+
+  # If covariates is NULL or FALSE, make covariates NULL.
+  # If covariates is TRUE, make it covariates=c("hosp_rank", "ili_rank")
+  if (is.null(covariates) || !covariates) {
+    covariates <- NULL
+  } else if (covariates) {
+    covariates <- c("hosp_rank", "ili_rank")
+  } else {
+    stop("This shouldn't happen. Problem with covariates reassignment.")
+  }
+
+  # Make model names case-insensitive)
+  names(models) <- tolower(names(models))
 
   if (!is.null(trim_date)) {
     message(sprintf("Trimming to %s", trim_date))
@@ -152,25 +169,28 @@ ts_fit_forecast <- function(prepped_tsibble,
 }
 
 #' @title Forecast ILI
-#' @description Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
-#' @details Currently limited to one location only.
-#' @param ilidat Data returned from [get_cdc_ili].
+#'
+#' @description
+#'
+#' This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see [ts_fit_forecast]). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
+#' @param ilidat Data returned from [get_cdc_ili]
+#'
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
-#' @param trim_date Earliest start date you want to use for ILI data. Default `NULL` doesn't trim.
-#' @param models The list of model parameters passed to [ts_fit_forecast]. Defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`. See help for [ts_fit_forecast].
+#' @param trim_date Earliest start date you want to use for ILI data; default `NULL` doesn't trim
+#' @param models The list of model parameters passed to [ts_fit_forecast]; defaults to `list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"`
 #' @return A named list containing:
-#' 1. `ilidat`: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
-#' 1. `ilidat_tsibble`: The `tsibble` class object returned by running [make_tsibble] on the data above.
-#' 1. `ili_fit`: The fit from [fabletools::model].
-#' 1. `ili_forecast`: The forecast from [fabletools::forecast] at the specified horizon.
-#' 1. `ili_future`: The `horizon`-number of weeks of ILI data forecasted into the future.
-#' 1. `ili_bound`: The data in 1 bound to the data in 5.
-#' 1. `arima_params`: A tibble with ARIMA model parameters for each location (if `type="arima"`).
-#' 1. `locstats`: A tibble with missing data information on all locations.
-#' 1. `removed`: A tibble with locations removed because of high missing ILI data.
+#' - **ilidat**: The data sent into the function filtered to the location and the `trim_date`. Select columns returned.
+#' - **ilidat_tsibble**: The `tsibble` class object returned by running [make_tsibble] on the data above.
+#' - **ili_fit**: The fit from [fabletools::model].
+#' - **ili_forecast**: The forecast from [fabletools::forecast] at the specified horizon.
+#' - **ili_future**: The `horizon`-number of weeks of ILI data forecasted into the future.
+#' - **ili_bound**: The data in 1 bound to the data in 5.
+#' - **arima_params**: A tibble with ARIMA model parameters for each location (if `type="arima"`).
+#' - **locstats**: A tibble with missing data information on all locations.
+#' - **removed**: A tibble with locations removed because of high missing ILI data.
 #' @examples
 #' \dontrun{
-#' # Get data
+#' # Retrieve ILI data
 #' ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
 #'                       years = 2010:lubridate::year(lubridate::today()))
 #'
@@ -179,62 +199,12 @@ ts_fit_forecast <- function(prepped_tsibble,
 #' # Replace most recent week with nowcast data, and nowcast last week
 #' ilidat_us <- ilidat_us %>% replace_ili_nowcast(weeks_to_replace=1)
 #' ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+#' # Take a look at objects that come out ILI forecasting procedure
 #' ilifor_us$ili_fit
 #' ilifor_us$arima_params
 #' ilifor_us$ili_forecast
 #' head(ilifor_us$ili_bound)
 #' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_us$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-03-01") %>%
-#'   ggplot(aes(date, ili)) +
-#'   geom_line(lwd=.3, alpha=.5) +
-#'   geom_point(aes(col=forecasted), size=2)
-#'
-#' # At the state level
-#' ilidat_st <- ilidat %>% dplyr::filter(region_type=="States")
-#' ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
-#'                           models=list(ets="season(method='N')"))
-#' ilifor_st$ili_fit
-#' ilifor_st$arima_params
-#' ilifor_st$ili_forecast
-#' head(ilifor_us$ili_bound)
-#' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_st$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-08-01") %>%
-#'   ggplot(aes(date, ili, col=forecasted)) +
-#'   geom_line(lwd=.3) +
-#'   geom_point(aes(col=forecasted), size=.7) +
-#'   facet_wrap(~abbreviation, scale="free_y")
-#'
-#' ## At the HHS regional level
-#' ilidat_hhs <- ilidat %>% dplyr::filter(region_type=="HHS Regions")
-#' ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, trim_date="2020-03-01")
-#' ilifor_hhs$ili_fit
-#' ilifor_hhs$arima_params
-#' ilifor_hhs$ili_forecast
-#' head(ilifor_us$ili_bound)
-#' tail(ilifor_us$ili_bound, 10)
-#' # Plot
-#' library(dplyr)
-#' library(ggplot2)
-#' theme_set(theme_classic())
-#' ilifor_hhs$ili_bound %>%
-#'   mutate(date=mmwr_week_to_date(epiyear, epiweek)) %>%
-#'   filter(date>"2021-08-01") %>%
-#'   ggplot(aes(date, ili, col=forecasted)) +
-#'   geom_line(lwd=.3) +
-#'   geom_point(aes(col=forecasted), size=.7) +
-#'   facet_wrap(~abbreviation, scale="free_y")
 #' }
 #' @export
 forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)")) {
@@ -323,40 +293,52 @@ forecast_ili <- function(ilidat, horizon=4L, trim_date=NULL, models=list(arima="
 }
 
 
-#' Nowcast clinical laboratory percent positive flu data
+#' @title Nowcast clinical laboratory percent positive flu data
 #'
-#' @description This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
+#' @description
 #'
-#' @param clin Data prepared with [get_cdc_clin()]
-#' @param weeks_to_replace Number of retrospective weeks to replace with nowcast; default is 1
+#' This function provides a naive nowcasting method for clinical laboratory percent positive flu data. The methodology simply averages the last 4 weeks of available data and uses this average as the value for the number of weeks specified to replace. The function will always add 1 additional week to the observed data and (optionally) replace the number of weeks specified in the "weeks_to_replace" argument. This is useful given that there is reporting lag in the NREVSS clinical laboratory percent positive flu data.
 #'
-#' @return A tibble formatted the same as that returned with `get_cdc_clin()` but where the n most recent weeks (n="weeks_to_replace") have been nowcasted.
+#' @param clin Data prepared with [get_cdc_clin]
+#' @param weeks_to_replace Number of retrospective weeks to replace with nowcast; default is `1`
+#'
+#' @return A `tibble` with the following columns:
+#'
+#' - **abbreviation**: Abbreviation for the location
+#' - **location**: FIPS code for the location
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **p_positive**: Percentage of positive specimens
+#' - **n_positive**: Total number of positive specimens
+#' - **total**: Total number of specimens tested
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #'
-#' ## get data for Texas
+#' # Get data for Texas
 #' tx_clin <-
-#' get_cdc_clin(region = "state") %>%
-#' dplyr::filter(location == "48")
+#'   get_cdc_clin(region = "state") %>%
+#'   dplyr::filter(location == "48")
 #'
-#' ## look at most recent observations
+#' # Look at most recent observations
 #' tx_clin %>%
-#' dplyr::arrange(week_start) %>%
-#' tail()
+#'   dplyr::arrange(week_start) %>%
+#'   tail()
 #'
-#' ## now augment with default 1 week nowcast
+#' # Now augment with default 1 week nowcast
 #' tx_clin %>%
-#' clin_nowcast(., weeks_to_replace = 1) %>%
-#' dplyr::arrange(week_start) %>%
-#' tail()
+#'   clin_nowcast(., weeks_to_replace = 1) %>%
+#'   dplyr::arrange(week_start) %>%
+#'   tail()
 #'
-#' ## and again augmented with 2 week nowcast instead
+#' # And again augmented with 2 week nowcast instead
 #' tx_clin %>%
-#'  clin_nowcast(., weeks_to_replace = 2) %>%
-#'  dplyr::arrange(week_start) %>%
-#'  tail()
+#'   clin_nowcast(., weeks_to_replace = 2) %>%
+#'   dplyr::arrange(week_start) %>%
+#'   tail()
 #'
 #' }
 #'
@@ -389,9 +371,11 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
     dplyr::arrange(location, week_start)
 }
 
-#' Simple Poisson count forecaster
+#' @title Simple Poisson count forecaster
 #'
-#' @description This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
+#' @description
+#'
+#' This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
 #'
 #' @param .data Data frame with incoming data that includes a variable with counts (see ".var" argument), and location (must be stored in a column called "location") and a variable for sorting by date (must be stored in a column called "week_start")
 #' @param .location The name of the location of interest
@@ -402,20 +386,14 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' all_clin <- get_cdc_clin()
 #' va_ahead <-
-#' dplyr::tibble(
-#' n_positive = pois_forc(all_clin, .location = "51", n_positive),
-#' total = pois_forc(all_clin, .location = "51", total),
-#' p_positive = n_positive / total
-#' )
-#'
+#'   dplyr::tibble(
+#'     n_positive = pois_forc(all_clin, .location = "51", n_positive),
+#'     total = pois_forc(all_clin, .location = "51", total),
+#'     p_positive = n_positive / total)
 #' va_ahead
-#'
 #' }
-#'
-#'
 pois_forc <- function(.data, .location, .var) {
 
   ## handle for NSE
@@ -439,9 +417,11 @@ pois_forc <- function(.data, .location, .var) {
   c(n1ahead,n2ahead,n3ahead,n4ahead)
 }
 
-#' Forecast categorical targets
+#' @title Forecast categorical targets
 #'
-#' @description This function takes probabilistic flu hospitalization forecast input and converts the forecasted values for each location to a categorical "change" indicator. The criteria for each level ("large decrease", "decrease", "stable", "increase", "large increase") was defined by the CDC (see link in references). The algorithm evaluates absolute changes in counts and rates (per 100k individuals) for the most recently observed week and a 2 week ahead forecasted horizon. This procedure runs independently for each location, and results in a formatted tabular output that includes each possible level and its corresponding probability of being observed (calculated from probabilistic quantiles) for every location.
+#' @description
+#'
+#' This function takes probabilistic flu hospitalization forecast input and converts the forecasted values for each location to a categorical "change" indicator. The criteria for each level ("large decrease", "decrease", "stable", "increase", "large increase") was defined by the CDC (see link in references). The algorithm evaluates absolute changes in counts and rates (per 100k individuals) for the most recently observed week and a 2 week ahead forecasted horizon. This procedure runs independently for each location, and results in a formatted tabular output that includes each possible level and its corresponding probability of being observed (calculated from probabilistic quantiles) for every location.
 #'
 #' @param .forecast A tibble with "submission-ready" probabilistic flu hospitalization forecast data (i.e., tibble contained in list element returned from [format_for_submission])
 #' @param .observed A tibble with observed flu admission data (i.e., tibble output from [prep_hdgov_hosp])
@@ -459,9 +439,11 @@ pois_forc <- function(.data, .location, .var) {
 #'
 #' @examples
 #' \dontrun{
-#'
+#' # Retrieve hospitalization data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' # Create a keyed time series tibble with only locations of interest
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                      epiyear = epiyear,
 #'                                      epiweek=epiweek,
@@ -471,15 +453,12 @@ pois_forc <- function(.data, .location, .var) {
 #' hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 #'                                horizon=4L,
 #'                                outcome="flu.admits",
-#'                                covariates=c("hosp_rank", "ili_rank"))
-#'
+#'                                covariates=TRUE)
+#' # Prepare forecast for quantile submission format
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' # Run categorical summary of quantiles for the time series ensemble
 #' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
-#'
 #' }
-#'
-#'
-
 forecast_categorical <- function(.forecast, .observed) {
 
   ## prep the .forecast object for experimental target summary
@@ -556,18 +535,19 @@ forecast_categorical <- function(.forecast, .observed) {
   # What are the names of the categories to forecast?
   categories <- c("large_decrease", "decrease", "stable", "increase", "large_increase")
   # Which ones are missing from the data?
-  missing_from_res <- categories[!categories %in% res$type_id]
-  # Fill those in with zeros
-  add_to_res <- tidyr::crossing(forecast_date=unique(res$forecast_date),
+  allcrossed <- tidyr::crossing(forecast_date=unique(res$forecast_date),
                                 target=unique(res$target),
                                 location=unique(res$location),
                                 type=unique(res$type),
-                                type_id=missing_from_res,
+                                type_id=categories,
                                 value=0)
-  # Bind to the existing data, and make type_id a factor for possible plotting
-  res <-
-    res %>%
-    dplyr::bind_rows(add_to_res) %>%
+  res <- allcrossed %>%
+    dplyr::anti_join(res, by=c("forecast_date", "target", "location", "type", "type_id")) %>%
+    dplyr::bind_rows(res, .) %>%
     dplyr::arrange(location) %>%
-    dplyr::mutate(type_id=factor(type_id, levels=categories))
+    dplyr::mutate(type_id=factor(type_id, levels=categories)) %>%
+    dplyr::filter(!is.na(type_id))
+
+  res
+
 }

@@ -12,37 +12,34 @@ forecast_ili(
 )
 }
 \arguments{
-\item{ilidat}{Data returned from \link{get_cdc_ili}.}
+\item{ilidat}{Data returned from \link{get_cdc_ili}}
 
 \item{horizon}{Optional horizon periods through which the forecasts should be generated; default is \code{4}}
 
-\item{trim_date}{Earliest start date you want to use for ILI data. Default \code{NULL} doesn't trim.}
+\item{trim_date}{Earliest start date you want to use for ILI data; default \code{NULL} doesn't trim}
 
-\item{models}{The list of model parameters passed to \link{ts_fit_forecast}. Defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}. See help for \link{ts_fit_forecast}.}
+\item{models}{The list of model parameters passed to \link{ts_fit_forecast}; defaults to \verb{list(arima="PDQ(0,0,0)+pdq(1:2,0:2,0)"}}
 }
 \value{
 A named list containing:
-\enumerate{
-\item \code{ilidat}: The data sent into the function filtered to the location and the \code{trim_date}. Select columns returned.
-\item \code{ilidat_tsibble}: The \code{tsibble} class object returned by running \link{make_tsibble} on the data above.
-\item \code{ili_fit}: The fit from \link[fabletools:model]{fabletools::model}.
-\item \code{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
-\item \code{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
-\item \code{ili_bound}: The data in 1 bound to the data in 5.
-\item \code{arima_params}: A tibble with ARIMA model parameters for each location (if \code{type="arima"}).
-\item \code{locstats}: A tibble with missing data information on all locations.
-\item \code{removed}: A tibble with locations removed because of high missing ILI data.
+\itemize{
+\item \strong{ilidat}: The data sent into the function filtered to the location and the \code{trim_date}. Select columns returned.
+\item \strong{ilidat_tsibble}: The \code{tsibble} class object returned by running \link{make_tsibble} on the data above.
+\item \strong{ili_fit}: The fit from \link[fabletools:model]{fabletools::model}.
+\item \strong{ili_forecast}: The forecast from \link[fabletools:forecast]{fabletools::forecast} at the specified horizon.
+\item \strong{ili_future}: The \code{horizon}-number of weeks of ILI data forecasted into the future.
+\item \strong{ili_bound}: The data in 1 bound to the data in 5.
+\item \strong{arima_params}: A tibble with ARIMA model parameters for each location (if \code{type="arima"}).
+\item \strong{locstats}: A tibble with missing data information on all locations.
+\item \strong{removed}: A tibble with locations removed because of high missing ILI data.
 }
 }
 \description{
-Forecasts ILI up to specified weeks in the future. Used in downstream modeling.
-}
-\details{
-Currently limited to one location only.
+This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see \link{ts_fit_forecast}). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
 }
 \examples{
 \dontrun{
-# Get data
+# Retrieve ILI data
 ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
                       years = 2010:lubridate::year(lubridate::today()))
 
@@ -51,61 +48,11 @@ ilidat_us <- ilidat \%>\% dplyr::filter(location=="US")
 # Replace most recent week with nowcast data, and nowcast last week
 ilidat_us <- ilidat_us \%>\% replace_ili_nowcast(weeks_to_replace=1)
 ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+# Take a look at objects that come out ILI forecasting procedure
 ilifor_us$ili_fit
 ilifor_us$arima_params
 ilifor_us$ili_forecast
 head(ilifor_us$ili_bound)
 tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_us$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-03-01") \%>\%
-  ggplot(aes(date, ili)) +
-  geom_line(lwd=.3, alpha=.5) +
-  geom_point(aes(col=forecasted), size=2)
-
-# At the state level
-ilidat_st <- ilidat \%>\% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
-                          models=list(ets="season(method='N')"))
-ilifor_st$ili_fit
-ilifor_st$arima_params
-ilifor_st$ili_forecast
-head(ilifor_us$ili_bound)
-tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_st$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-08-01") \%>\%
-  ggplot(aes(date, ili, col=forecasted)) +
-  geom_line(lwd=.3) +
-  geom_point(aes(col=forecasted), size=.7) +
-  facet_wrap(~abbreviation, scale="free_y")
-
-## At the HHS regional level
-ilidat_hhs <- ilidat \%>\% dplyr::filter(region_type=="HHS Regions")
-ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, trim_date="2020-03-01")
-ilifor_hhs$ili_fit
-ilifor_hhs$arima_params
-ilifor_hhs$ili_forecast
-head(ilifor_us$ili_bound)
-tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_hhs$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-08-01") \%>\%
-  ggplot(aes(date, ili, col=forecasted)) +
-  geom_line(lwd=.3) +
-  geom_point(aes(col=forecasted), size=.7) +
-  facet_wrap(~abbreviation, scale="free_y")
 }
 }

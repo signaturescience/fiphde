@@ -2,7 +2,7 @@
 % Please edit documentation in R/retrieve.R
 \name{hospitalizations}
 \alias{hospitalizations}
-\title{Laboratory-Confirmed Influenza Hospitalizations}
+\title{Laboratory-confirmed influenza hospitalizations}
 \usage{
 hospitalizations(
   surveillance_area = c("flusurv", "eip", "ihsp"),
@@ -11,14 +11,11 @@ hospitalizations(
 )
 }
 \arguments{
-\item{surveillance_area}{one of "\code{flusurv}", "\code{eip}", or "\code{ihsp}"}
+\item{surveillance_area}{One of \code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}}
 
-\item{region}{Using "\code{all}" mimics selecting "Entire Network" from the
-CDC FluView application drop down. Individual regions for each
-surveillance area can also be selected. Use \code{\link[=surveillance_areas]{surveillance_areas()}} to
-see a list of valid sub-regions for each surveillance area.}
+\item{region}{Individual region within the surveillance area selected; default \code{"all"} mimics selecting "Entire Network" from the CDC FluView application drop down; see "Details" for list of valid region values for each surveillance area}
 
-\item{years}{a vector of years to retrieve data for (i.e. \code{2014} for CDC
+\item{years}{A vector of years to retrieve data for (i.e. \code{2014} for CDC
 flu season 2014-2015). CDC has data for this API going back to 2009
 and up until the \emph{previous} flu season.
 Default value (\code{NULL}) means retrieve \strong{all} years. NOTE: if you
@@ -27,14 +24,19 @@ the function is smart enough to retrieve by season ID vs convert that
 to a year.}
 }
 \description{
-Adapted from cdcfluview::ilinet.
+Adapted from \code{cdcfluview::hospitalizations}.
+
+This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
 }
-\examples{
-\dontrun{
-hosp_fs <- hospitalizations("flusurv", years=2015)
-hosp_eip <- hospitalizations("eip")
-hosp_ihsp <- hospitalizations("ihsp")
+\details{
+Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}) can be further queried by region. The following is a list of valid regions:
+\itemize{
+\item \strong{flusurv}: "Entire Network"
+\item \strong{eip}: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
+\item \strong{ihsp}: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
 }
+
+NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API (https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public).
 }
 \references{
 \itemize{

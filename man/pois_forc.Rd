@@ -21,18 +21,12 @@ This function is a helper that forecasts Poisson counts for 4 near-term horizons
 }
 \examples{
 \dontrun{
-
 all_clin <- get_cdc_clin()
 va_ahead <-
-dplyr::tibble(
-n_positive = pois_forc(all_clin, .location = "51", n_positive),
-total = pois_forc(all_clin, .location = "51", total),
-p_positive = n_positive / total
-)
-
+  dplyr::tibble(
+    n_positive = pois_forc(all_clin, .location = "51", n_positive),
+    total = pois_forc(all_clin, .location = "51", total),
+    p_positive = n_positive / total)
 va_ahead
-
 }
-
-
 }

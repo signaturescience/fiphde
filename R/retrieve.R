@@ -1,18 +1,41 @@
-#' @title Get hospitalization data
-#' @description Retrieves hospitalization data from the healthdata.gov endpoint with optional filtering on fields, and return the results into a nice tibble.
-#' @param endpoint URL to healthdata.gov endpoint (see references)..
-#' @param limitcols Limit the columns returned to the subjectively defined important ones?
-#' @param app_token App token from healthdata.gov. If `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
-#' @return A tibble
-#' @references API documentation: <http://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>.
+#' @title Retrieve hospitalization data from HHS
+#'
+#' @description
+#'
+#' This function retrieves hospital utilization time series data distributed through healthdata.gov. Data are aggregated to the state granularity from facility level reports via HHS TeleTracking, HHS Protect, and the National Healthcare Safety Network (historically). Users can optionally filter to include all fields or restrict to a prespecified set of fields relevant to COVID and influenza hospital utilization. The results are returned as a `tibble`.
+#'
+#' @param endpoint URL to healthdata.gov endpoint
+#' @param limitcols Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default `FALSE`
+#' @param app_token App token from healthdata.gov; default is to look for environment variable called `"HEALTHDATA_APP_TOKEN"` and if a token is not supplied to proceed with possibility of rate limitation (see "Details" for more information)
+#' @details The data retrieval will proceed whether or not an API token has been supplied via the `app_token` argument. However, to avoid possible rate limits it is recommended to retrieve a token for the healthdata.gov API (<https://healthdata.gov/profile/edit/developer_settings>), and add that token as an entry to `.Renviron` with `HEALTHDATA_APP_TOKEN="yourtokenhere"`.
+#' @return A `tibble` with at least the following columns:
+#'
+#' - **state**: Abbreviation of the state
+#' - **date**: Date of report
+#' - **flu.admits**: Count of flu cases among admitted patients on previous day
+#' - **flu.admits.cov**: Coverage (number of hospitals reporting) for incident flu cases
+#' - **flu.deaths**: Count of flu deaths on previous day
+#' - **flu.deaths.cov**: Coverage (number of hospitals reporting) for flu deaths
+#' - **flu.icu**: Count of flu cases among ICU patients on previous day
+#' - **flu.icu.cov**: Coverage (number of hospitals reporting) for flu ICU cases
+#' - **flu.tot**: Count of total flu cases among admitted patients
+#' - **flu.tot.cov**: Coverage (number of hospitals reporting) for total flu cases
+#' - **cov.admits**: Count of COVID cases among admitted patients on previous day
+#' - **cov.admits.cov**: Coverage (number of hospitals reporting) for incident COVID cases
+#' - **cov.deaths**: Count of COVID deaths on previous day
+#' - **cov.deaths.cov**: Coverage (number of hospitals reporting) for COVID deaths
+#'
+#' If `limitcols=TRUE` then the only columns returned will be those listed above. However, if `limitcols=FALSE` then the function will additionally return *all* other fields in the state-aggregated hospitalization data.
+#'
+#' @references <https://healthdata.gov/Hospital/COVID-19-Reported-Patient-Impact-and-Hospital-Capa/g62h-syeh>
+#' @references <https://dev.socrata.com/foundry/healthdata.gov/g62h-syeh>
+#'
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data (all columns)
+#' get_hdgov_hosp()
+#' # Retrieve hospitalization data (limited columns)
 #' get_hdgov_hosp(limitcols=TRUE)
-#' get_hdgov_hosp(mindate="2021-11-01", limitrows=10, limitcols=FALSE)
-#' get_hdgov_hosp(state="VA")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-10-31")
-#' get_hdgov_hosp(state="VA", mindate="2021-10-01", maxdate="2021-11-21", limitrows=5)
 #' }
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/rows.csv",
@@ -67,75 +90,34 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
 
 }
 
-
-
-#' @title Get vaccination data
-#' @description Get vaccination data from cdc.gov endpoint.
-#' @param endpoint URL to cdc.gov endpoint. See references.
-#' @param app_token App token from healthdata.gov. If it's `NULL` you might get rate limited. Add an entry to your `~/.Renviron` with `HEALTHDATA_APP_TOKEN="tokenhere"` that you got from <https://healthdata.gov/profile/edit/developer_settings>.
-#' @return A tibble
-#' @references API documentation: <https://dev.socrata.com/foundry/data.cdc.gov/k87d-gv3u>.
-#' @examples
-#' \dontrun{
-#' d <- get_cdc_vax()
-#' d
-#' library(ggplot2)
-#' d %>%
-#'   ggplot(aes(date, cumulative_flu_doses_distributed)) +
-#'   geom_line() +
-#'   facet_wrap(~season, scale="free_x") +
-#'   theme_bw()
-#' rm(d)
-#' }
-#' @export
-get_cdc_vax <- function(endpoint="https://data.cdc.gov/api/views/k87d-gv3u/rows.csv",
-                        app_token=Sys.getenv("HEALTHDATA_APP_TOKEN")) {
-
-  api_url <- endpoint
-
-  if (!is.null(app_token) && is.character(app_token) && app_token!="") {
-    api_url <- paste0(api_url, "?$$app_token=", app_token)
-  }
-
-  # Get the data
-  d <- readr::read_csv(api_url, progress=FALSE, show_col_types = FALSE)
-
-  # Make it a tibble, and fix the date
-  d <-
-    d %>%
-    tibble::as_tibble() %>%
-    purrr::set_names(tolower) %>%
-    dplyr::mutate(week=as.numeric(week)) %>%
-    dplyr::mutate(cumulative_flu_doses_distributed=as.numeric(cumulative_flu_doses_distributed)) %>%
-    # Separate the season (20xx-20yy) into two different years
-    tidyr::separate(season, into=c("y1", "y2"), sep="-", remove=FALSE) %>%
-    # If it's July-December, it's 20xx, else it's 20yy
-    dplyr::mutate(year=ifelse(month %in% c("July", "August", "September", "October", "November", "December"), y1, y2), .before=1L) %>%
-    dplyr::select(-y1, -y2) %>%
-    # Figure out January, February, ..., November, December is month 1, 2, ..., 11, 12
-    dplyr::inner_join(tibble::tibble(month=month.name, month_calendar_number=1:12), by="month") %>%
-    # Figure out the date. Start with the year and the month number ie 20XX-MM, then start with the first day of that month, 01,
-    # then add 7 days for each week elapsed in that month.
-    dplyr::mutate(date = lubridate::as_date(paste(year, month_calendar_number, "01", sep="-"))  + lubridate::weeks(week-1), .before=1L) %>%
-    # Get the epiweek and year
-    dplyr::mutate(epiyear=lubridate::epiyear(date), epiweek=lubridate::epiweek(date)) %>%
-    # Reorder columns keeping only the useful ones
-    dplyr::select(season, year, month, month_number, month_calendar_number, week, epiyear, epiweek, date, cumulative_flu_doses_distributed, imputed_value)
-
-  message(paste0(nrow(d), " rows retrieved from:\n", api_url))
-  return(d)
-
-}
-
-
-#' @title Get ILI data from CDC FluView
-#' @description Get ILI data from CDC FluView. See [ilinet].
-#' @param region Either "state", "national", or "hhs". Defaults to `c("national", "state", "hhs") for all three`.
+#' @title Retrieve ILI data from ILINet
+#'
+#' @description
+#'
+#' This function pulls ILINet data from the CDC FluView API. Data are available historically and can be pulled at the state, national, or HHS region level.
+#'
+#' @param region Either "state", "national", or "hhs"; defaults to `c("national", "state", "hhs")` for all three.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
-#' @return A tibble
-#' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **region_type**: The type of location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **weighted_ili**: Population-weighted percentage of ILI outpatient visits
+#' - **unweighted_ili**: Unweighted percentage of ILI outpatient visits
+#' - **ilitotal**: Total number of ILI outpatient visits reported
+#' - **num_providers**: Number of providers reporting
+#' - **total_patients**: Total number of outpatient visits reported
+#' - **population**: Total population for the given location
+#'
+#' @references <https://gis.cdc.gov/grasp/fluview/FluViewPhase1QuickReferenceGuide.pdf>
 #' @examples
 #' \dontrun{
+#' # Retrieve ILI data for specific years and regions
 #' get_cdc_ili(region="national", years=2021)
 #' get_cdc_ili(region="hhs", years=2021)
 #' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
@@ -165,30 +147,55 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
   return(d)
 }
 
-#' @title Get hospitalization data from CDC FluView
-#' @description Get hospitalization data from CDC FluView. See [hospitalizations].
+#' @title Retrieve hospitalization data from FluSurv-NET
+#'
+#' @description
+#'
+#' This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
+#'
+#'
 #' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
-#' @return A tibble
-#' @references cdcfluview documentation: <https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data>.
+#'
+#' @return A `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **abbreviation**: Abbreviation for the location
+#' - **region**: Name of the region
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **week_end**: Date of end (Saturday) of the given epidemiological week
+#' - **rate**: The cumulative rate per 100k
+#' - **weekly_rate**: The weekly rate per 100k
+#' - **season**: The flu season to which the given epidemiological week belongs
+#'
+#' @references <https://gis.cdc.gov/GRASP/fluview/FluViewPhase3QuickReferenceGuide.pdf>
+#' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve FluSurv-Net hospitalization data for specific year(s)
 #' get_cdc_hosp(years=2019)
 #' }
 get_cdc_hosp <- function(years=NULL) {
-  warning("CDC hospitalization should only be used for historical analysis. Use get_hdgov_hosp() for flusight forecasting.")
-  d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)
+  d <- hospitalizations(surveillance_area="flusurv", region="all", years=NULL)
   d <- d %>%
     dplyr::filter(age_label=="Overall") %>%
+    dplyr::filter(race_label=="Overall") %>%
+    dplyr::filter(sexid == 0) %>%
+    dplyr::filter(name == "FluSurv-NET") %>%
+    dplyr::filter(!is.na(weeklyrate)) %>%
     dplyr::transmute(location="US",
                      abbreviation="US",
                      region="US",
                      epiyear=year,
-                     epiweek=year_wk_num,
-                     week_start=wk_start,
-                     week_end=wk_end,
+                     epiweek=weeknumber,
+                     week_start=weekend,
+                     week_end=weekstart,
                      rate,
                      weeklyrate,
-                     season=sea_label)
+                     season=season_label) %>%
+    ## coerce to tibble
+    dplyr::as_tibble(.)
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
                   unique(d$epiyear[d$week_start==max(d$week_start)]),
@@ -197,13 +204,17 @@ get_cdc_hosp <- function(years=NULL) {
 }
 
 
-#' @title Get ILI nowcast
-#' @description Get ILI nowcast from CMU Delphi ILI Nearby. See examples.
+#' @title Retrieve ILI nowcast
+#'
+#' @description
+#'
+#' This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
+#'
 #' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
 #' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
-#' @param boundatzero Bound nowcasts at zero? defaults to TRUE.
-#' @return A tibble
+#' @param boundatzero Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is `TRUE`
+#' @return A `tibble`
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
@@ -218,22 +229,11 @@ get_cdc_hosp <- function(years=NULL) {
 #' get_nowcast_ili(epiyearweeks=NULL,
 #'                 dates=lubridate::today()-seq(52*7, 7, -7),
 #'                 state="FL")
-#'
-#' # Compare to ilinet
-#' library(dplyr)
-#' library(ggplot2)
-#' ilidat <- get_cdc_ili(years=2021)
-#' ilinow <- get_nowcast_ili()
-#' ilijoined <-
-#'   inner_join(ilidat, ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
-#'   select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
-#' ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
-#' ilijoined %>%
-#'   mutate(diff=weighted_ili_now-weighted_ili) %>%
-#'   arrange(desc(abs(diff)))
 #' }
 #' @export
 get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL, boundatzero=TRUE) {
+
+  warning("As of October 2022 ILInearby was no longer being updated. This will likely return 'NA'. See https://github.com/cmu-delphi/delphi-epidata/issues/993")
 
   # Check that you're not supplying both. If you are, error out.
   if (!xor(is.null(epiyearweeks), is.null(dates))) {
@@ -281,7 +281,7 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   resjson <- jsonlite::read_json(api_url, simplifyVector = TRUE)
 
   ## check that epidata returns nowcast values for *all* weeks
-  if(purrr::is_empty(resjson$epidata) | !all(epiyearweeks %in% resjson$epidata$epiweek)) {
+  if(purrr::is_empty(resjson$epidata) | !all(strsplit(epiyearweeks, split=",")[[1]] %in% resjson$epidata$epiweek)) {
     message("The nowcast data returned is missing some or all of the query weeks. Returning NA.")
     return(NA)
   } else {
@@ -308,34 +308,44 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
   }
 }
 
-#' Retrieve and prep clinical laboratory percent positive flu data
+#' @title Retrieve clinical laboratory percent positive flu data
 #'
-#' @description This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument.
+#' @description
 #'
-#' @param region Either "state", "national", or "both". Defaults to "both" to return state and national data combined.
+#' This function returns weekly state and/or national clinical laboratory percent positivity data from the NREVSS reporting instrument via the CDC FluView API.
+#'
+#' @param region Either "state", "national", or "both". Defaults to `"both"` to return state and national data combined.
 #' @param years A vector of years to retrieve data for. CDC has data going back to 1997. Default value (`NULL`) retrieves **all** years.
 #'
-#' @return Tibble with prepared data pulled from NREVSS, including columns for total number of positives, percent positive, epiweek, epiyear
+#' @return A `tibble` with the following columns:
+#'
+#' - **abbreviation**: Abbreviation for the location
+#' - **location**: FIPS code for the location
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **week_start**: Date of beginning (Sunday) of the given epidemiological week
+#' - **p_positive**: Percentage of positive specimens
+#' - **n_positive**: Total number of positive specimens
+#' - **total**: Total number of specimens tested
+#'
+#' @references <https://gis.cdc.gov/grasp/fluview/Phase_6_Cleared_Help.pdf>
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'
-#'## get all clinical lab flu positivity data
-#'all_clin <- get_cdc_clin()
-#'
-#'## or look at a specific location and time
-#'## note: the year "start" will begin at the first epiweek of the season
-#'## this example 2021 will weekly data ...
-#'## ... starting at beginning of 2021/22 season
-#'## ... ending the week before start of 2022/23 season
-#'va_clin <-
-#'get_cdc_clin(region = "state", years = 2021) %>%
-#'dplyr::filter(location == "51")
-#'
+#' # Get all clinical lab flu positivity data
+#' all_clin <- get_cdc_clin()
+#' all_clin
+#' # Alternatively look at a specific location and time
+#' # This 2021 will return weekly data
+#' # Starting at beginning of 2021/22 season
+#' # Ending the week before start of 2022/23 season
+#' va_clin <-
+#'   get_cdc_clin(region = "state", years = 2021) %>%
+#'   dplyr::filter(location == "51")
+#' va_clin
 #' }
-#'
-#'
 get_cdc_clin <- function(region = "both", years = NULL) {
 
   ## handle incoming arg
@@ -390,20 +400,17 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 
 }
 
-#' Retrieve ILINet Surveillance Data
+#' @title Retrieve ILINet surveillance data
 #'
-#' Adapted from cdcfluview::ilinet.
+#' @description
 #'
-#' The CDC FluView Portal provides in-season and past seasons' national, regional,
-#' and state-level outpatient illness and viral surveillance data from both
-#' ILINet (Influenza-like Illness Surveillance Network) and WHO/NREVSS
-#' (National Respiratory and Enteric Virus Surveillance System).
+#' Adapted from `cdcfluview::ilinet`.
 #'
-#' This function retrieves current and historical ILINet surveillance data for
-#' the identified region. The function is used internally in `get_cdc_ili()` but is not exported.
+#' This unexported helper function retrieves current and historical ILINet surveillance data for
+#' the identified region via the CDC FluView API. The function is used internally in [get_cdc_ili]. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 #'
-#' @param region one of "`national`", "`hhs`", "`census`", or "`state`"
-#' @param years a vector of years to retrieve data for (i.e. `2014` for CDC
+#' @param region One of "`national`", "`hhs`", "`census`", or "`state`"
+#' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 1997.
 #'        Default value (`NULL`) means retrieve **all** years. NOTE: if you
 #'        happen to specify a 2-digit season value (i.e. `57` == 2017-2018)
@@ -412,18 +419,7 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' - [CDC FluView Portal](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html)
-#' - [ILINet Portal](https://wwwn.cdc.gov/ilinet/) (Login required)
-#' - [WHO/NREVSS](https://www.cdc.gov/surveillance/nrevss/index.html)
-#' @examples
-#' \dontrun{
-#' national_ili <- ilinet("national", years = 2017)
-#' hhs_ili <- ilinet("hhs")
-#' census_ili <- ilinet("census")
-#' state_ili <- ilinet("state")
 #'
-#' all_ili <- suppressWarnings(
-#'   suppressMessages(purrr::map_df(c("national", "hhs", "census", "state"), ilinet)))
-#' }
 ilinet <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
 
   ## handle region argument
@@ -538,31 +534,38 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 
 }
 
-#' Laboratory-Confirmed Influenza Hospitalizations
+#' @title Laboratory-confirmed influenza hospitalizations
 #'
-#' Adapted from cdcfluview::ilinet.
+#' @description
 #'
-#' @param surveillance_area one of "`flusurv`", "`eip`", or "`ihsp`"
-#' @param region Using "`all`" mimics selecting "Entire Network" from the
-#'        CDC FluView application drop down. Individual regions for each
-#'        surveillance area can also be selected. Use [surveillance_areas()] to
-#'        see a list of valid sub-regions for each surveillance area.
-#' @param years a vector of years to retrieve data for (i.e. `2014` for CDC
+#' Adapted from `cdcfluview::hospitalizations`.
+#'
+#' This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by [get_cdc_hosp].
+#'
+#' @param surveillance_area One of `"flusurv"`, `"eip"`, or `"ihsp"`
+#' @param region Individual region within the surveillance area selected; default `"all"` mimics selecting "Entire Network" from the CDC FluView application drop down; see "Details" for list of valid region values for each surveillance area
+#' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 2009
 #'        and up until the _previous_ flu season.
 #'        Default value (`NULL`) means retrieve **all** years. NOTE: if you
 #'        happen to specify a 2-digit season value (i.e. `56` == 2016-2017)
 #'        the function is smart enough to retrieve by season ID vs convert that
 #'        to a year.
+#'
+#' @details
+#'
+#' Each possible value "surveillance_area" (`"flusurv"`, `"eip"`, or `"ihsp"`) can be further queried by region. The following is a list of valid regions:
+#'
+#' - **flusurv**: "Entire Network"
+#' - **eip**: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
+#' - **ihsp**: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
+#'
+#' NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API (https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public).
+#'
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
-#' @examples
-#' \dontrun{
-#' hosp_fs <- hospitalizations("flusurv", years=2015)
-#' hosp_eip <- hospitalizations("eip")
-#' hosp_ihsp <- hospitalizations("ihsp")
-#' }
+#'
 hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
                              region="all", years=NULL) {
 
@@ -570,8 +573,36 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
   sarea <- match.arg(tolower(surveillance_area), choices = c("flusurv", "eip", "ihsp"))
   sarea <- c(flusurv = "FluSurv-NET", eip = "EIP", ihsp = "IHSP")[sarea]
 
-  ## get metadata from CDC fluview API
-  meta <- jsonlite::fromJSON("https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public")
+  ## establish user agent for query
+  ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
+
+  body <-
+    list(
+      appversion = jsonlite::unbox("Public"),
+      key = jsonlite::unbox(""),
+      injson = I(list())
+    )
+
+  ## submit query to API
+  tmp_q <-
+    httr::POST(
+      httr::user_agent(ua),
+      url = "https://gis.cdc.gov/GRASP/Flu3/PostPhase03DataTool",
+      body = jsonlite::toJSON(body),
+      encode = "raw",
+      httr::accept_json(),
+      httr::add_headers(
+        `content-type` = "application/json;charset=UTF-8",
+        origin = "https://gis.cdc.gov",
+        referer = "https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html"
+      ),
+      httr::timeout(120)
+    )
+
+  httr::stop_for_status(tmp_q)
+
+  meta <- jsonlite::fromJSON(httr::content(tmp_q, as = "text"))
+
   ## use metadata to establish catchment data
   areas <- stats::setNames(meta$catchments[,c("networkid", "name", "area", "catchmentid")],
                            c("networkid", "surveillance_area", "region", "id"))
@@ -583,116 +614,59 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
   tgt <- dplyr::filter(areas, (surveillance_area == sarea) & (region == reg))
 
   if (nrow(tgt) == 0) {
-    stop("Region not found. Use `surveillance_areas()` to see a list of valid inputs.",
+    stop("Region not found. See ?hospitalizations to see a list of valid inputs.",
          call.=FALSE)
   }
 
-  ## establish user agent for query
-  ua <- "Mozilla/5.0 (compatible; R-fiphde Bot/1.0; https://github.com/signaturescience/fiphde)"
-
-  ## submit query to API
-  tmp_q <-
-    httr::POST(
-      url = "https://gis.cdc.gov/GRASP/Flu3/PostPhase03GetData",
-      httr::user_agent(ua),
-      httr::add_headers(
-        Origin = "https://gis.cdc.gov",
-        Accept = "application/json, text/plain, */*",
-        Referer = "https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html"
-      ),
-      encode = "json",
-      body = list(
-        appversion = "Public",
-        networkid = tgt$networkid,
-        cacthmentid = tgt$id
-      ),
-      httr::timeout(120)
-    )
-
-  httr::stop_for_status(tmp_q)
-
-  ## parse query
-  res <- httr::content(tmp_q)
-
   ## create a list object with metadata returned and the http query response
-  hosp <- list(res = res, meta = meta)
+  hosp <- list(res = meta$default_data, meta = meta)
 
   ## create a tibble with age metadata and labels
-  age_df <- stats::setNames(hosp$meta$ages, c("age_label", "age", "color"))
-  age_df <- age_df[,c("age", "age_label")]
+  age_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
+  age_df <- age_df[(age_df$variable == "Age" | age_df$value_id == 0) & !is.na(age_df$value_id),]
+  age_df <- stats::setNames(age_df[,c("value_id", "label")], c("ageid", "age_label"))
+  age_df <- age_df[order(age_df$ageid),]
+
+  ## cerate a tibble with race metadata
+  race_df <- stats::setNames(hosp$meta$master_lookup, c("variable", "value_id", "parent_id", "label", "color", "enabled"))
+  race_df <- race_df[(race_df$variable == "Race" | race_df$value_id == 0) & !is.na(race_df$value_id),]
+  race_df <- stats::setNames(race_df[,c("value_id", "label")], c("raceid", "race_label"))
 
   ## create a tibble with season metadata
-  sea_df <- stats::setNames(
-    hosp$meta$seasons,
-    c("sea_description", "sea_endweek", "sea_label", "seasonid", "sea_startweek", "color", "color_hexvalue")
-  )
-  sea_df <- sea_df[,c("seasonid", "sea_label", "sea_description", "sea_startweek", "sea_endweek")]
+  season_df <-
+    hosp$meta$seasons %>%
+    purrr::set_names(c("season_description", "season_enabled", "season_endweek", "season_label", "seasonid", "season_startweek", "include_weekly"))
 
-  ## variable names for hospital data
-  ser_names <- unlist(hosp$res$busdata$datafields, use.names = FALSE)
-
-  ## create tibble with hospital data
-  suppressWarnings(
-    suppressMessages(
-      mmwr_df <- dplyr::bind_rows(hosp$res$mmwr)
-    )
-  )
+  season_df <- season_df[,c("seasonid", "season_label", "season_description", "season_startweek", "season_endweek")]
 
   ## create tibble that maps mmwr week to season
+  mmwr_df <- hosp$meta$mmwr
   mmwr_df <- mmwr_df[,c("mmwrid", "weekend", "weeknumber", "weekstart", "year",
                         "yearweek", "seasonid", "weekendlabel", "weekendlabel2")]
+  mmwr_df$seasonid <- NULL
 
-  ## start binding actual hospitalization data to information about season and age groups queried
-  suppressMessages(
-    suppressWarnings(
+  ## create tibble with catchment metadata
+  catchments_df <- hosp$meta$catchments[,c("catchmentid", "beginseasonid", "endseasonid", "networkid", "name", "area")]
+  catchments_df$catchmentid <- as.character(catchments_df$catchmentid)
+  catchments_df$networkid <- NULL
 
-      xdf <-
-        dplyr::bind_rows(
-          lapply(hosp$res$busdata$dataseries, function(.x) {
-            tdf <-
-              dplyr::bind_rows(
-                lapply(.x$data, function(.x) stats::setNames(.x, ser_names))
-              )
-
-            tdf$age <- .x$age
-            tdf$season <- .x$season
-            tdf
-          })
-        )
-
-    )
-  )
-
-  ## create age labels as factors
-  if (length(unique(xdf$age)) > 9) {
-    age_df <-
-      data.frame(
-        age = 1:12,
-        age_label = c("0-4 yr", "5-17 yr", "18-49 yr", "50-64 yr", "65+ yr", "Overall",
-                      "65-74 yr", "75-84 yr", "85+", "18-29 yr", "30-39 yr", "40-49 yr"
-        )
-      )
-    age_df$age_label <- factor(age_df$age_label, levels = age_df$age_label)
-  }
-
-  ## join results data to information about mmwr week / season / age group and labels
+  ## join results data to information about mmwr week / season / age group / race and labels
   ## add a column for the surveillance area based on choice of "flusurv", "eip", or "ihsp"
   ## and add a column for region based on region argument value
   ## lastly join to mmwrid_map to get week start and week end
   xdf <-
-    dplyr::left_join(xdf, mmwr_df, c("mmwrid", "weeknumber")) %>%
-    dplyr::left_join(age_df, "age") %>%
-    dplyr::left_join(sea_df, "seasonid") %>%
+    hosp$res %>%
+    dplyr::left_join(mmwr_df, "mmwrid") %>%
+    dplyr::left_join(age_df, "ageid") %>%
+    dplyr::left_join(race_df, "raceid") %>%
+    dplyr::left_join(season_df, "seasonid") %>%
+    dplyr::mutate(catchmentid = as.character(catchmentid)) %>%
+    dplyr::left_join(catchments_df, "catchmentid") %>%
     dplyr::mutate(
       surveillance_area = sarea,
       region = reg
-    ) %>%
-    dplyr::left_join(mmwrid_map, "mmwrid")
+    )
 
-  ## subset to columns of interest
-  xdf <- xdf[,c("surveillance_area", "region", "year", "season", "wk_start", "wk_end",
-                "year_wk_num", "rate", "weeklyrate", "age", "age_label", "sea_label",
-                "sea_description", "mmwrid")]
 
   ## make sure that the data returned is for years selected
   ## based on available seasons
@@ -724,12 +698,16 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 
 }
 
-#' WHO/NREVSS surveillance data
+#' @title WHO/NREVSS clinical lab surveillance data
 #'
-#' Adapted from cdcfluview::who_nrevss.
+#' @description
 #'
-#' @param region one of "`national`", "`hhs`", "`census`", or "`state`"
-#' @param years a vector of years to retrieve data for (i.e. `2014` for CDC
+#' Adapted from `cdcfluview::who_nrevss`.
+#'
+#' This unexported helper function leverages the CDC FluView API to pull flu surveillance data collected from U.S. World Health Organization (WHO) Collaborating Laboratories and National Respiratory and Enteric Virus Surveillance System (NREVSS) laboratories. The data retrieved can be parameterized by geographic granularity and/or flu season. The function is used internally by [get_cdc_clin].
+#'
+#' @param region One of "`national`", "`hhs`", "`census`", or "`state`"
+#' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 1997.
 #'        Default value (`NULL`) means retrieve **all** years. NOTE: if you
 #'        happen to specify a 2-digit season value (i.e. `57` == 2017-2018)
@@ -737,13 +715,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #'        to a year.
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
-#' @examples
-#' \dontrun{
-#' national_nrevss <- who_nrevss("national")
-#' hhs_who <- who_nrevss("hhs")
-#' census_who <- who_nrevss("census")
-#' state_who <- who_nrevss("state")
-#' }
+#'
 who_nrevss <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
 
   ## handle region arg

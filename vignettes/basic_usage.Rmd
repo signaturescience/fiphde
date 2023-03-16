@@ -55,7 +55,7 @@ The fiphde package retrieves current data from HHS and CDC APIs and fits models 
 
 To get started, load the packages that are used in this vignette.
 
-```{r setup,}
+```{r setup}
 library(fiphde)
 library(dplyr)
 library(purrr)
@@ -136,19 +136,18 @@ prepped_hosp_tsibble
 
 Next, let's fit a time series model and create forecasts using the `ts_fit_forecast` function. This function takes a tsibble created as above, a forecast horizon in weeks, the name of the outcome variable to forecast, and optional covariates to use in the ARIMA model. 
 
-Here we fit a non-seasonal ARIMA model with the autoregressive term (p) restricted to 1:2, order of integration for differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an autoregressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We can also trim the data used in modeling, and here we restrict to only include hospitalization data reported after January 1, 2021. By setting `ensemble=TRUE` we create an ensemble model that averages the ARIMA and exponential smoothing models. The `remove_null_models=TRUE` specification identifies models that did not converge and removes those from downstream processing.
+Here we fit a non-seasonal ARIMA model with the autoregressive term (p) restricted to 1:2, order of integration for differencing (d) restricted to 0:2, and the moving average (q) restricted to 0 (see `?fable::ARIMA` for more information). The model also fits a non-seasonal exponential smoothing model (see `?fable::ETS` for details). In this example we do not fit an autoregressive neural network model, but we could change `nnetar=NULL` to `nnetar="AR(P=1)"` to do so (see `?fable::nnetar` for details). We can also trim the data used in modeling, and here we restrict to only include hospitalization data reported after January 1, 2021. By setting `ensemble=TRUE` we create an ensemble model that averages the ARIMA and exponential smoothing models.
 
 ```{r, eval=FALSE}
 hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                horizon=4L,
                                outcome="flu.admits",
                                trim_date = "2021-01-01",
-                               covariates=c("hosp_rank", "ili_rank"), 
+                               covariates=TRUE, 
                                models=list(arima='PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)',
                                            ets='season(method="N")',
                                            nnetar=NULL), 
-                               ensemble=TRUE, 
-                               remove_null_models=TRUE)
+                               ensemble=TRUE)
 ```
 
 The function will output messages describing the ARIMA and ETS model formulas passed to `fable::ARIMA` and `fable::ETS`.
@@ -214,7 +213,7 @@ ilidat <-
   filter(region == "Hawaii") %>%
   replace_ili_nowcast(., weeks_to_replace=1)
 
-ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01", stepwise=FALSE, approximation=FALSE)
+ilifor <- forecast_ili(ilidat, horizon=4L, trim_date="2020-03-01")
 ```
 
 In the next step we are going to log transform weighted ILI and flu admissions, so in this step we need to remove all the zeros. The fiphde package provides the `mnz_replace` function which replaces zeros in a variable with the smallest non-zero value of that variable.
@@ -297,8 +296,4 @@ Finally, we can visualize the forecasted point estimates with the 90% prediction
 
 ```{r, warning=FALSE}
 plot_forecast(dat_hi, hi_glm_prepped$CREG, location="15", pi=.9)
-```
-
-```{r, eval=TRUE, echo=FALSE}
-knitr::knit_exit()
 ```

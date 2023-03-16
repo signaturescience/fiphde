@@ -1,3 +1,37 @@
+# fiphde 1.0.0
+
+This major release introduces new features, improved documentation throughout, automated unit tests, and a simplified API. 
+
+## New Features
+
+### `plot_forecast_categorical()`
+
+The package now includes a data visualization method for categorical forecast summaries via the `plot_forecast_categorical()` function. This function returns a `ggplot2` object with a stacked barplot showing the probabilities assigned to each categorical bin at every location. 
+
+### Parity between objects returned
+
+Package functions previously returned a mix of `data.frame` and `tibble` objects. As of this release, each such function returns a `tibble` for consistency. 
+
+###  Messaging for `get_nowcast_ili()`
+
+The `get_nowcast_ili()` uses the Delphi ILI Nearby API. As of this release, the API was documented as no longer being updated. The function (and any others that call this function, like `replace_ili_nowcast()`) now issue the following warning:
+
+> As of October 2022 ILInearby was no longer being updated. This will likely return 'NA'. See https://github.com/cmu-delphi/delphi-epidata/issues/993
+
+### Simplified API
+
+The API for the package has been simplified to remove outmoded functions and harden arguments where needed. The list below enumerates all of these updates: 
+
+- Removed `wis_score()` function
+- Removed `get_cdc_vax()` function
+- Removed `state_replace_ili_nowcast_all()` function
+- Removed `submission/` directory from the source code repository on GitHub
+- More intuitive handling of arguments in `ts_fit_forecast()`, including case-insenstive model names, better handling of optional covariates, and removing the inoperative "remove_null_models" argument
+
+### Documentation
+
+All exported functions are now robustly documented with links between package functions, detailed descriptions, and examples that include inline comments.
+
 # fiphde 0.3.4
 
 ## New features

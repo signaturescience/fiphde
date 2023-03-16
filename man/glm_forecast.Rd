@@ -18,11 +18,17 @@ glm_forecast(
 
 \item{fit}{Fitted model object from \link[fiphde]{glm_fit}}
 
-\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to range of intervals}
+\item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to create a range of intervals}
 }
 \value{
-Tibble with forecasts (quantiles and point estimates)
+A \code{tibble} with forecasted data including the following columns:
+\itemize{
+\item \strong{epiweek}: The epidemiological week for the forecasted horizon
+\item \strong{epiyear}: The epidemiological year for the forecasted horizon
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} for point estimate
+\item \strong{value}: The forecasted value
+}
 }
 \description{
-This function uses fitted model object from \link[fiphde]{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
+This function uses fitted model object from \link{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
 }

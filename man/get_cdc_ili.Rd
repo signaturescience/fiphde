@@ -2,23 +2,39 @@
 % Please edit documentation in R/retrieve.R
 \name{get_cdc_ili}
 \alias{get_cdc_ili}
-\title{Get ILI data from CDC FluView}
+\title{Retrieve ILI data from ILINet}
 \usage{
 get_cdc_ili(region = c("national", "state", "hhs"), years = NULL)
 }
 \arguments{
-\item{region}{Either "state", "national", or "hhs". Defaults to \verb{c("national", "state", "hhs") for all three}.}
+\item{region}{Either "state", "national", or "hhs"; defaults to \code{c("national", "state", "hhs")} for all three.}
 
 \item{years}{A vector of years to retrieve data for. CDC has data going back to 1997. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
 \value{
-A tibble
+A \code{tibble} with the following columns:
+\itemize{
+\item \strong{location}: FIPS code for the location
+\item \strong{region_type}: The type of location
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{region}: Name of the region
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{week_start}: Date of beginning (Sunday) of the given epidemiological week
+\item \strong{weighted_ili}: Population-weighted percentage of ILI outpatient visits
+\item \strong{unweighted_ili}: Unweighted percentage of ILI outpatient visits
+\item \strong{ilitotal}: Total number of ILI outpatient visits reported
+\item \strong{num_providers}: Number of providers reporting
+\item \strong{total_patients}: Total number of outpatient visits reported
+\item \strong{population}: Total population for the given location
+}
 }
 \description{
-Get ILI data from CDC FluView. See \link{ilinet}.
+This function pulls ILINet data from the CDC FluView API. Data are available historically and can be pulled at the state, national, or HHS region level.
 }
 \examples{
 \dontrun{
+# Retrieve ILI data for specific years and regions
 get_cdc_ili(region="national", years=2021)
 get_cdc_ili(region="hhs", years=2021)
 get_cdc_ili(region="state", years=2021) \%>\% dplyr::filter(abbreviation=="VA")
@@ -26,5 +42,5 @@ get_cdc_ili(region=c("national", "state"), years=2021)
 }
 }
 \references{
-cdcfluview documentation: \url{https://hrbrmstr.github.io/cdcfluview/index.html#retrieve-ilinet-surveillance-data}.
+\url{https://gis.cdc.gov/grasp/fluview/FluViewPhase1QuickReferenceGuide.pdf}
 }

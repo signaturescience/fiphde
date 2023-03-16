@@ -12,3 +12,6 @@ Logical indicating whether or not today is Monday
 \description{
 This is a helper function to see if today is Monday.
 }
+\examples{
+is_monday()
+}
