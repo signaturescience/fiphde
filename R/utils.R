@@ -203,7 +203,8 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' prepped_hosp <-
 #'   h_raw %>%
 #'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
-#'   dplyr::filter(abbreviation != "DC")
+#'   dplyr::filter(abbreviation != "DC") %>%
+#'   dplyr::filter(week_start < as.Date("2022-01-08", format = "%Y-%m-%d"))
 #'
 #' tsens_20220110 <-
 #'   system.file("extdata/2022-01-10-SigSci-TSENS.csv", package="fiphde") %>%
