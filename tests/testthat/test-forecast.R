@@ -5,6 +5,9 @@ load(system.file("testdata/testdata.rd", package="fiphde", mustWork=TRUE))
 
 test_that("Time series modeling and forecasting works as expected", {
 
+  ## NOTE: as of 2023-03-16 skipping on CI because it will install a broken version of fabletools
+  ## see https://github.com/signaturescience/fiphde/issues/148
+  skip_on_ci()
   set.seed(2023-01-30)
   hosp_fitfor_test <- ts_fit_forecast(prepped_tsibble, horizon=4L, outcome="flu.admits", covariates=TRUE)
   ## check that forecast values are equal
@@ -18,6 +21,10 @@ test_that("Time series modeling and forecasting works as expected", {
 })
 
 test_that("Categorical forecasting operates as expected", {
+
+  ## NOTE: as of 2023-03-16 skipping on CI because it will install a broken version of fabletools
+  ## see https://github.com/signaturescience/fiphde/issues/148
+  skip_on_ci()
 
   set.seed(2023-01-30)
   hosp_fitfor_test <- ts_fit_forecast(prepped_tsibble, horizon=4L, outcome="flu.admits", covariates=TRUE)
