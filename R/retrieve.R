@@ -32,7 +32,9 @@
 #'
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data (all columns)
 #' get_hdgov_hosp()
+#' # Retrieve hospitalization data (limited columns)
 #' get_hdgov_hosp(limitcols=TRUE)
 #' }
 #' @export
@@ -115,6 +117,7 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
 #' @references <https://gis.cdc.gov/grasp/fluview/FluViewPhase1QuickReferenceGuide.pdf>
 #' @examples
 #' \dontrun{
+#' # Retrieve ILI data for specific years and regions
 #' get_cdc_ili(region="national", years=2021)
 #' get_cdc_ili(region="hhs", years=2021)
 #' get_cdc_ili(region="state", years=2021) %>% dplyr::filter(abbreviation=="VA")
@@ -153,7 +156,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #'
 #' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
 #'
-#' @return A tibble with the following columns:
+#' @return A `tibble` with the following columns:
 #'
 #' - **location**: FIPS code for the location
 #' - **abbreviation**: Abbreviation for the location
@@ -170,6 +173,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve FluSurv-Net hospitalization data for specific year(s)
 #' get_cdc_hosp(years=2019)
 #' }
 get_cdc_hosp <- function(years=NULL) {
@@ -189,7 +193,9 @@ get_cdc_hosp <- function(years=NULL) {
                      week_end=weekstart,
                      rate,
                      weeklyrate,
-                     season=season_label)
+                     season=season_label) %>%
+    ## coerce to tibble
+    dplyr::as_tibble(.)
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
                   unique(d$epiyear[d$week_start==max(d$week_start)]),
@@ -212,8 +218,6 @@ get_cdc_hosp <- function(years=NULL) {
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
-#' # Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
-#'
 #' # Defaults to the previous two weeks for all states
 #' get_nowcast_ili()
 #'
@@ -225,19 +229,6 @@ get_cdc_hosp <- function(years=NULL) {
 #' get_nowcast_ili(epiyearweeks=NULL,
 #'                 dates=lubridate::today()-seq(52*7, 7, -7),
 #'                 state="FL")
-#'
-#' # Compare to ilinet
-#' library(dplyr)
-#' library(ggplot2)
-#' ilidat <- get_cdc_ili(years=2021)
-#' ilinow <- get_nowcast_ili()
-#' ilijoined <-
-#'   inner_join(ilidat, ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) %>%
-#'   select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
-#' ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
-#' ilijoined %>%
-#'   mutate(diff=weighted_ili_now-weighted_ili) %>%
-#'   arrange(desc(abs(diff)))
 #' }
 #' @export
 get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7), state=NULL, boundatzero=TRUE) {
@@ -343,17 +334,17 @@ get_nowcast_ili <- function(epiyearweeks=NULL, dates=lubridate::today()-c(14,7),
 #'
 #' @examples
 #' \dontrun{
-#' ## get all clinical lab flu positivity data
+#' # Get all clinical lab flu positivity data
 #' all_clin <- get_cdc_clin()
-#'
-#' ## or look at a specific location and time
-#' ## note: the year "start" will begin at the first epiweek of the season
-#' ## this example 2021 will weekly data ...
-#' ## ... starting at beginning of 2021/22 season
-#' ## ... ending the week before start of 2022/23 season
+#' all_clin
+#' # Alternatively look at a specific location and time
+#' # This 2021 will return weekly data
+#' # Starting at beginning of 2021/22 season
+#' # Ending the week before start of 2022/23 season
 #' va_clin <-
 #'   get_cdc_clin(region = "state", years = 2021) %>%
 #'   dplyr::filter(location == "51")
+#' va_clin
 #' }
 get_cdc_clin <- function(region = "both", years = NULL) {
 
@@ -428,16 +419,7 @@ get_cdc_clin <- function(region = "both", years = NULL) {
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #' - [CDC FluView Portal](https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html)
-#' @examples
-#' \dontrun{
-#' national_ili <- ilinet("national", years = 2017)
-#' hhs_ili <- ilinet("hhs")
-#' census_ili <- ilinet("census")
-#' state_ili <- ilinet("state")
 #'
-#' all_ili <- suppressWarnings(
-#'   suppressMessages(purrr::map_df(c("national", "hhs", "census", "state"), ilinet)))
-#' }
 ilinet <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
 
   ## handle region argument
@@ -583,12 +565,7 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
-#' @examples
-#' \dontrun{
-#' hosp_fs <- hospitalizations("flusurv", years=2015)
-#' hosp_eip <- hospitalizations("eip")
-#' hosp_ihsp <- hospitalizations("ihsp")
-#' }
+#'
 hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
                              region="all", years=NULL) {
 
@@ -738,13 +715,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #'        to a year.
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
-#' @examples
-#' \dontrun{
-#' natl_nrevss <- who_nrevss("national")
-#' hhs_nrevss <- who_nrevss("hhs")
-#' census_nrevss <- who_nrevss("census")
-#' state_nrevss <- who_nrevss("state")
-#' }
+#'
 who_nrevss <- function(region = c("national", "hhs", "census", "state"), years = NULL) {
 
   ## handle region arg
