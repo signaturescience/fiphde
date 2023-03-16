@@ -74,15 +74,18 @@
 
 
 <dt>alpha</dt>
-<dd><p>Vector specifying the threshold(s) to be used for prediction intervals; alpha of <code>0.05</code> would correspond to 95% PI; default is <code>c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2</code> to range of intervals</p></dd>
+<dd><p>Vector specifying the threshold(s) to be used for prediction intervals; alpha of <code>0.05</code> would correspond to 95% PI; default is <code>c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2</code> to create a range of intervals</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>Tibble with forecasts (quantiles and point estimates)</p>
-    </div>
+<p>A <code>tibble</code> with forecasted data including the following columns:</p><ul><li><p><strong>epiweek</strong>: The epidemiological week for the forecasted horizon</p></li>
+<li><p><strong>epiyear</strong>: The epidemiological year for the forecasted horizon</p></li>
+<li><p><strong>quantile</strong>: The quantile for the forecasted value; <code>NA</code> for point estimate</p></li>
+<li><p><strong>value</strong>: The forecasted value</p></li>
+</ul></div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

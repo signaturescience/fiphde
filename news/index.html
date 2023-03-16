@@ -45,6 +45,42 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="fiphde-100">fiphde 1.0.0<a class="anchor" aria-label="anchor" href="#fiphde-100"></a></h2>
+<p>This major release introduces new features, improved documentation throughout, automated unit tests, and a simplified API.</p>
+<div class="section level3">
+<h3 id="new-features-1-0-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
+<div class="section level4">
+<h4 id="plot_forecast_categorical-1-0-0"><code>plot_forecast_categorical()</code><a class="anchor" aria-label="anchor" href="#plot_forecast_categorical-1-0-0"></a></h4>
+<p>The package now includes a data visualization method for categorical forecast summaries via the <code><a href="../reference/plot_forecast_categorical.html">plot_forecast_categorical()</a></code> function. This function returns a <code>ggplot2</code> object with a stacked barplot showing the probabilities assigned to each categorical bin at every location.</p>
+</div>
+<div class="section level4">
+<h4 id="parity-between-objects-returned-1-0-0">Parity between objects returned<a class="anchor" aria-label="anchor" href="#parity-between-objects-returned-1-0-0"></a></h4>
+<p>Package functions previously returned a mix of <code>data.frame</code> and <code>tibble</code> objects. As of this release, each such function returns a <code>tibble</code> for consistency.</p>
+</div>
+<div class="section level4">
+<h4 id="messaging-for-get_nowcast_ili-1-0-0">Messaging for <code>get_nowcast_ili()</code>
+<a class="anchor" aria-label="anchor" href="#messaging-for-get_nowcast_ili-1-0-0"></a></h4>
+<p>The <code><a href="../reference/get_nowcast_ili.html">get_nowcast_ili()</a></code> uses the Delphi ILI Nearby API. As of this release, the API was documented as no longer being updated. The function (and any others that call this function, like <code><a href="../reference/replace_ili_nowcast.html">replace_ili_nowcast()</a></code>) now issue the following warning:</p>
+<blockquote>
+<p>As of October 2022 ILInearby was no longer being updated. This will likely return ‘NA’. See <a href="https://github.com/cmu-delphi/delphi-epidata/issues/993" class="external-link uri">https://github.com/cmu-delphi/delphi-epidata/issues/993</a></p>
+</blockquote>
+</div>
+<div class="section level4">
+<h4 id="simplified-api-1-0-0">Simplified API<a class="anchor" aria-label="anchor" href="#simplified-api-1-0-0"></a></h4>
+<p>The API for the package has been simplified to remove outmoded functions and harden arguments where needed. The list below enumerates all of these updates:</p>
+<ul><li>Removed <code>wis_score()</code> function</li>
+<li>Removed <code>get_cdc_vax()</code> function</li>
+<li>Removed <code>state_replace_ili_nowcast_all()</code> function</li>
+<li>Removed <code>submission/</code> directory from the source code repository on GitHub</li>
+<li>More intuitive handling of arguments in <code><a href="../reference/ts_fit_forecast.html">ts_fit_forecast()</a></code>, including case-insenstive model names, better handling of optional covariates, and removing the inoperative “remove_null_models” argument</li>
+</ul></div>
+<div class="section level4">
+<h4 id="documentation-1-0-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-0-0"></a></h4>
+<p>All exported functions are now robustly documented with links between package functions, detailed descriptions, and examples that include inline comments.</p>
+</div>
+</div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.4" id="fiphde-034">fiphde 0.3.4<a class="anchor" aria-label="anchor" href="#fiphde-034"></a></h2>
 <div class="section level3">
 <h3 id="new-features-0-3-4">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-4"></a></h3>
@@ -114,7 +150,6 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="fiphde-010">fiphde 0.1.0<a class="anchor" aria-label="anchor" href="#fiphde-010"></a></h2>
 <p>Initial release !</p>
-<p>Built and checked successfully on Ubuntu 20.04, Windows Server 2022, Mac OSX.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

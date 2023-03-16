@@ -304,20 +304,17 @@ network model, but we could change <code>nnetar=NULL</code> to
 for details). We can also trim the data used in modeling, and here we
 restrict to only include hospitalization data reported after January 1,
 2021. By setting <code>ensemble=TRUE</code> we create an ensemble model
-that averages the ARIMA and exponential smoothing models. The
-<code>remove_null_models=TRUE</code> specification identifies models
-that did not converge and removes those from downstream processing.</p>
+that averages the ARIMA and exponential smoothing models.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_fit_forecast.html">ts_fit_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp_tsibble</span>,</span>
 <span>                               horizon<span class="op">=</span><span class="fl">4L</span>,</span>
 <span>                               outcome<span class="op">=</span><span class="st">"flu.admits"</span>,</span>
 <span>                               trim_date <span class="op">=</span> <span class="st">"2021-01-01"</span>,</span>
-<span>                               covariates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hosp_rank"</span>, <span class="st">"ili_rank"</span><span class="op">)</span>, </span>
+<span>                               covariates<span class="op">=</span><span class="cn">TRUE</span>, </span>
 <span>                               models<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>arima<span class="op">=</span><span class="st">'PDQ(0, 0, 0) + pdq(1:2, 0:2, 0)'</span>,</span>
 <span>                                           ets<span class="op">=</span><span class="st">'season(method="N")'</span>,</span>
 <span>                                           nnetar<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span>, </span>
-<span>                               ensemble<span class="op">=</span><span class="cn">TRUE</span>, </span>
-<span>                               remove_null_models<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>                               ensemble<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>The function will output messages describing the ARIMA and ETS model
 formulas passed to <code><a href="https://fable.tidyverts.org/reference/ARIMA.html" class="external-link">fable::ARIMA</a></code> and
 <code><a href="https://fable.tidyverts.org/reference/ETS.html" class="external-link">fable::ETS</a></code>.</p>
@@ -373,11 +370,11 @@ those locations in <code>$nullmodels</code>.</p>
 <span><span class="co">#&gt; $formulas</span></span>
 <span><span class="co">#&gt; $formulas$arima</span></span>
 <span><span class="co">#&gt; flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d858307680&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619bd08e0d8&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas$ets</span></span>
 <span><span class="co">#&gt; flu.admits ~ season(method = "N")</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d858307680&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619bd08e0d8&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $nullmodels</span></span>
@@ -523,7 +520,7 @@ a time series model to forecast ILI for the next four weeks.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">region</span> <span class="op">==</span> <span class="st">"Hawaii"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/replace_ili_nowcast.html">replace_ili_nowcast</a></span><span class="op">(</span><span class="va">.</span>, weeks_to_replace<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ilifor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/forecast_ili.html">forecast_ili</a></span><span class="op">(</span><span class="va">ilidat</span>, horizon<span class="op">=</span><span class="fl">4L</span>, trim_date<span class="op">=</span><span class="st">"2020-03-01"</span>, stepwise<span class="op">=</span><span class="cn">FALSE</span>, approximation<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">ilifor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/forecast_ili.html">forecast_ili</a></span><span class="op">(</span><span class="va">ilidat</span>, horizon<span class="op">=</span><span class="fl">4L</span>, trim_date<span class="op">=</span><span class="st">"2020-03-01"</span><span class="op">)</span></span></code></pre></div>
 <p>In the next step we are going to log transform weighted ILI and flu
 admissions, so in this step we need to remove all the zeros. The fiphde
 package provides the <code>mnz_replace</code> function which replaces
@@ -590,7 +587,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         family = "poisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d85a3d5a80&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619b9f6de30&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -605,7 +602,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         family = "quasipoisson", data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d85a416f68&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619b9ea7350&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm"   "trending_model"</span></span>
@@ -620,7 +617,7 @@ used to determine the best fitting approach.</p>
 <span><span class="co">#&gt;         ili_rank, data = data, ...)</span></span>
 <span><span class="co">#&gt;     model_fit(model, data)</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d85a425f00&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619b9d62758&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_glm_nb" "trending_model"</span></span></code></pre></div>
@@ -701,8 +698,8 @@ aspects of the final fitted model.</p>
 <span><span class="co">#&gt;     }</span></span>
 <span><span class="co">#&gt;     result</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x55d85634b780&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55d8568e2fa8&gt;</span></span>
+<span><span class="co">#&gt; &lt;bytecode: 0x5619ba0cff30&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5619bb605988&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"class")</span></span>
 <span><span class="co">#&gt; [1] "trending_model_fit" "list"</span></span>
@@ -721,16 +718,16 @@ aspects of the final fitted model.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target                  target_en…¹ locat…² type  quant…³ value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2023-01-20    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.010   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.025   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.050   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.100   0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.150   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.200   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.250   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.300   1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.350   2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2023-03-16    1 wk ahead inc flu hosp 2022-06-04  15      quan… 0.400   2    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># … with 86 more rows, and abbreviated variable names ¹​target_end_date,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   ²​location, ³​quantile</span></span></span></code></pre></div>
 <p>Finally, we can visualize the forecasted point estimates with the 90%

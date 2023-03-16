@@ -67,11 +67,11 @@
 
 
 <dt>.models</dt>
-<dd><p>List of models defined as <a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">trending_model</a> objects</p></dd>
+<dd><p>List of models defined as <a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">trending::trending_model</a> objects</p></dd>
 
 
 <dt>new_covariates</dt>
-<dd><p>Tibble with one column per covariate, and n rows for n horizons being forecasted</p></dd>
+<dd><p>A <code>tibble</code> with one column per covariate, and n rows for n horizons being forecasted</p></dd>
 
 
 <dt>horizon</dt>
@@ -79,17 +79,53 @@
 
 
 <dt>alpha</dt>
-<dd><p>Vector specifying the threshold(s) to be used for prediction intervals; alpha of <code>0.05</code> would correspond to 95% PI; default is <code>c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2</code> to range of intervals</p></dd>
+<dd><p>Vector specifying the threshold(s) to be used for prediction intervals (PI); alpha of <code>0.05</code> would correspond to 95% PI; default is <code>c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2</code> to create a range of intervals</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>Named list with two elements:</p><ul><li><p>model: Output from <a href="glm_fit.html">glm_fit</a> with selected model fit</p></li>
-<li><p>forecasts: Output from <a href="glm_forecast.html">glm_forecast</a> with forecasts from each horizon combined as a single tibble</p></li>
+<p>Named list with two elements:</p><ul><li><p><strong>model</strong>: Output from <a href="glm_fit.html">glm_fit</a> with selected model fit</p></li>
+<li><p><strong>forecasts</strong>: Output from <a href="glm_forecast.html">glm_forecast</a> with forecasts from each horizon combined as a single tibble</p></li>
 </ul></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># Retrieve data to be used in fitting models</span></span></span>
+<span class="r-in"><span><span class="va">hosp_va</span> <span class="op">&lt;-</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="get_hdgov_hosp.html">get_hdgov_hosp</a></span><span class="op">(</span>limitcols<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="prep_hdgov_hosp.html">prep_hdgov_hosp</a></span><span class="op">(</span>statesonly<span class="op">=</span><span class="cn">TRUE</span>, min_per_week <span class="op">=</span> <span class="fl">0</span>, remove_incomplete <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span> <span class="op">==</span> <span class="st">"VA"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define list of models</span></span></span>
+<span class="r-in"><span><span class="va">models</span> <span class="op">&lt;-</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>   poisson <span class="op">=</span> <span class="fu">trending</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">glm_model</a></span><span class="op">(</span><span class="va">flu.admits</span> <span class="op">~</span> <span class="va">hosp_rank</span> <span class="op">+</span> <span class="va">ili_rank</span>, family <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   quasipoisson <span class="op">=</span> <span class="fu">trending</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">glm_model</a></span><span class="op">(</span><span class="va">flu.admits</span> <span class="op">~</span> <span class="va">hosp_rank</span> <span class="op">+</span> <span class="va">ili_rank</span>, family <span class="op">=</span> <span class="st">"quasipoisson"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>   negbin <span class="op">=</span> <span class="fu">trending</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">glm_nb_model</a></span><span class="op">(</span><span class="va">flu.admits</span> <span class="op">~</span> <span class="va">hosp_rank</span> <span class="op">+</span> <span class="va">ili_rank</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create new covariate data to feed into forecast procedure</span></span></span>
+<span class="r-in"><span><span class="va">new_cov</span> <span class="op">&lt;-</span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">hosp_va</span><span class="op">$</span><span class="va">week_start</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">7</span>,<span class="fl">14</span>,<span class="fl">21</span>,<span class="fl">28</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    epiweek <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/week.html" class="external-link">epiweek</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    epiyear <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/year.html" class="external-link">epiyear</a></span><span class="op">(</span><span class="va">date</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="fu">fiphde</span><span class="fu">:::</span><span class="va">historical_severity</span>, by<span class="op">=</span><span class="st">"epiweek"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">epiweek</span>,<span class="op">-</span><span class="va">epiyear</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Run the glm wrapper to fit and forecast</span></span></span>
+<span class="r-in"><span><span class="va">va_glm_res</span> <span class="op">&lt;-</span> <span class="fu">glm_wrap</span><span class="op">(</span>.data <span class="op">=</span> <span class="va">hosp_va</span>, .models <span class="op">=</span> <span class="va">models</span>, new_covariates <span class="op">=</span> <span class="va">new_cov</span>, horizon <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">va_glm_res</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
