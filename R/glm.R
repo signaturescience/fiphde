@@ -14,23 +14,6 @@
 #'- **location**: The geographic unit being modeled
 #'- **data**: Original model fit data as a `tibble` in a list column
 #'
-#' @examples
-#' \dontrun{
-#' hosp_va <-
-#'  get_hdgov_hosp(limitcols=TRUE) %>%
-#'  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
-#'  dplyr::filter(abbreviation == "VA")
-#'
-#' models <-
-#'   list(
-#'     poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-#'     quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-#'     negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
-#'   )
-#'
-#' va_fit <- glm_fit(.data = hosp_va, .models = models)
-#' va_fit
-#' }
 glm_fit <- function(.data,
                     .models) {
 
@@ -99,35 +82,6 @@ glm_fit <- function(.data,
 #' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
 #' - **value**: The forecasted value
 #'
-#' @examples
-#' \dontrun{
-#' hosp_va <-
-#'   get_hdgov_hosp(limitcols=TRUE) %>%
-#'   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
-#'   dplyr::filter(abbreviation == "VA")
-#'
-#' models <-
-#'   list(
-#'     poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-#'     quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-#'     negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
-#'   )
-#'
-#' va_fit <- glm_fit(.data = hosp_va, .models = models)
-#'
-#' new_cov <-
-#'   dplyr::tibble(
-#'     date = max(hosp_va$week_start) + c(7,14,21,28),
-#'     epiweek = lubridate::epiweek(date),
-#'     epiyear = lubridate::epiyear(date)
-#'   ) %>%
-#'  dplyr::left_join(
-#'    fiphde:::historical_severity, by="epiweek"
-#'   )
-#'
-#' glm_quibble(fit = va_fit$fit, new_data = new_cov[1,], alpha = 0.05)
-#'
-#' }
 glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## get the quantiles from the alpha
@@ -166,37 +120,6 @@ glm_quibble <- function(fit, new_data, alpha = c(0.01, 0.025, seq(0.05, 0.45, by
 #' - **quantile**: The quantile for the forecasted value; `NA` for point estimate
 #' - **value**: The forecasted value
 #'
-#' @examples
-#' \dontrun{
-#' hosp_va <-
-#'  get_hdgov_hosp(limitcols=TRUE) %>%
-#'  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
-#'  dplyr::filter(abbreviation == "VA")
-#'
-#' models <-
-#'  list(
-#'    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-#'    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-#'    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
-#'  )
-#'
-#' va_fit <- glm_fit(.data = hosp_va, .models = models)
-#'
-#' new_cov <-
-#'   dplyr::tibble(
-#'     date = max(hosp_va$week_start) + c(7,14,21,28),
-#'     epiweek = lubridate::epiweek(date),
-#'     epiyear = lubridate::epiyear(date)
-#'   ) %>%
-#'   dplyr::left_join(
-#'     fiphde:::historical_severity, by="epiweek"
-#'   ) %>%
-#'   dplyr::select(-epiweek,-epiyear)
-#'
-#' ## NOTE: for this example just look at 1 week ahead (first row only) for new covariates
-#' va_forc <- glm_forecast(.data = hosp_va, new_covariates = new_cov[1,], fit = va_fit$fit)
-#' va_forc
-#' }
 glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## get the last date from the data provided
@@ -263,11 +186,13 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve data to be used in fitting models
 #' hosp_va <-
 #'  get_hdgov_hosp(limitcols=TRUE) %>%
 #'  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) %>%
 #'  dplyr::filter(abbreviation == "VA")
 #'
+#' # Define list of models
 #' models <-
 #'  list(
 #'    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
@@ -275,6 +200,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 #'    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
 #'  )
 #'
+#' # Create new covariate data to feed into forecast procedure
 #' new_cov <-
 #'   dplyr::tibble(
 #'     date = max(hosp_va$week_start) + c(7,14,21,28),
@@ -286,6 +212,7 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 #'   ) %>%
 #'   dplyr::select(-epiweek,-epiyear)
 #'
+#' # Run the glm wrapper to fit and forecast
 #' va_glm_res <- glm_wrap(.data = hosp_va, .models = models, new_covariates = new_cov, horizon = 4)
 #' va_glm_res
 #'
