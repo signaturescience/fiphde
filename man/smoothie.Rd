@@ -23,9 +23,9 @@ This helper function calculates a weighted average of the last n observations.
 \dontrun{
 ## pull and prep weekly US flu hospitalization data
 hosp_us <-
-get_hdgov_hosp() \%>\%
-prep_hdgov_hosp() \%>\%
-dplyr::filter(location == "US")
+  get_hdgov_hosp() \%>\%
+  prep_hdgov_hosp() \%>\%
+  dplyr::filter(location == "US")
 
 ## what do the last 4 observations look like?
 tail(hosp_us$flu.admits, 4)

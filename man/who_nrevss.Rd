@@ -21,14 +21,6 @@ Adapted from \code{cdcfluview::who_nrevss}.
 
 This unexported helper function leverages the CDC FluView API to pull flu surveillance data collected from U.S. World Health Organization (WHO) Collaborating Laboratories and National Respiratory and Enteric Virus Surveillance System (NREVSS) laboratories. The data retrieved can be parameterized by geographic granularity and/or flu season. The function is used internally by \link{get_cdc_clin}.
 }
-\examples{
-\dontrun{
-natl_nrevss <- who_nrevss("national")
-hhs_nrevss <- who_nrevss("hhs")
-census_nrevss <- who_nrevss("census")
-state_nrevss <- who_nrevss("state")
-}
-}
 \references{
 \itemize{
 \item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}

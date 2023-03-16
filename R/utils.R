@@ -351,8 +351,11 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 #' @export
 #' @examples
 #' \dontrun{
+#' # Retrieve hospitalization data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
+#' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)
+#' # Create a keyed time series tibble with only locations of interest
 #' prepped_tsibble <- make_tsibble(prepped_hosp,
 #'                                      epiyear = epiyear,
 #'                                      epiweek=epiweek,

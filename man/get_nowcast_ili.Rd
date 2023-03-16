@@ -28,8 +28,6 @@ This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed I
 }
 \examples{
 \dontrun{
-# Warning: the CMU Delphi ILI Nearby API may be down, and these examples may not work.
-
 # Defaults to the previous two weeks for all states
 get_nowcast_ili()
 
@@ -41,19 +39,6 @@ get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
 get_nowcast_ili(epiyearweeks=NULL,
                 dates=lubridate::today()-seq(52*7, 7, -7),
                 state="FL")
-
-# Compare to ilinet
-library(dplyr)
-library(ggplot2)
-ilidat <- get_cdc_ili(years=2021)
-ilinow <- get_nowcast_ili()
-ilijoined <-
-  inner_join(ilidat, ilinow, by = c("location", "abbreviation", "epiyear", "epiweek")) \%>\%
-  select(abbreviation, epiyear, epiweek, weighted_ili, weighted_ili_now)
-ggplot(ilijoined, aes(weighted_ili, weighted_ili_now)) + geom_point()
-ilijoined \%>\%
-  mutate(diff=weighted_ili_now-weighted_ili) \%>\%
-  arrange(desc(abs(diff)))
 }
 }
 \references{

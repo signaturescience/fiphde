@@ -22,17 +22,6 @@ Adapted from \code{cdcfluview::ilinet}.
 This unexported helper function retrieves current and historical ILINet surveillance data for
 the identified region via the CDC FluView API. The function is used internally in \link{get_cdc_ili}. Data returned include weighted and unweighted ILI percentage, as well as age-specific ILI outpatient visit counts for each location / epidemiological week.
 }
-\examples{
-\dontrun{
-national_ili <- ilinet("national", years = 2017)
-hhs_ili <- ilinet("hhs")
-census_ili <- ilinet("census")
-state_ili <- ilinet("state")
-
-all_ili <- suppressWarnings(
-  suppressMessages(purrr::map_df(c("national", "hhs", "census", "state"), ilinet)))
-}
-}
 \references{
 \itemize{
 \item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}

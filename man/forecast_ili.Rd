@@ -39,7 +39,7 @@ This function forecasts ILI up to a specified future horizon. The models used ca
 }
 \examples{
 \dontrun{
-# Get data
+# Retrieve ILI data
 ilidat <- get_cdc_ili(region = c("national", "state", "hhs"),
                       years = 2010:lubridate::year(lubridate::today()))
 
@@ -48,61 +48,11 @@ ilidat_us <- ilidat \%>\% dplyr::filter(location=="US")
 # Replace most recent week with nowcast data, and nowcast last week
 ilidat_us <- ilidat_us \%>\% replace_ili_nowcast(weeks_to_replace=1)
 ilifor_us <- forecast_ili(ilidat_us, horizon=4L, trim_date="2020-03-01")
+# Take a look at objects that come out ILI forecasting procedure
 ilifor_us$ili_fit
 ilifor_us$arima_params
 ilifor_us$ili_forecast
 head(ilifor_us$ili_bound)
 tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_us$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-03-01") \%>\%
-  ggplot(aes(date, ili)) +
-  geom_line(lwd=.3, alpha=.5) +
-  geom_point(aes(col=forecasted), size=2)
-
-# At the state level
-ilidat_st <- ilidat \%>\% dplyr::filter(region_type=="States")
-ilifor_st <- forecast_ili(ilidat_st, horizon=4L, trim_date="2019-01-01",
-                          models=list(ets="season(method='N')"))
-ilifor_st$ili_fit
-ilifor_st$arima_params
-ilifor_st$ili_forecast
-head(ilifor_us$ili_bound)
-tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_st$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-08-01") \%>\%
-  ggplot(aes(date, ili, col=forecasted)) +
-  geom_line(lwd=.3) +
-  geom_point(aes(col=forecasted), size=.7) +
-  facet_wrap(~abbreviation, scale="free_y")
-
-## At the HHS regional level
-ilidat_hhs <- ilidat \%>\% dplyr::filter(region_type=="HHS Regions")
-ilifor_hhs <- forecast_ili(ilidat_hhs, horizon=4L, trim_date="2020-03-01")
-ilifor_hhs$ili_fit
-ilifor_hhs$arima_params
-ilifor_hhs$ili_forecast
-head(ilifor_us$ili_bound)
-tail(ilifor_us$ili_bound, 10)
-# Plot
-library(dplyr)
-library(ggplot2)
-theme_set(theme_classic())
-ilifor_hhs$ili_bound \%>\%
-  mutate(date=mmwr_week_to_date(epiyear, epiweek)) \%>\%
-  filter(date>"2021-08-01") \%>\%
-  ggplot(aes(date, ili, col=forecasted)) +
-  geom_line(lwd=.3) +
-  geom_point(aes(col=forecasted), size=.7) +
-  facet_wrap(~abbreviation, scale="free_y")
 }
 }

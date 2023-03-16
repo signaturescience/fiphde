@@ -46,7 +46,9 @@ The data retrieval will proceed whether or not an API token has been supplied vi
 }
 \examples{
 \dontrun{
+# Retrieve hospitalization data (all columns)
 get_hdgov_hosp()
+# Retrieve hospitalization data (limited columns)
 get_hdgov_hosp(limitcols=TRUE)
 }
 }

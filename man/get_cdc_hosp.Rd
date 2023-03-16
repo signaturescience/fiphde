@@ -10,7 +10,7 @@ get_cdc_hosp(years = NULL)
 \item{years}{A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the \emph{previous} flu season. Default value (\code{NULL}) retrieves \strong{all} years.}
 }
 \value{
-A tibble with the following columns:
+A \code{tibble} with the following columns:
 \itemize{
 \item \strong{location}: FIPS code for the location
 \item \strong{abbreviation}: Abbreviation for the location
@@ -29,6 +29,7 @@ This function retrieves historical FluSurv-NET hospitalization data via the CDC 
 }
 \examples{
 \dontrun{
+# Retrieve FluSurv-Net hospitalization data for specific year(s)
 get_cdc_hosp(years=2019)
 }
 }

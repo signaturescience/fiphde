@@ -46,7 +46,9 @@ This function prepares hospitalization data retrieved using \link{get_hdgov_hosp
 }
 \examples{
 \dontrun{
+# Retrieve hospitalization data
 hdgov_hosp <- get_hdgov_hosp(limitcols=TRUE)
+# Prepare and summarize to weekly resolution
 h <- prep_hdgov_hosp(hdgov_hosp)
 h
 }

@@ -35,11 +35,13 @@ This is a wrapper function that pipelines influenza hospitalization modeling (\l
 }
 \examples{
 \dontrun{
+# Retrieve data to be used in fitting models
 hosp_va <-
  get_hdgov_hosp(limitcols=TRUE) \%>\%
  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
  dplyr::filter(abbreviation == "VA")
 
+# Define list of models
 models <-
  list(
    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
@@ -47,6 +49,7 @@ models <-
    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
  )
 
+# Create new covariate data to feed into forecast procedure
 new_cov <-
   dplyr::tibble(
     date = max(hosp_va$week_start) + c(7,14,21,28),
@@ -58,6 +61,7 @@ new_cov <-
   ) \%>\%
   dplyr::select(-epiweek,-epiyear)
 
+# Run the glm wrapper to fit and forecast
 va_glm_res <- glm_wrap(.data = hosp_va, .models = models, new_covariates = new_cov, horizon = 4)
 va_glm_res
 

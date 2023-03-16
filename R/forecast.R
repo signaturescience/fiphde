@@ -439,7 +439,7 @@ pois_forc <- function(.data, .location, .var) {
 #'
 #' @examples
 #' \dontrun{
-#' # Retrieve
+#' # Retrieve hospitalization data
 #' h_raw <- get_hdgov_hosp(limitcols=TRUE)
 #' # Prepare and summarize hospitalization data to weekly resolution
 #' prepped_hosp <- prep_hdgov_hosp(h_raw)

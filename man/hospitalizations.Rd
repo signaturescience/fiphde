@@ -38,13 +38,6 @@ Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \cod
 
 NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API (https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public).
 }
-\examples{
-\dontrun{
-hosp_fs <- hospitalizations("flusurv", years=2015)
-hosp_eip <- hospitalizations("eip")
-hosp_ihsp <- hospitalizations("ihsp")
-}
-}
 \references{
 \itemize{
 \item \href{https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html}{Hospital Portal}

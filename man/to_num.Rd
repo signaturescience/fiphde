@@ -15,7 +15,3 @@ Numeric vector
 \description{
 This unexported helper is used in the \link{ilinet} function to strip special characters and empty space and convert a character vector to numeric.
 }
-\examples{
-x <- c(",1", 4, "11", "19  ", "25>")
-fiphde:::to_num(x)
-}

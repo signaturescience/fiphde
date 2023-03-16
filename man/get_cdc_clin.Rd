@@ -29,17 +29,17 @@ This function returns weekly state and/or national clinical laboratory percent p
 }
 \examples{
 \dontrun{
-## get all clinical lab flu positivity data
+# Get all clinical lab flu positivity data
 all_clin <- get_cdc_clin()
-
-## or look at a specific location and time
-## note: the year "start" will begin at the first epiweek of the season
-## this example 2021 will weekly data ...
-## ... starting at beginning of 2021/22 season
-## ... ending the week before start of 2022/23 season
+all_clin
+# Alternatively look at a specific location and time
+# This 2021 will return weekly data
+# Starting at beginning of 2021/22 season
+# Ending the week before start of 2022/23 season
 va_clin <-
   get_cdc_clin(region = "state", years = 2021) \%>\%
   dplyr::filter(location == "51")
+va_clin
 }
 }
 \references{

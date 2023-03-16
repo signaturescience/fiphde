@@ -34,6 +34,7 @@ This function pulls ILINet data from the CDC FluView API. Data are available his
 }
 \examples{
 \dontrun{
+# Retrieve ILI data for specific years and regions
 get_cdc_ili(region="national", years=2021)
 get_cdc_ili(region="hhs", years=2021)
 get_cdc_ili(region="state", years=2021) \%>\% dplyr::filter(abbreviation=="VA")

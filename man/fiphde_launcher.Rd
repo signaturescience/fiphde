@@ -25,11 +25,14 @@ The explorer is meant to review \emph{candidate} submission files. As such, the 
 }
 \examples{
 \dontrun{
+# Path to the submission example
 submission_dir <- system.file("extdata", "submission-example", package = "fiphde")
+# Prepare data for explorer app
 prepped_hosp <-
   get_hdgov_hosp(limitcols = TRUE) \%>\%
   prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
   dplyr::filter(abbreviation != "DC")
+# Launch the explorer app
 fiphde_launcher(.data = prepped_hosp,
                 submission_dir = submission_dir,
                 host = "0.0.0.0",

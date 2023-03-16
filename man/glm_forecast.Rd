@@ -32,35 +32,3 @@ A \code{tibble} with forecasted data including the following columns:
 \description{
 This function uses fitted model object from \link{glm_fit} and future covariate data to create probablistic forecasts at specific quantiles derived from the "alpha" parameter.
 }
-\examples{
-\dontrun{
-hosp_va <-
- get_hdgov_hosp(limitcols=TRUE) \%>\%
- prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
- dplyr::filter(abbreviation == "VA")
-
-models <-
- list(
-   poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-   quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-   negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
- )
-
-va_fit <- glm_fit(.data = hosp_va, .models = models)
-
-new_cov <-
-  dplyr::tibble(
-    date = max(hosp_va$week_start) + c(7,14,21,28),
-    epiweek = lubridate::epiweek(date),
-    epiyear = lubridate::epiyear(date)
-  ) \%>\%
-  dplyr::left_join(
-    fiphde:::historical_severity, by="epiweek"
-  ) \%>\%
-  dplyr::select(-epiweek,-epiyear)
-
-## NOTE: for this example just look at 1 week ahead (first row only) for new covariates
-va_forc <- glm_forecast(.data = hosp_va, new_covariates = new_cov[1,], fit = va_fit$fit)
-va_forc
-}
-}

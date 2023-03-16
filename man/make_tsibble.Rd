@@ -24,9 +24,11 @@ that indexes the \code{tsibble} in 1 week increments.
 This function converts an input \code{tibble} with columns for \link[lubridate:year]{lubridate::epiyear} and \link[lubridate:week]{lubridate::epiweek}  into a \link[tsibble:tsibble]{tsibble::tsibble} object. The \code{tsibble} has columns specifying indices for the time series as well as a date for the Monday of the epiyear/epiweek combination at each row.
 }
 \examples{
+# Create an example tibble
 d <- tibble::tibble(epiyear=c(2020, 2020, 2021, 2021),
                     epiweek=c(52, 53, 1, 2),
                     location="US",
                     somedata=101:104)
+# Convert to tsibble (keyed time series tibble)
 make_tsibble(d, epiyear = epiyear, epiweek=epiweek, key=location)
 }

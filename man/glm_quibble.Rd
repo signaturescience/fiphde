@@ -32,33 +32,3 @@ This helper function runs the \link[trending:trending_model_fit-prediction]{tren
 \details{
 The "alpha" parameter defines the width of prediction interval (PI). For example, an alpha = 0.05 would correspond to a 95\% PI. This function uses the PI(s) (per the alpha value(s) specified) to construct a range of quantiles that fall at lower and upper bound of each PI. Continuing from the example of alpha = 0.05, the quantile estimates returned would fall at 0.025 (lower bound of PI) and 0.975 (upper bound of PI).
 }
-\examples{
-\dontrun{
-hosp_va <-
-  get_hdgov_hosp(limitcols=TRUE) \%>\%
-  prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
-  dplyr::filter(abbreviation == "VA")
-
-models <-
-  list(
-    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
-  )
-
-va_fit <- glm_fit(.data = hosp_va, .models = models)
-
-new_cov <-
-  dplyr::tibble(
-    date = max(hosp_va$week_start) + c(7,14,21,28),
-    epiweek = lubridate::epiweek(date),
-    epiyear = lubridate::epiyear(date)
-  ) \%>\%
- dplyr::left_join(
-   fiphde:::historical_severity, by="epiweek"
-  )
-
-glm_quibble(fit = va_fit$fit, new_data = new_cov[1,], alpha = 0.05)
-
-}
-}

@@ -37,9 +37,15 @@ hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                outcome="flu.admits",
                                covariates=TRUE)
 
-# format for submission
+
+
+# Format for submission
 formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
-validate_forecast(formatted_list$ets)
+# Validate one of the forecasts
+# Note that this expects forecast is prepared with forecast date = Monday of the current week
+ens_forc <- formatted_list$ensemble
+ens_forc$forecast_date <- this_monday()
+validate_forecast(ens_forc)
 }
 
 }

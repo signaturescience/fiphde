@@ -54,7 +54,7 @@ hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                outcome="flu.admits",
                                covariates=TRUE)
 
-# format for submission
+# Format for submission
 formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 formatted_list
 }

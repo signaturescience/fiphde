@@ -23,21 +23,3 @@ A \code{tibble} containing characteristics from the "best" \code{glm} model incl
 \description{
 This helper function is used in \link{glm_wrap} to fit a list of models and select the best one. The model selection procedure will use the root mean square error (RMSE) metric implemented in \link[yardstick:rmse]{yardstick::rmse} to select the best model.
 }
-\examples{
-\dontrun{
-hosp_va <-
- get_hdgov_hosp(limitcols=TRUE) \%>\%
- prep_hdgov_hosp(statesonly=TRUE, min_per_week = 0, remove_incomplete = TRUE) \%>\%
- dplyr::filter(abbreviation == "VA")
-
-models <-
-  list(
-    poisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "poisson"),
-    quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"),
-    negbin = trending::glm_nb_model(flu.admits ~ hosp_rank + ili_rank)
-  )
-
-va_fit <- glm_fit(.data = hosp_va, .models = models)
-va_fit
-}
-}

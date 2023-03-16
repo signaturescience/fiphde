@@ -46,15 +46,17 @@ When fitting time series models, the set of models used (and their parameters) c
 }
 \examples{
 \dontrun{
+# Retrieve hospitalization data
 h_raw <- get_hdgov_hosp(limitcols=TRUE)
+# Prepare and summarize hospitalization data to weekly resolution
 prepped_hosp <- prep_hdgov_hosp(h_raw)
+# Create a keyed time series tibble with only locations of interest
 prepped_tsibble <- make_tsibble(prepped_hosp,
                                 epiyear = epiyear,
                                 epiweek=epiweek,
-                                key=location)
-prepped_tsibble <-
-  prepped_tsibble \%>\%
+                                key=location) \%>\%
   dplyr::filter(location \%in\% c("US", "51"))
+
 # Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
 hospfor1 <- ts_fit_forecast(prepped_tsibble,
                             horizon=4L,

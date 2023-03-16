@@ -30,23 +30,23 @@ This function provides a naive nowcasting method for clinical laboratory percent
 \examples{
 \dontrun{
 
-## get data for Texas
+# Get data for Texas
 tx_clin <-
   get_cdc_clin(region = "state") \%>\%
   dplyr::filter(location == "48")
 
-## look at most recent observations
+# Look at most recent observations
 tx_clin \%>\%
   dplyr::arrange(week_start) \%>\%
   tail()
 
-## now augment with default 1 week nowcast
+# Now augment with default 1 week nowcast
 tx_clin \%>\%
   clin_nowcast(., weeks_to_replace = 1) \%>\%
   dplyr::arrange(week_start) \%>\%
   tail()
 
-## and again augmented with 2 week nowcast instead
+# And again augmented with 2 week nowcast instead
 tx_clin \%>\%
   clin_nowcast(., weeks_to_replace = 2) \%>\%
   dplyr::arrange(week_start) \%>\%
