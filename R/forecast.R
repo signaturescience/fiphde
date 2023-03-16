@@ -579,20 +579,19 @@ forecast_categorical <- function(.forecast, .observed) {
   # What are the names of the categories to forecast?
   categories <- c("large_decrease", "decrease", "stable", "increase", "large_increase")
   # Which ones are missing from the data?
-  missing_from_res <- categories[!categories %in% res$type_id]
-  # Fill those in with zeros
-  add_to_res <- tidyr::crossing(forecast_date=unique(res$forecast_date),
+  allcrossed <- tidyr::crossing(forecast_date=unique(res$forecast_date),
                                 target=unique(res$target),
                                 location=unique(res$location),
                                 type=unique(res$type),
-                                type_id=missing_from_res,
+                                type_id=categories,
                                 value=0)
-  # Bind to the existing data, and make type_id a factor for possible plotting
-  res <-
-    res %>%
-    dplyr::bind_rows(add_to_res) %>%
+  res <- allcrossed %>%
+    dplyr::anti_join(res, by=c("forecast_date", "target", "location", "type", "type_id")) %>%
+    dplyr::bind_rows(res, .) %>%
     dplyr::arrange(location) %>%
-    dplyr::mutate(type_id=factor(type_id, levels=categories))
+    dplyr::mutate(type_id=factor(type_id, levels=categories)) %>%
+    dplyr::filter(!is.na(type_id))
 
   res
+
 }
