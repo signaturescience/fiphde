@@ -44,7 +44,7 @@
 #'                                outcome="flu.admits",
 #'                                covariates=TRUE)
 #'
-#' # format for submission
+#' # Format for submission
 #' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 #' formatted_list
 #' }
@@ -68,7 +68,6 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
       dplyr::mutate(value = as.character(value)) %>%
       dplyr::select(forecast_date,target,target_end_date,location,type,quantile,value) %>%
       ## call to distinct to get rid of duplicated 0.5 quantile
-      ## BETTER WAY TO DO THIS ??
       dplyr::distinct()
 
     res <- list(res_tmp)
@@ -179,8 +178,6 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
     split(.$.model) %>%
     # remove the .model variable from each list item
     purrr::map(dplyr::select, -.model)
-    ## fix duplicating quantile rows
-    # purrr::map(dplyr::distinct)
 
   return(submission_list)
 
@@ -219,9 +216,15 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
 #'                                outcome="flu.admits",
 #'                                covariates=TRUE)
 #'
-#' # format for submission
+#'
+#'
+#' # Format for submission
 #' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
-#' validate_forecast(formatted_list$ets)
+#' # Validate one of the forecasts
+#' # Note that this expects forecast is prepared with forecast date = Monday of the current week
+#' ens_forc <- formatted_list$ensemble
+#' ens_forc$forecast_date <- this_monday()
+#' validate_forecast(ens_forc)
 #' }
 #'
 validate_forecast <- function(subdat) {
