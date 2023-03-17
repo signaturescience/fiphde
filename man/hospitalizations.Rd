@@ -36,7 +36,7 @@ Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \cod
 \item \strong{ihsp}: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
 }
 
-NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API (https://gis.cdc.gov/GRASP/Flu3/GetPhase03InitApp?appVersion=Public).
+NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API.
 }
 \references{
 \itemize{
