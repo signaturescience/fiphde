@@ -118,7 +118,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #'
 #' This function serves as a plotting mechanism for prepped forecast submission data. The plots show the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
 #'
-#' Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information requirements for these parameters.
+#' Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information.
 #'
 #' @param .data A data frame with historical truth data for all locations and outcomes in submission targets
 #' @param submission Formatted submission (e.g., a `tibble` containing forecasts prepped with [format_for_submission])
