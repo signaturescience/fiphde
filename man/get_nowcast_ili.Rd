@@ -21,10 +21,20 @@ get_nowcast_ili(
 \item{boundatzero}{Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is \code{TRUE}}
 }
 \value{
-A \code{tibble}
+Either \code{NA} (if the API can't be reached) or a \code{tibble} with the following columns:
+\itemize{
+\item \strong{location}: FIPS code for the location
+\item \strong{abbreviation}: Abbreviation for the location
+\item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
+\item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
+\item \strong{weigthed_ili_now}: Nowcasted ILI value
+}
 }
 \description{
-This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
+This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream. The functionality here depends on availability of the ILI Nearby API (see 'Details' section).
+}
+\details{
+As of October 2022 ILInearby was no longer being updated. As such, the \code{get_nowcast_ili()} will likely return 'NA'. See \url{https://github.com/cmu-delphi/delphi-epidata/issues/993}.
 }
 \examples{
 \dontrun{

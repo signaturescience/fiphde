@@ -208,13 +208,24 @@ get_cdc_hosp <- function(years=NULL) {
 #'
 #' @description
 #'
-#' This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream.
+#' This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API. Observed ILINet data is typically reported with a lag, and the ILI nowcast can be used to augment the ILI data stream. The functionality here depends on availability of the ILI Nearby API (see 'Details' section).
 #'
 #' @param epiyearweeks A vector of epiyear-epiweeks to retrieve data for, e.g., 202150, 202151, etc. Exclusive with dates
 #' @param dates A vector of dates to retrieve data for, e.g., ""2021-12-12" or "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
 #' @param state A vector of states to retrieve (two-letter abbreviation). Default `NULL` retrieves all states, national, and hhs regions. See examples.
 #' @param boundatzero Logical as to whether or not the values should be truncated at 0 (i.e., non-negative); default is `TRUE`
-#' @return A `tibble`
+#' @return Either `NA` (if the API can't be reached) or a `tibble` with the following columns:
+#'
+#' - **location**: FIPS code for the location
+#' - **abbreviation**: Abbreviation for the location
+#' - **epiyear**: Year of reporting (in epidemiological week calendar)
+#' - **epiweek**: Week of reporting (in epidemiological week calendar)
+#' - **weigthed_ili_now**: Nowcasted ILI value
+#'
+#' @details
+#'
+#' As of October 2022 ILInearby was no longer being updated. As such, the `get_nowcast_ili()` will likely return 'NA'. See <https://github.com/cmu-delphi/delphi-epidata/issues/993>.
+#'
 #' @references <https://delphi.cmu.edu/nowcast/>
 #' @examples
 #' \dontrun{
