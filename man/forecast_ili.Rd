@@ -35,7 +35,7 @@ A named list containing:
 }
 }
 \description{
-This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see \link{ts_fit_forecast}). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
+This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see \link{ts_fit_forecast}). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models to forecast out to each of the horizons.
 }
 \examples{
 \dontrun{

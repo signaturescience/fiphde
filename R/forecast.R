@@ -172,7 +172,7 @@ ts_fit_forecast <- function(prepped_tsibble,
 #'
 #' @description
 #'
-#' This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see [ts_fit_forecast]). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models forecast out to each of the horizons.
+#' This function forecasts ILI up to a specified future horizon. The models used can be parameterized with a "models" argument (for more details see [ts_fit_forecast]). By default, the function will use an ARIMA approach to model all locations in the input historical ILI data and then use the fitted models to forecast out to each of the horizons.
 #' @param ilidat Data returned from [get_cdc_ili]
 #'
 #' @param horizon Optional horizon periods through which the forecasts should be generated; default is `4`
