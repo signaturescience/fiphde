@@ -30,7 +30,7 @@ plot_forecast(
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location
 }
 \description{
-This function serves as a plotting mechanism for prepped forecast submission data. The plots how the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
+This function serves as a plotting mechanism for prepped forecast submission data. The plots show the historical trajectory of the truth data supplied along with the forecasted point estimates and (optionally) the prediction interval. All plots are faceted by location.
 
 Note that the ".data" and "submission" arguments to this function expect incoming data prepared in a certain format. See the argument documentation and "Details" for more information requirements for these parameters.
 }
@@ -69,7 +69,7 @@ last4 <-
   dplyr::arrange(week_start) \%>\%
   tail(4)
 
-#remove those
+# Remove those
 prepped_hosp <-
   prepped_hosp_all \%>\%
   dplyr::anti_join(last4, by="week_start")
