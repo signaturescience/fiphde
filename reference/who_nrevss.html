@@ -67,9 +67,7 @@ This unexported helper function leverages the CDC FluView API to pull flu survei
 <dd><p>A vector of years to retrieve data for (i.e. <code>2014</code> for CDC
 flu season 2014-2015). CDC has data for this API going back to 1997.
 Default value (<code>NULL</code>) means retrieve <strong>all</strong> years. NOTE: if you
-happen to specify a 2-digit season value (i.e. <code>57</code> == 2017-2018)
-the function is smart enough to retrieve by season ID vs convert that
-to a year.</p></dd>
+specify a 2-digit season value the function will convert that to the corresponding season identifier (i.e. <code>57</code> == 2017-2018).</p></dd>
 
 </dl></div>
     <div class="section level2">
