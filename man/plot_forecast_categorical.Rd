@@ -7,13 +7,13 @@
 plot_forecast_categorical(categorical_forecast)
 }
 \arguments{
-\item{categorical_forecast}{A forecast from \link{forecast_categorical}}
+\item{categorical_forecast}{A \code{tibble} with categorical forecasts created with \link{forecast_categorical}}
 }
 \value{
-A ggplot2 object with categorical forecasts shown as a stacked bar plot.
+A \code{ggplot2} object with categorical forecasts shown as a stacked bar plot.
 }
 \description{
-Creates a bar plot for categorical forecasts. See examples.
+This function creates a bar plot for categorical forecasts. See examples for demonstration of usage.
 }
 \examples{
 \dontrun{

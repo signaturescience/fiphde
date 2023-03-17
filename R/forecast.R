@@ -426,7 +426,7 @@ pois_forc <- function(.data, .location, .var) {
 #' @param .forecast A tibble with "submission-ready" probabilistic flu hospitalization forecast data (i.e., tibble contained in list element returned from [format_for_submission])
 #' @param .observed A tibble with observed flu admission data (i.e., tibble output from [prep_hdgov_hosp])
 #'
-#' @return Tibble with formatted categorical forecasts that includes the following columns:
+#' @return A `tibble` with formatted categorical forecasts that includes the following columns:
 #' - **forecast_date**: Date of forecast
 #' - **target**: Name of target forecasted; fixed at "2 wk flu hosp rate change"
 #' - **location**: FIPS code for the location

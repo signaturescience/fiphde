@@ -12,7 +12,7 @@ forecast_categorical(.forecast, .observed)
 \item{.observed}{A tibble with observed flu admission data (i.e., tibble output from \link{prep_hdgov_hosp})}
 }
 \value{
-Tibble with formatted categorical forecasts that includes the following columns:
+A \code{tibble} with formatted categorical forecasts that includes the following columns:
 \itemize{
 \item \strong{forecast_date}: Date of forecast
 \item \strong{target}: Name of target forecasted; fixed at "2 wk flu hosp rate change"

@@ -120,7 +120,7 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 #'                                outcome="flu.admits",
 #'                                covariates=TRUE)
 #'
-#' # format for submission
+#' # Format for submission
 #' formatted_list <- ts_format_for_submission(hosp_fitfor$tsfor)
 #' formatted_list
 #' }

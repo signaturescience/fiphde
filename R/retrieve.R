@@ -721,9 +721,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #' @param years A vector of years to retrieve data for (i.e. `2014` for CDC
 #'        flu season 2014-2015). CDC has data for this API going back to 1997.
 #'        Default value (`NULL`) means retrieve **all** years. NOTE: if you
-#'        happen to specify a 2-digit season value (i.e. `57` == 2017-2018)
-#'        the function is smart enough to retrieve by season ID vs convert that
-#'        to a year.
+#'        specify a 2-digit season value the function will convert that to the corresponding season identifier (i.e. `57` == 2017-2018).
 #' @references
 #' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
 #'
