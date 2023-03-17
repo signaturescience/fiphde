@@ -10,7 +10,7 @@
 status](https://www.r-pkg.org/badges/version/fiphde)](https://CRAN.R-project.org/package=fiphde)
 <!-- badges: end -->
 
-FIPHDE: **F**orecasting **I**nfluenza in Support of **P**ublic
+`fiphde`: **F**orecasting **I**nfluenza in Support of **P**ublic
 **H**ealth **DE**cision Making
 
 ## Motivation
