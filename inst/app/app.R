@@ -8,6 +8,7 @@ library(purrr)
 library(stringr)
 library(fiphde)
 library(plotly)
+library(waiter)
 
 ## data dir
 ## list files in data dir
@@ -197,7 +198,11 @@ submission_summary <- function(.data, submission, location = NULL) {
 
 }
 
+## UI Side ##
+
 ui <- fluidPage(
+  useWaiter(),
+  waiterOnBusy(html = spin_whirly(), color = transparent(.5)),
   titlePanel("FIPHDE Explorer"),
   sidebarLayout(
     sidebarPanel(
@@ -227,15 +232,14 @@ ui <- fluidPage(
                    column(
                      tags$h3("% Change"),
                      tableOutput("percdiff_summary"),
-                     width = 6)
-                   )
-        )
-      )
+                     width = 6)))
+      ))
     )
   )
-)
+
 
 server <- function(input, output) {
+  waiter_hide()
 
   ## reactive to read in the original submission file
   ## this is reactive because the data will change depending on which input$forecast is supplied
@@ -336,7 +340,7 @@ server <- function(input, output) {
         filter(location %in% unique(submission_raw()$data$location))
     }
     ## checkbox choices are *names* (not codes) ... see above
-    pickerInput("location","Select location", choices = locs$location_name, selected = locs$location_name, options = list(`actions-box` = TRUE),multiple = T)
+    pickerInput("location","Select location", choices = locs$location_name, selected = locs$location_name, options = list(`actions-box` = TRUE, `live-search` = TRUE),multiple = T)
   })
 
   output$model_checkbox <- renderUI({

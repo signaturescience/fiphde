@@ -58,6 +58,7 @@ Suggests:
     feasts,
     urca,
     rmarkdown
+    waiter
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://signaturescience.github.io/fiphde/
