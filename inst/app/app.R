@@ -17,10 +17,8 @@ sapply(module_sources, source)
 
 ## data dir
 ## list files in data dir
-data_dir <- .GlobalEnv$submission_dir
-#data_dir <- .GlobalEnv$.submission_dir
-prepped_hosp = prepped_hosp
-#prepped_hosp <- .GlobalEnv$.data
+data_dir <- .GlobalEnv$.submission_dir
+prepped_hosp <- .GlobalEnv$.data
 
 ## note that fps are reversed so that most recent *should* appear first
 fps <- rev(list.files(data_dir, pattern = "candidate\\.csv$", recursive = TRUE, full.names = TRUE))
