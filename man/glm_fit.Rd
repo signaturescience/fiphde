@@ -15,7 +15,7 @@ glm_fit(.data, .models)
 A \code{tibble} containing characteristics from the "best" \code{glm} model including:
 \itemize{
 \item \strong{model_class}: The "type" of model for the best fit
-\item \strong{fit}: The fitted model object for the best fit
+\item \strong{fit}: The fitted model object for the best fit stored as a list column
 \item \strong{location}: The geographic unit being modeled
 \item \strong{data}: Original model fit data as a \code{tibble} in a list column
 }
