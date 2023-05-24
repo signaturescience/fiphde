@@ -7,15 +7,13 @@ load(system.file("testdata/testdata.rd", package="fiphde", mustWork=TRUE))
 test_that("The glm models fit and quibble works as expected", {
 
   ## fit the glm model using prepped_hosp loaded above
-  models <-
-    list(
-      quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson")
-    )
+  models <- list(quasipoisson = trending::glm_model(flu.admits ~ hosp_rank + ili_rank, family = "quasipoisson"))
 
-  fit_tst <- fiphde:::glm_fit(.data = prepped_hosp, .models = models)
+  ## NOTE: as of trending v0.1.0 we need to access the fit object a little differently
+  fit_tst <- fiphde:::glm_fit(.data = prepped_hosp, .models = models)$fit[[1]]
 
   ## test that the class of the fit column is what we would expect out of trending
-  expect_s3_class(fit_tst$fit, c("trending_model_fit","list"))
+  expect_s3_class(fit_tst, c("trending_fit_tbl","list"))
 
 
   ## define new cov
@@ -30,11 +28,11 @@ test_that("The glm models fit and quibble works as expected", {
     )
 
   ## test that the quibble returns expected quantiles
-  quibble_tst <- fiphde:::glm_quibble(fit = fit_tst$fit, new_data = new_cov, alpha = 0.05)
+  quibble_tst <- fiphde:::glm_quibble(fit = fit_tst, new_data = new_cov, alpha = 0.05)
   q_tst <- unique(quibble_tst$quantile)
   expect_equal(q_tst, c(0.025,0.975))
 
-  quibble_tst2 <- fiphde:::glm_quibble(fit = fit_tst$fit, new_data = new_cov, alpha = 0.4)
+  quibble_tst2 <- fiphde:::glm_quibble(fit = fit_tst, new_data = new_cov, alpha = 0.4)
   q_tst2 <- unique(quibble_tst2$quantile)
   expect_equal(q_tst2, c(0.2,0.8))
 

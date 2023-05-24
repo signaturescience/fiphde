@@ -27,13 +27,15 @@ glm_fit <- function(.data,
     trendeval::evaluate_resampling(.models, dat) %>%
     summary()
 
-  ## pull the best model by rmse
-  best_by_rmse <-
+  ## get the name of best model by rmse
+  best_by_rmse_name <-
     res %>%
     dplyr::slice_min(value) %>%
     dplyr::select(model_name) %>%
-    purrr::pluck(1,1) %>%
-    purrr::pluck(models, .)
+    purrr::pluck(1,1)
+
+  ## use the name to access which model it is
+  best_by_rmse <- .models[[best_by_rmse_name]]
 
   ## fit the model
   tmp_fit <-
