@@ -110,6 +110,28 @@ server <- function(input, output, session) {
     submission_summary(.data = prepped_hosp, submission = submission()$data, location = submission()$selected_loc)
   })
 
+  ## reactive engine that drives the bus here ...
+  validate_dat <- reactive({
+
+    req(!is.null(submission()))
+    req(length(input$model) == 1)
+
+    ## should NOT be valid to have no locations selected
+    if(nrow(submission()$data) == 0) {
+      "<br><font color=\"#b22222\"><b>FORECAST FILE IS NOT VALID</b></font><br>"
+    } else if(validate_forecast(submission()$formatted_data)$valid) {
+      "<br><font color=\"#228B22\"><b>FORECAST FILE IS VALID</b></font><br>"
+    } else {
+      "<br><font color=\"#b22222\"><b>FORECAST FILE IS NOT VALID</b></font><br>"
+    }
+
+  })
+
+  output$valid <- renderText({
+    req(!is.null(validate_dat()))
+    validate_dat()
+  })
+
   ## checkbox to select locations
   ## this is a renderUI option
   output$loc_checkbox <- renderUI({
