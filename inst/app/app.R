@@ -11,8 +11,9 @@ library(plotly)
 library(waiter)
 library(bslib)
 
-source("~/fiphde/inst/app/global_functions.R")
-module_sources = list.files(full.names = TRUE, path = "~/fiphde/inst/app/modules")
+
+source(system.file("app/global_functions.R", package = "fiphde"))
+module_sources = list.files(path = system.file("app/modules", package = "fiphde"), full.names = TRUE)
 sapply(module_sources, source)
 
 ## data dir
@@ -30,7 +31,7 @@ dates <- unique(stringr::str_extract(fps, "[0-9]{4}-[0-9]{2}-[0-9]{2}"))
 
 # app part ####
 ui <- fluidPage(
-  includeCSS("~/fiphde/inst/app/style.css"),
+  includeCSS(system.file("app/style.css", package = "fiphde")),
   theme = bs_theme(bootswatch = "lux"),
   useWaiter(),
   waiterOnBusy(html = spin_hexdots(), color = transparent(.5)),
