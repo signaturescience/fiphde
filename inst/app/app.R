@@ -12,8 +12,9 @@ library(waiter)
 library(bslib)
 
 
+## load global functions and iterate through module files to load in module functions
 source(system.file("app/global_functions.R", package = "fiphde"))
-module_sources = list.files(path = system.file("app/modules", package = "fiphde"), full.names = TRUE)
+module_sources <- list.files(path = system.file("app/modules", package = "fiphde"), full.names = TRUE)
 sapply(module_sources, source)
 
 ## data dir
