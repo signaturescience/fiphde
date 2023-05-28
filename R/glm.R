@@ -6,6 +6,7 @@
 #'
 #' @param .data Data including all explanatory and outcome variables needed for modeling; must include column for "location"
 #' @param .models List of models defined as [trending::trending_model] objects
+#' @param complete Logical as to whether or not all observations for covariates must be available in a given model; default is `TRUE`
 #'
 #' @return A `tibble` containing characteristics from the "best" `glm` model including:
 #'
@@ -15,7 +16,8 @@
 #'- **data**: Original model fit data as a `tibble` in a list column
 #'
 glm_fit <- function(.data,
-                    .models) {
+                    .models,
+                    complete = TRUE) {
 
   dat <- .data
 
@@ -27,12 +29,25 @@ glm_fit <- function(.data,
     trendeval::evaluate_resampling(.models, dat) %>%
     summary()
 
+  if(complete) {
+    res <-
+      res %>%
+      dplyr::filter(nas_removed == 0)
+
+    if(nrow(res) == 0) {
+      stop("There were no models for which complete observations for all covariates were available.")
+    }
+  }
+
   ## get the name of best model by rmse
   best_by_rmse_name <-
     res %>%
+    ## make sure that *at least 1* of the models in the tibble have a value
+    dplyr::filter(!is.na(value) & !is.nan(value)) %>%
     dplyr::slice_min(value) %>%
     dplyr::select(model_name) %>%
     purrr::pluck(1,1)
+
 
   ## use the name to access which model it is
   best_by_rmse <- .models[[best_by_rmse_name]]
@@ -213,6 +228,8 @@ glm_forecast <- function(.data, new_covariates = NULL, fit, alpha = c(0.01, 0.02
 glm_wrap <- function(.data, .models, new_covariates = NULL, horizon = 4, alpha = c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2) {
 
   ## NOTE: as of trending v0.1.0 we need to access the fit object a little differently
+  ## NOTE: because of changes in trendeval v0.1.0 we now check for NAs removed ...
+  ## ... and enforce complete obs with "complete=TRUE" default to glm_fit
   tmp_fit <- glm_fit(.data, .models = .models)$fit[[1]]
 
   stopifnot(nrow(new_covariates) == horizon)
