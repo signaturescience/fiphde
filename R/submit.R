@@ -278,13 +278,13 @@ validate_forecast <- function(subdat) {
   }
 
 
-  ## value must be non-negative
-  tst_values <- all(subdat$value >= 0)
+  ## value must be not missing and non-negative
+  tst_values <- all(!is.na(subdat$value)) & all(subdat$value >= 0)
 
   if(tst_values) {
     valres$values <- list(valid = TRUE, msg = NULL)
   } else {
-    valres$values <- list(valid = FALSE, msg = "The submission includes negative values.")
+    valres$values <- list(valid = FALSE, msg = "The submission includes missing or negative values.")
   }
 
   ## quantiles must be in valid quantile
