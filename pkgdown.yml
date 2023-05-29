@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   basic_usage: basic_usage.html
-last_built: 2023-03-17T20:14Z
+last_built: 2023-05-29T22:27Z
 urls:
   reference: https://signaturescience.github.io/fiphde/reference
   article: https://signaturescience.github.io/fiphde/articles

@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">glm_fit</span><span class="op">(</span><span class="va">.data</span>, <span class="va">.models</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">glm_fit</span><span class="op">(</span><span class="va">.data</span>, <span class="va">.models</span>, complete <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,13 +63,17 @@
 <dt>.models</dt>
 <dd><p>List of models defined as <a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">trending::trending_model</a> objects</p></dd>
 
+
+<dt>complete</dt>
+<dd><p>Logical as to whether or not all observations for covariates must be available in a given model; default is <code>TRUE</code></p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
 <p>A <code>tibble</code> containing characteristics from the "best" <code>glm</code> model including:</p><ul><li><p><strong>model_class</strong>: The "type" of model for the best fit</p></li>
-<li><p><strong>fit</strong>: The fitted model object for the best fit</p></li>
+<li><p><strong>fit</strong>: The fitted model object for the best fit stored as a list column</p></li>
 <li><p><strong>location</strong>: The geographic unit being modeled</p></li>
 <li><p><strong>data</strong>: Original model fit data as a <code>tibble</code> in a list column</p></li>
 </ul></div>
@@ -79,7 +83,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by VP Nagraj, Shakeel Jessa, Chris Hulme-Lowe, Stephen Turner.</p>
+  <p></p><p>Developed by VP Nagraj, Desiree Williams, Shakeel Jessa, Chris Hulme-Lowe, Stephen Turner.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,10 +45,24 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="fiphde-110">fiphde 1.1.0<a class="anchor" aria-label="anchor" href="#fiphde-110"></a></h2>
+<div class="section level3">
+<h3 id="new-features-1-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-0"></a></h3>
+<div class="section level4">
+<h4 id="improved-api-for-glm-modeling-1-1-0">Improved API for GLM modeling<a class="anchor" aria-label="anchor" href="#improved-api-for-glm-modeling-1-1-0"></a></h4>
+<p>This release future-proofs the GLM modeling and forecasting functionality. In particular, the API now conforms to updates to the <code>trending</code> and <code>trendeval</code> packages, both of which are used internally inside <code><a href="../reference/glm_wrap.html">glm_wrap()</a></code> and its helpers. Both <code>trending</code> and <code>trendeval</code> introduced significant changes to their respective APIs in recent releases. The <code>fiphde</code> package now requires <code>trending</code> &gt;= 0.1.0 and <code>trendeval</code> &gt;= 0.1.0 to ensure all package functionality works as expected.</p>
+</div>
+<div class="section level4">
+<h4 id="explorer-app-enhancements-1-1-0">Explorer app enhancements<a class="anchor" aria-label="anchor" href="#explorer-app-enhancements-1-1-0"></a></h4>
+<p>As of this release the data explorer app (see <code>?fiphde_launcher()</code>) is now organized into modules for easier backend maintenance. The app also has several new features for usability, including a new CSS theme and a “busy” icon to indicate that the app is loading when data processing delays outputs from rendering.</p>
+</div>
+</div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="fiphde-100">fiphde 1.0.0<a class="anchor" aria-label="anchor" href="#fiphde-100"></a></h2>
 <p>This major release introduces new features, improved documentation throughout, automated unit tests, and a simplified API.</p>
 <div class="section level3">
-<h3 id="new-features-1-0-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
+<h3 id="new-features-1-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
 <div class="section level4">
 <h4 id="plot_forecast_categorical-1-0-0"><code>plot_forecast_categorical()</code><a class="anchor" aria-label="anchor" href="#plot_forecast_categorical-1-0-0"></a></h4>
 <p>The package now includes a data visualization method for categorical forecast summaries via the <code><a href="../reference/plot_forecast_categorical.html">plot_forecast_categorical()</a></code> function. This function returns a <code>ggplot2</code> object with a stacked barplot showing the probabilities assigned to each categorical bin at every location.</p>
@@ -156,7 +170,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by VP Nagraj, Shakeel Jessa, Chris Hulme-Lowe, Stephen Turner.</p>
+  <p></p><p>Developed by VP Nagraj, Desiree Williams, Shakeel Jessa, Chris Hulme-Lowe, Stephen Turner.</p>
 </div>
 
 <div class="pkgdown-footer-right">
