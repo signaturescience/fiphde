@@ -16,7 +16,7 @@ glm_forecast(
 
 \item{new_covariates}{Tibble with one column per covariate, and n rows for n horizons being forecasted}
 
-\item{fit}{Fitted model object from \link[fiphde]{glm_fit}}
+\item{fit}{Fitted model object from \link{glm_fit}; note must be accessed from first element in "fit" column}
 
 \item{alpha}{Vector specifying the threshold(s) to be used for prediction intervals; alpha of \code{0.05} would correspond to 95\% PI; default is \code{c(0.01, 0.025, seq(0.05, 0.45, by = 0.05)) * 2} to create a range of intervals}
 }

@@ -20,6 +20,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Desiree Williams
   \item Shakeel Jessa
   \item Chris Hulme-Lowe
   \item Stephen Turner (\href{https://orcid.org/0000-0001-9140-9028}{ORCID})

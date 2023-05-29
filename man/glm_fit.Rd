@@ -4,18 +4,20 @@
 \alias{glm_fit}
 \title{Fit glm models}
 \usage{
-glm_fit(.data, .models)
+glm_fit(.data, .models, complete = TRUE)
 }
 \arguments{
 \item{.data}{Data including all explanatory and outcome variables needed for modeling; must include column for "location"}
 
 \item{.models}{List of models defined as \link[trending:trending_model]{trending::trending_model} objects}
+
+\item{complete}{Logical as to whether or not all observations for covariates must be available in a given model; default is \code{TRUE}}
 }
 \value{
 A \code{tibble} containing characteristics from the "best" \code{glm} model including:
 \itemize{
 \item \strong{model_class}: The "type" of model for the best fit
-\item \strong{fit}: The fitted model object for the best fit
+\item \strong{fit}: The fitted model object for the best fit stored as a list column
 \item \strong{location}: The geographic unit being modeled
 \item \strong{data}: Original model fit data as a \code{tibble} in a list column
 }

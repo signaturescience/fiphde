@@ -1,12 +1,15 @@
 Package: fiphde
 Title: Forecasting Influenza in Support of Public Health Decision Making
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
     c(person(given = "VP",
              family = "Nagraj",
              role = c("aut", "cre"),
              email = "pnagraj@signaturescience.com",
              comment = c(ORCID = "0000-0003-0060-566X")),
+      person(given = "Desiree",
+             family = "Williams",
+             role = "aut"),
       person(given = "Shakeel",
              family = "Jessa",
              role = "aut"),
@@ -35,10 +38,9 @@ Imports:
     tibble,
     tidyr,
     tsibble,
-    trending,
-    trendeval,
+    trending (>= 0.1.0),
+    trendeval (>= 0.1.0),
     ggplot2,
-    yardstick,
     stringr,
     jsonlite,
     stats,
@@ -57,7 +59,9 @@ Suggests:
     knitr,
     feasts,
     urca,
-    rmarkdown
+    rmarkdown,
+    waiter,
+    bslib
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://signaturescience.github.io/fiphde/
