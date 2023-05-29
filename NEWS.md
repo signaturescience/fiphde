@@ -1,8 +1,20 @@
+# fiphde 1.1.0
+
+## New features
+
+### Improved API for GLM modeling
+
+This release future-proofs the GLM modeling and forecasting functionality. In particular, the API now conforms to updates to the `trending` and `trendeval` packages, both of which are used internally inside `glm_wrap()` and its helpers.
+
+### Explorer app enhancements
+
+As of this release the data explorer app (see `?fiphde_launcher()`) is now organized into modules for easier backend maintenance. The app also has several new features for usability, including a new CSS theme and a "busy" icon to indicate that the app is loading when data processing delays outputs from rendering.
+
 # fiphde 1.0.0
 
 This major release introduces new features, improved documentation throughout, automated unit tests, and a simplified API. 
 
-## New Features
+## New features
 
 ### `plot_forecast_categorical()`
 
