@@ -4,7 +4,7 @@
 
 ### Improved API for GLM modeling
 
-This release future-proofs the GLM modeling and forecasting functionality. In particular, the API now conforms to updates to the `trending` and `trendeval` packages, both of which are used internally inside `glm_wrap()` and its helpers.
+This release future-proofs the GLM modeling and forecasting functionality. In particular, the API now conforms to updates to the `trending` and `trendeval` packages, both of which are used internally inside `glm_wrap()` and its helpers. Both `trending` and `trendeval` introduced significant changes to their respective APIs in recent releases. The `fiphde` package now requires that `trending` >= 0.1.0 and `trendeval` >= 0.1.0 to ensure all package functionality works as expected.
 
 ### Explorer app enhancements
 
