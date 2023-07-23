@@ -1,3 +1,11 @@
+# fiphde 1.1.1
+
+## New features
+
+### Optionally bypass ILI nowcast API
+
+The `replace_ili_nowcast()` function includes an option to "try_api", which is set to `TRUE` by default and will try to query the ILI Nearby nowcast API. If set to `FALSE`, the function will not try to query the API at all. 
+
 # fiphde 1.1.0
 
 ## New features
