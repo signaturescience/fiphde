@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,8 @@
 <span>  <span class="va">ilidat</span>,</span>
 <span>  start_date <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weeks_to_replace <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  fallback <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  fallback <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  try_api <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,6 +76,10 @@
 
 <dt>fallback</dt>
 <dd><p>Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is <code>TRUE</code></p></dd>
+
+
+<dt>try_api</dt>
+<dd><p>Logical as to whether or not the function should try the ILI Nearby nowcast API; default is <code>TRUE</code>; if <code>FALSE</code> then the function will not attempt to query the API at all</p></dd>
 
 </dl></div>
     <div class="section level2">
