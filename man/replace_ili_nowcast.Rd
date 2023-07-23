@@ -8,7 +8,8 @@ replace_ili_nowcast(
   ilidat,
   start_date = NULL,
   weeks_to_replace = 1,
-  fallback = TRUE
+  fallback = TRUE,
+  try_api = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ replace_ili_nowcast(
 \item{weeks_to_replace}{Number of weeks of \code{ilidat} to replace; default is \code{1}}
 
 \item{fallback}{Logical as to whether or not to fall back to pseudo nowcast (average of last 4 ILI weeks in the given location) if nowcast data is unavailable; default is \code{TRUE}}
+
+\item{try_api}{Logical as to whether or not the function should try the ILI Nearby nowcast API; default is \code{TRUE}; if \code{FALSE} then the function will not attempt to query the API at all}
 }
 \value{
 A \code{tibble} with the following columns:
