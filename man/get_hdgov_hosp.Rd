@@ -7,7 +7,8 @@
 get_hdgov_hosp(
   endpoint = "https://healthdata.gov/api/views/g62h-syeh/rows.csv",
   app_token = Sys.getenv("HEALTHDATA_APP_TOKEN"),
-  limitcols = FALSE
+  limitcols = FALSE,
+  shift_back = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ get_hdgov_hosp(
 \item{app_token}{App token from healthdata.gov; default is to look for environment variable called \code{"HEALTHDATA_APP_TOKEN"} and if a token is not supplied to proceed with possibility of rate limitation (see "Details" for more information)}
 
 \item{limitcols}{Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default \code{FALSE}}
+
+\item{shift_back}{Logical as to whether or not the dates for the retrieved data should be shifted back to reflect previous day; default is \code{TRUE}}
 }
 \value{
 A \code{tibble} with at least the following columns:
