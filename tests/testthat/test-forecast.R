@@ -28,7 +28,7 @@ test_that("Categorical forecasting operates as expected", {
 
   set.seed(2023-01-30)
   hosp_fitfor_test <- ts_fit_forecast(prepped_tsibble, horizon=4L, outcome="flu.admits", covariates=TRUE)
-  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts")
+  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts", format = "legacy")
   ens_forc <- formatted_list$ensemble
   cat_forcs <- forecast_categorical(ens_forc, prepped_hosp)
 

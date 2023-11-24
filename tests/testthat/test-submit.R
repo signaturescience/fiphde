@@ -12,7 +12,7 @@ test_that("Forecast submission prep and validation works as expected", {
   set.seed(2023-01-30)
   hosp_fitfor_test <- ts_fit_forecast(prepped_tsibble, horizon=4L, outcome="flu.admits", covariates=TRUE)
 
-  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts")
+  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts", format = "legacy")
   ens_forc <- formatted_list$ensemble
   ## NOTE: need to force the forecast date to the monday prior to the first horizon target end date
   ## find the minimum date (Saturday of horizon=1) and subtract 5 to get the correct forecast date
