@@ -375,13 +375,14 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
 #'
 #' @description
 #'
-#' This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
+#' This function is a helper that forecasts Poisson counts for near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of most recent observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
 #'
 #' @param .data Data frame with incoming data that includes a variable with counts (see ".var" argument), and location (must be stored in a column called "location") and a variable for sorting by date (must be stored in a column called "week_start")
 #' @param .location The name of the location of interest
 #' @param .var Bare, unquoted name of the variable with counts to be forecasted
+#' @param horizon The number of horizons ahead to forecast; must be one of `4` or `5`; default is `4`
 #'
-#' @return Vector of length 4 with Poisson forecasts for 4 horizons ahead.
+#' @return Vector with Poisson forecasts for the number of horizons specified.
 #' @export
 #'
 #' @examples
@@ -394,27 +395,41 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
 #'     p_positive = n_positive / total)
 #' va_ahead
 #' }
-pois_forc <- function(.data, .location, .var) {
+pois_forc <- function(.data, .location, .var, horizon = 4) {
 
   ## handle for NSE
   tmp_var <- dplyr::enquo(.var)
 
-  last4 <-
+  lastn <-
     .data %>%
     ## ensures no duplicate
     dplyr::distinct_all() %>%
     dplyr::filter(location == .location) %>%
     dplyr::arrange(week_start) %>%
-    utils::tail(4) %>%
+    utils::tail(horizon) %>%
     dplyr::pull(!!tmp_var)
 
-  ## draw 1 random poisson value based on lambda computed by average of last 4 weeks of count data
-  n1ahead <- stats::rpois(1, mean(last4))
-  n2ahead <- stats::rpois(1, mean(c(last4[2:4],n1ahead)))
-  n3ahead <- stats::rpois(1, mean(c(last4[3:4],n1ahead,n2ahead)))
-  n4ahead <- stats::rpois(1, mean(c(last4[4],n1ahead,n2ahead,n3ahead)))
+  if(horizon == 5) {
+    ## draw 1 random poisson value based on lambda computed by average of last 5 weeks of count data
+    n1ahead <- stats::rpois(1, mean(lastn))
+    n2ahead <- stats::rpois(1, mean(c(lastn[2:horizon],n1ahead)))
+    n3ahead <- stats::rpois(1, mean(c(lastn[3:horizon],n1ahead,n2ahead)))
+    n4ahead <- stats::rpois(1, mean(c(lastn[4:horizon],n1ahead,n2ahead,n3ahead)))
+    n5ahead <- stats::rpois(1, mean(c(lastn[horizon],n1ahead,n2ahead,n3ahead,n4ahead)))
 
-  c(n1ahead,n2ahead,n3ahead,n4ahead)
+    c(n1ahead,n2ahead,n3ahead,n4ahead,n5ahead)
+
+  } else if (horizon == 4) {
+    ## draw 1 random poisson value based on lambda computed by average of last 4 weeks of count data
+    n1ahead <- stats::rpois(1, mean(lastn))
+    n2ahead <- stats::rpois(1, mean(c(lastn[2:horizon],n1ahead)))
+    n3ahead <- stats::rpois(1, mean(c(lastn[3:horizon],n1ahead,n2ahead)))
+    n4ahead <- stats::rpois(1, mean(c(lastn[4:horizon],n1ahead,n2ahead,n3ahead)))
+
+    c(n1ahead,n2ahead,n3ahead,n4ahead)
+  } else {
+    stop("The horizon argument must be set at 4 or 5")
+  }
 }
 
 #' @title Forecast categorical targets
