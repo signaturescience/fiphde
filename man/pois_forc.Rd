@@ -4,7 +4,7 @@
 \alias{pois_forc}
 \title{Simple Poisson count forecaster}
 \usage{
-pois_forc(.data, .location, .var)
+pois_forc(.data, .location, .var, horizon = 4)
 }
 \arguments{
 \item{.data}{Data frame with incoming data that includes a variable with counts (see ".var" argument), and location (must be stored in a column called "location") and a variable for sorting by date (must be stored in a column called "week_start")}
@@ -12,12 +12,14 @@ pois_forc(.data, .location, .var)
 \item{.location}{The name of the location of interest}
 
 \item{.var}{Bare, unquoted name of the variable with counts to be forecasted}
+
+\item{horizon}{The number of horizons ahead to forecast; must be one of \code{4} or \code{5}; default is \code{4}}
 }
 \value{
-Vector of length 4 with Poisson forecasts for 4 horizons ahead.
+Vector with Poisson forecasts for the number of horizons specified.
 }
 \description{
-This function is a helper that forecasts Poisson counts for 4 near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of last 4 observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
+This function is a helper that forecasts Poisson counts for near-term horizons based on characteristics of recently observed count data. The function effectively takes a rolling average of most recent observations (augmenting with each forecasted horizon as the horizons progress), then uses this average as the parameter for Lambda in a random draw from a Poisson distribution.
 }
 \examples{
 \dontrun{
