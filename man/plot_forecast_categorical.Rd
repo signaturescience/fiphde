@@ -4,16 +4,21 @@
 \alias{plot_forecast_categorical}
 \title{Plot categorical forecasts}
 \usage{
-plot_forecast_categorical(categorical_forecast)
+plot_forecast_categorical(categorical_forecast, format = "hubverse")
 }
 \arguments{
-\item{categorical_forecast}{A \code{tibble} with categorical forecasts created with \link{forecast_categorical}}
+\item{categorical_forecast}{Either a \code{tibble} with categorical forecasts created with \link{forecast_categorical} or prepared forecast submission in "hubverse" format (see Details)}
+
+\item{format}{Either "hubverse" or "legacy"; the "hubverse" format will require an input forecast that includes output for "pmf" (see Details); default is "hubverse"}
 }
 \value{
 A \code{ggplot2} object with categorical forecasts shown as a stacked bar plot.
 }
 \description{
 This function creates a bar plot for categorical forecasts. See examples for demonstration of usage.
+}
+\details{
+The categorical plotting function works both with "legacy" formatting (i.e., format used in the 2022-23 FluSight season) and the "hubverse" formatting (i.e., format used in the 2023-24 FluSight season). The unlike the "legacy" format, the "hubverse" format allows for quantile and categorical forecasts to be co-mingled in the same submission object. If the format is specified as "hubverse", then the \code{plot_forecast_categorical()} function will interally look for the "pmf" forecasts.
 }
 \examples{
 \dontrun{
@@ -35,6 +40,6 @@ prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
 # Run categorical summary of quantiles for the time series ensemble
 categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
 # Plot the categorical forecast
-plot_forecast_categorical(categorical_forecast)
+plot_forecast_categorical(categorical_forecast, format = "legacy")
 }
 }

@@ -365,8 +365,13 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 
 #' @title Plot categorical forecasts
 #' @description This function creates a bar plot for categorical forecasts. See examples for demonstration of usage.
-#' @param categorical_forecast A `tibble` with categorical forecasts created with [forecast_categorical]
+#' @param categorical_forecast Either a `tibble` with categorical forecasts created with [forecast_categorical] or prepared forecast submission in "hubverse" format (see Details)
+#' @param format Either "hubverse" or "legacy"; the "hubverse" format will require an input forecast that includes output for "pmf" (see Details); default is "hubverse"
 #' @return A `ggplot2` object with categorical forecasts shown as a stacked bar plot.
+#'
+#' @details
+#' The categorical plotting function works both with "legacy" formatting (i.e., format used in the 2022-23 FluSight season) and the "hubverse" formatting (i.e., format used in the 2023-24 FluSight season). The unlike the "legacy" format, the "hubverse" format allows for quantile and categorical forecasts to be co-mingled in the same submission object. If the format is specified as "hubverse", then the `plot_forecast_categorical()` function will interally look for the "pmf" forecasts.
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -388,26 +393,43 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 #' # Run categorical summary of quantiles for the time series ensemble
 #' categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
 #' # Plot the categorical forecast
-#' plot_forecast_categorical(categorical_forecast)
+#' plot_forecast_categorical(categorical_forecast, format = "legacy")
 #' }
-plot_forecast_categorical <- function(categorical_forecast) {
-  categorical_forecast %>%
-    dplyr::inner_join(locations, by="location") %>%
-    dplyr::select(loc=abbreviation, type_id, value) %>%
-    tidyr::spread(type_id, value) %>%
-    dplyr::mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
-    dplyr::mutate(loc=factor(loc) %>% stats::reorder(score)) %>%
-    dplyr::mutate(loc=stats::relevel(loc, ref="US")) %>%
-    dplyr::select(-score) %>%
-    tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
-    dplyr::mutate(type_id=factor(type_id,
-                                 levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
-                                 labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
-    ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=type_id)) +
-    ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
-    ggplot2::theme_classic() +
-    ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
-    ggplot2::labs(x=NULL, y=NULL)
+plot_forecast_categorical <- function(categorical_forecast, format = "hubverse") {
+  if(format == "legacy") {
+    categorical_forecast %>%
+      dplyr::inner_join(locations, by="location") %>%
+      dplyr::select(loc=abbreviation, type_id, value) %>%
+      tidyr::spread(type_id, value) %>%
+      dplyr::mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
+      dplyr::mutate(loc=factor(loc) %>% stats::reorder(score)) %>%
+      dplyr::mutate(loc=stats::relevel(loc, ref="US")) %>%
+      dplyr::select(-score) %>%
+      tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
+      dplyr::mutate(type_id=factor(type_id,
+                                   levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
+                                   labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
+      ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=type_id)) +
+      ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
+      ggplot2::labs(x=NULL, y=NULL)
+  } else if (format == "hubverse") {
+    categorical_forecast %>%
+      dplyr::filter(output_type == "pmf") %>%
+      dplyr::inner_join(locations, by="location") %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::select(loc=abbreviation, output_type_id, value, horizon) %>%
+      dplyr::mutate(output_type_id=factor(output_type_id,
+                                          levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
+                                          labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
+      ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=output_type_id)) +
+      ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+      ggplot2::facet_wrap(~horizon, ncol = 1) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
+      ggplot2::labs(x=NULL, y=NULL)
+  }
 }
 
 #' @title Minimum non-zero
