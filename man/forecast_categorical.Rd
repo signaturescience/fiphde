@@ -4,12 +4,24 @@
 \alias{forecast_categorical}
 \title{Forecast categorical targets}
 \usage{
-forecast_categorical(.forecast, .observed)
+forecast_categorical(
+  .forecast,
+  .observed,
+  method = "density",
+  format = "hubverse",
+  horizon = 4
+)
 }
 \arguments{
 \item{.forecast}{A tibble with "submission-ready" probabilistic flu hospitalization forecast data (i.e., tibble contained in list element returned from \link{format_for_submission})}
 
 \item{.observed}{A tibble with observed flu admission data (i.e., tibble output from \link{prep_hdgov_hosp})}
+
+\item{method}{The categorical forecasting method to use; must be one of \code{"density"} or \code{"interpolation"}; default is \code{"density"}}
+
+\item{format}{The submission format to be used; must be one of \code{"hubverse"} or \code{"legacy"}; default is \code{"hubverse"}}
+
+\item{horizon}{The number of horizons ahead to forecast; must be one of \code{4} or \code{5}; default is \code{4}}
 }
 \value{
 A \code{tibble} with formatted categorical forecasts that includes the following columns:
@@ -45,7 +57,7 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
 # Prepare forecast for quantile submission format
 prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 # Run categorical summary of quantiles for the time series ensemble
-forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+forecast_categorical(prepped_forecast$ensemble, prepped_hosp, method = "interpolation", format = "legacy")
 }
 }
 \references{
