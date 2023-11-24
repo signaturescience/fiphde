@@ -440,6 +440,10 @@ pois_forc <- function(.data, .location, .var, horizon = 4) {
 #'
 #' @param .forecast A tibble with "submission-ready" probabilistic flu hospitalization forecast data (i.e., tibble contained in list element returned from [format_for_submission])
 #' @param .observed A tibble with observed flu admission data (i.e., tibble output from [prep_hdgov_hosp])
+#' @param method The categorical forecasting method to use; must be one of `"density"` or `"interpolation"`; default is `"density"`
+#' @param format The submission format to be used; must be one of `"hubverse"` or `"legacy"`; default is `"hubverse"`
+#' @param horizon The number of horizons ahead to forecast; must be one of `4` or `5`; default is `4`
+
 #'
 #' @return A `tibble` with formatted categorical forecasts that includes the following columns:
 #' - **forecast_date**: Date of forecast
@@ -472,97 +476,419 @@ pois_forc <- function(.data, .location, .var, horizon = 4) {
 #' # Prepare forecast for quantile submission format
 #' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 #' # Run categorical summary of quantiles for the time series ensemble
-#' forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+#' forecast_categorical(prepped_forecast$ensemble, prepped_hosp, method = "interpolation", format = "legacy")
 #' }
-forecast_categorical <- function(.forecast, .observed) {
+forecast_categorical <- function(.forecast, .observed, method = "density", format = "hubverse", horizon = 4) {
 
-  ## prep the .forecast object for experimental target summary
-  forc4exp <-
-    .forecast %>%
-    dplyr::mutate(value = as.numeric(value)) %>%
-    dplyr::mutate(quantile = as.numeric(quantile)) %>%
-    ## only looking at 2 week ahead for now
-    dplyr::filter(target == "2 wk ahead inc flu hosp") %>%
-    ## join to internal locations object that has population data
-    dplyr::left_join(locations, by = "location") %>%
-    ## calculate rate per 100k
-    dplyr::mutate(rate = (value/population)*100000) %>%
-    ## exclude point estimates
-    dplyr::filter(type == "quantile") %>%
-    ## get columns of interest
-    dplyr::select(forecast_date, location, quantile, value, rate)
+  if(method == "interpolation") {
+    ## prep the .forecast object for experimental target summary
 
-  hosp4exp <-
-    .observed %>%
-    ## find observed data that is prior to the 1 week ahead forecast
-    dplyr::filter(week_end == min(.forecast$target_end_date) - 7) %>%
-    ## join to internal locations object that has population data
-    dplyr::left_join(locations, by = "location") %>%
-    ## calculate rate per 100k
-    dplyr::mutate(lag_rate = (flu.admits/population)*100000) %>%
-    ## get columns of interest
-    dplyr::select(location, lag_value = flu.admits, lag_rate)
+    if(format != "legacy") {
+      stop("Currently the interpolation method only works with 'legacy' forecast format.")
+    }
 
-  ## get "probability range" from each quantile ...
-  ## for example: 0.99 and 0.01 quantiles have same prob value (0.01)
-  quants <-
-    forc4exp %>%
-    dplyr::filter(quantile < 0.5) %>%
-    dplyr::pull(quantile) %>%
-    unique(.)
+    forc4exp <-
+      .forecast %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::mutate(quantile = as.numeric(quantile)) %>%
+      ## only looking at 2 week ahead for now
+      dplyr::filter(target == "2 wk ahead inc flu hosp") %>%
+      ## join to internal locations object that has population data
+      dplyr::left_join(locations, by = "location") %>%
+      ## calculate rate per 100k
+      dplyr::mutate(rate = (value/population)*100000) %>%
+      ## exclude point estimates
+      dplyr::filter(type == "quantile") %>%
+      ## get columns of interest
+      dplyr::select(forecast_date, location, quantile, value, rate)
 
-  quant_denom <-
-    c(quants,quants,0.5) %>%
-    sum(.)
+    hosp4exp <-
+      .observed %>%
+      ## find observed data that is prior to the 1 week ahead forecast
+      dplyr::filter(week_end == min(.forecast$target_end_date) - 7) %>%
+      ## join to internal locations object that has population data
+      dplyr::left_join(locations, by = "location") %>%
+      ## calculate rate per 100k
+      dplyr::mutate(lag_rate = (flu.admits/population)*100000) %>%
+      ## get columns of interest
+      dplyr::select(location, lag_value = flu.admits, lag_rate)
 
-  ## join prepped forecast and prepped observed
-  res <-
-    dplyr::left_join(forc4exp,hosp4exp, by="location") %>%
-    dplyr::left_join(rate_change, by="location") %>%
-    ## calculate component indicators
-    dplyr::mutate(
-      ind_count = abs(value - lag_value),
-      ind_rate = abs(rate - lag_rate),
-      ind_rate2 = ifelse(rate - lag_rate > 0, "positive", "negative")
-    ) %>%
-    ## use component indicators to assess overall type per CDC flowchart
-    dplyr::mutate(type_id =
-                    dplyr::case_when(
-                      ind_count < 20 | ind_count < count_rate1per100k ~ "stable",
-                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "positive" ~ "increase",
-                      (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "negative" ~ "decrease",
-                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "positive" ~ "large_increase",
-                      (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "negative" ~ "large_decrease"
-                    )) %>%
-    ## convert quantiles to "probability magnitude"
-    dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
-    dplyr::group_by(location,type_id) %>%
-    ## sum up quantiles as probability magnitude over the total sum of quantiles
-    dplyr::summarise(value = sum(quantile)/ (quant_denom), .groups = "drop") %>%
-    ## fill in any missing type_ids in a given location with 0
-    tidyr::complete(location,type_id, fill = list(value = 0)) %>%
-    ## prep the submission format
-    dplyr::mutate(forecast_date = unique(.forecast$forecast_date),
-                  target = "2 wk flu hosp rate change",
-                  type = "category") %>%
-    dplyr::select(forecast_date, target,location, type, type_id, value)
+    ## get "probability range" from each quantile ...
+    ## for example: 0.99 and 0.01 quantiles have same prob value (0.01)
+    quants <-
+      forc4exp %>%
+      dplyr::filter(quantile < 0.5) %>%
+      dplyr::pull(quantile) %>%
+      unique(.)
 
-  # What are the names of the categories to forecast?
-  categories <- c("large_decrease", "decrease", "stable", "increase", "large_increase")
-  # Which ones are missing from the data?
-  allcrossed <- tidyr::crossing(forecast_date=unique(res$forecast_date),
-                                target=unique(res$target),
-                                location=unique(res$location),
-                                type=unique(res$type),
-                                type_id=categories,
-                                value=0)
-  res <- allcrossed %>%
-    dplyr::anti_join(res, by=c("forecast_date", "target", "location", "type", "type_id")) %>%
-    dplyr::bind_rows(res, .) %>%
-    dplyr::arrange(location) %>%
-    dplyr::mutate(type_id=factor(type_id, levels=categories)) %>%
-    dplyr::filter(!is.na(type_id))
+    quant_denom <-
+      c(quants,quants,0.5) %>%
+      sum(.)
 
-  res
+    ## join prepped forecast and prepped observed
+    res <-
+      dplyr::left_join(forc4exp,hosp4exp, by="location") %>%
+      dplyr::left_join(legacy_rate_change, by="location") %>%
+      ## calculate component indicators
+      dplyr::mutate(
+        ind_count = abs(value - lag_value),
+        ind_rate = abs(rate - lag_rate),
+        ind_rate2 = ifelse(rate - lag_rate > 0, "positive", "negative")
+      ) %>%
+      ## use component indicators to assess overall type per CDC flowchart
+      dplyr::mutate(type_id =
+                      dplyr::case_when(
+                        ind_count < 20 | ind_count < count_rate1per100k ~ "stable",
+                        (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "positive" ~ "increase",
+                        (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "negative" ~ "decrease",
+                        (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "positive" ~ "large_increase",
+                        (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "negative" ~ "large_decrease"
+                      )) %>%
+      ## convert quantiles to "probability magnitude"
+      dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
+      dplyr::group_by(location,type_id) %>%
+      ## sum up quantiles as probability magnitude over the total sum of quantiles
+      dplyr::summarise(value = sum(quantile)/ (quant_denom), .groups = "drop") %>%
+      ## fill in any missing type_ids in a given location with 0
+      tidyr::complete(location,type_id, fill = list(value = 0)) %>%
+      ## prep the submission format
+      dplyr::mutate(forecast_date = unique(.forecast$forecast_date),
+                    target = "2 wk flu hosp rate change",
+                    type = "category") %>%
+      dplyr::select(forecast_date, target,location, type, type_id, value)
+
+    # What are the names of the categories to forecast?
+    categories <- c("large_decrease", "decrease", "stable", "increase", "large_increase")
+    # Which ones are missing from the data?
+    allcrossed <- tidyr::crossing(forecast_date=unique(res$forecast_date),
+                                  target=unique(res$target),
+                                  location=unique(res$location),
+                                  type=unique(res$type),
+                                  type_id=categories,
+                                  value=0)
+    res <- allcrossed %>%
+      dplyr::anti_join(res, by=c("forecast_date", "target", "location", "type", "type_id")) %>%
+      dplyr::bind_rows(res, .) %>%
+      dplyr::arrange(location) %>%
+      dplyr::mutate(type_id=factor(type_id, levels=categories)) %>%
+      dplyr::filter(!is.na(type_id))
+
+    return(res)
+
+  } else if (method == "density") {
+
+    if(format != "hubverse") {
+      stop("Currently the desnity method only works with 'legacy' forecast format.")
+    }
+
+    last_week <-
+      .observed %>%
+      dplyr::filter(week_end == max(.observed$week_end)) %>%
+      dplyr::select(location, flu_admits = flu.admits)
+
+    res <-
+      .forecast %>%
+      dplyr::left_join(hubverse_rate_change %>% dplyr::select(-population), by = "location") %>%
+      dplyr::left_join(last_week, by = "location") %>%
+      dplyr::group_split(location, horizon) %>%
+      purrr::map(density_probs, n_horizons = horizon) %>%
+      purrr::list_rbind() %>%
+      dplyr::rename(reference_date = forecast_date, output_type_id = target_name, value = target_prob) %>%
+      dplyr::mutate(output_type = "pmf") %>%
+      dplyr::mutate(target = "wk flu hosp rate change") %>%
+      dplyr::select(reference_date, horizon, target, target_end_date, location, output_type, output_type_id, value) %>%
+      dplyr::mutate(output_type_id = as.character(output_type_id)) %>%
+      dplyr::mutate(reference_date = this_saturday()) %>%
+      dplyr::mutate(value = as.character(value)) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::group_by(location, horizon) %>%
+      dplyr::mutate(value = round_preserve(value, digits = 3)) %>%
+      dplyr::mutate(value = as.character(value)) %>%
+      dplyr::ungroup()
+
+    return(res)
+  } else {
+    stop("The method must be one of 'density' or 'interpolation'.")
+  }
+
+  # if(method == "interpolation") {
+  #   ## prep the .forecast object for experimental target summary
+  #
+  #   ## conditionally handle prepped forecast column names based on format
+  #   if(format == "hubverse") {
+  #     .forecast <-
+  #       .forecast %>%
+  #       dplyr::rename(quantile = output_type_id) %>%
+  #       dplyr::rename(type = output_type) %>%
+  #       dplyr::rename(forecast_date = reference_date)
+  #   }
+  #
+  #   forc4exp <-
+  #     .forecast %>%
+  #     dplyr::mutate(value = as.numeric(value)) %>%
+  #     dplyr::mutate(quantile = as.numeric(quantile)) %>%
+  #     ## only looking at 2 week ahead for now
+  #     dplyr::filter(target == "2 wk ahead inc flu hosp") %>%
+  #     ## join to internal locations object that has population data
+  #     dplyr::left_join(locations, by = "location") %>%
+  #     ## calculate rate per 100k
+  #     dplyr::mutate(rate = (value/population)*100000) %>%
+  #     ## exclude point estimates
+  #     dplyr::filter(type == "quantile") %>%
+  #     ## get columns of interest
+  #     dplyr::select(forecast_date, location, quantile, value, rate)
+  #
+  #   hosp4exp <-
+  #     .observed %>%
+  #     ## find observed data that is prior to the 1 week ahead forecast
+  #     dplyr::filter(week_end == min(.forecast$target_end_date) - 7) %>%
+  #     ## join to internal locations object that has population data
+  #     dplyr::left_join(locations, by = "location") %>%
+  #     ## calculate rate per 100k
+  #     dplyr::mutate(lag_rate = (flu.admits/population)*100000) %>%
+  #     ## get columns of interest
+  #     dplyr::select(location, lag_value = flu.admits, lag_rate)
+  #
+  #   ## get "probability range" from each quantile ...
+  #   ## for example: 0.99 and 0.01 quantiles have same prob value (0.01)
+  #   quants <-
+  #     forc4exp %>%
+  #     dplyr::filter(quantile < 0.5) %>%
+  #     dplyr::pull(quantile) %>%
+  #     unique(.)
+  #
+  #   quant_denom <-
+  #     c(quants,quants,0.5) %>%
+  #     sum(.)
+  #
+  #   ## join prepped forecast and prepped observed
+  #   res <-
+  #     dplyr::left_join(forc4exp,hosp4exp, by="location") %>%
+  #     dplyr::left_join(legacy_rate_change, by="location") %>%
+  #     ## calculate component indicators
+  #     dplyr::mutate(
+  #       ind_count = abs(value - lag_value),
+  #       ind_rate = abs(rate - lag_rate),
+  #       ind_rate2 = ifelse(rate - lag_rate > 0, "positive", "negative")
+  #     ) %>%
+  #     ## use component indicators to assess overall type per CDC flowchart
+  #     dplyr::mutate(type_id =
+  #                     dplyr::case_when(
+  #                       ind_count < 20 | ind_count < count_rate1per100k ~ "stable",
+  #                       (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "positive" ~ "increase",
+  #                       (ind_count < 40 | ind_count < count_rate2per100k) & ind_rate2 == "negative" ~ "decrease",
+  #                       (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "positive" ~ "large_increase",
+  #                       (ind_count >= 40 & ind_count >= count_rate2per100k) & ind_rate2 == "negative" ~ "large_decrease"
+  #                     )) %>%
+  #     ## convert quantiles to "probability magnitude"
+  #     dplyr::mutate(quantile = ifelse(quantile > 0.5, 1-quantile, quantile)) %>%
+  #     dplyr::group_by(location,type_id) %>%
+  #     ## sum up quantiles as probability magnitude over the total sum of quantiles
+  #     dplyr::summarise(value = sum(quantile)/ (quant_denom), .groups = "drop") %>%
+  #     ## fill in any missing type_ids in a given location with 0
+  #     tidyr::complete(location,type_id, fill = list(value = 0)) %>%
+  #     ## prep the submission format
+  #     dplyr::mutate(forecast_date = unique(.forecast$forecast_date),
+  #                   target = "2 wk flu hosp rate change",
+  #                   type = "category") %>%
+  #     dplyr::select(forecast_date, target,location, type, type_id, value)
+  #
+  #   # What are the names of the categories to forecast?
+  #   categories <- c("large_decrease", "decrease", "stable", "increase", "large_increase")
+  #   # Which ones are missing from the data?
+  #   allcrossed <- tidyr::crossing(forecast_date=unique(res$forecast_date),
+  #                                 target=unique(res$target),
+  #                                 location=unique(res$location),
+  #                                 type=unique(res$type),
+  #                                 type_id=categories,
+  #                                 value=0)
+  #   res <- allcrossed %>%
+  #     dplyr::anti_join(res, by=c("forecast_date", "target", "location", "type", "type_id")) %>%
+  #     dplyr::bind_rows(res, .) %>%
+  #     dplyr::arrange(location) %>%
+  #     dplyr::mutate(type_id=factor(type_id, levels=categories)) %>%
+  #     dplyr::filter(!is.na(type_id))
+  #
+  #   if(format == "hubverse") {
+  #     res <-
+  #       res %>%
+  #       dplyr::rename(reference_date = forecast_date, output_type_id = target_name, value = target_prob) %>%
+  #       dplyr::mutate(output_type = "pmf") %>%
+  #       dplyr::mutate(target = "wk flu hosp rate change") %>%
+  #       dplyr::select(reference_date, horizon, target, target_end_date, location, output_type, output_type_id, value) %>%
+  #       dplyr::mutate(output_type_id = as.character(output_type_id)) %>%
+  #       dplyr::mutate(reference_date = this_saturday()) %>%
+  #       dplyr::mutate(value = as.character(value)) %>%
+  #       dplyr::mutate(value = as.numeric(value)) %>%
+  #       group_by(location, horizon) %>%
+  #       mutate(value = round_preserve(value, digits = 3)) %>%
+  #       mutate(value = as.character(value)) %>%
+  #       ungroup()
+  #
+  #     return(res)
+  #   } else if (format == "legacy") {
+  #     return(res)
+  #   } else {
+  #     stop("Format must be one of 'hubverse' or 'legacy'.")
+  #   }
+  # } else if (method == "density") {
+  #
+  #   last_week <-
+  #     .observed %>%
+  #     dplyr::filter(week_end == max(.observed$week_end)) %>%
+  #     dplyr::select(location, flu_admits = flu.admits)
+  #
+  #   res <-
+  #     .forecast %>%
+  #     dplyr::left_join(hubverse_rate_change %>% dplyr::select(-population), by = "location") %>%
+  #     dplyr::left_join(last_week, by = "location") %>%
+  #     dplyr::group_split(location, horizon) %>%
+  #     purrr::map(density_probs, n_horizons = horizon) %>%
+  #     purrr::list_rbind()
+  #
+  #   if(format == "hubverse") {
+  #     res <-
+  #       res %>%
+  #       dplyr::rename(reference_date = forecast_date, output_type_id = target_name, value = target_prob) %>%
+  #       dplyr::mutate(output_type = "pmf") %>%
+  #       dplyr::mutate(target = "wk flu hosp rate change") %>%
+  #       dplyr::select(reference_date, horizon, target, target_end_date, location, output_type, output_type_id, value) %>%
+  #       dplyr::mutate(output_type_id = as.character(output_type_id)) %>%
+  #       dplyr::mutate(reference_date = this_saturday()) %>%
+  #       dplyr::mutate(value = as.character(value)) %>%
+  #       dplyr::mutate(value = as.numeric(value)) %>%
+  #       group_by(location, horizon) %>%
+  #       mutate(value = round_preserve(value, digits = 3)) %>%
+  #       mutate(value = as.character(value)) %>%
+  #       ungroup()
+  #
+  #     return(res)
+  #   } else if (format == "legacy") {
+  #
+  #     res <-
+  #       res %>%
+  #       dplyr::mutate(type = "category") %>%
+  #       dplyr::mutate(target = paste0(horizon, " wk flu hosp rate change")) %>%
+  #       dplyr::select(forecast_date, target, location, type, type_id = target_name, value = target_prob)
+  #
+  #     return(res)
+  #   } else {
+  #     stop("Format must be one of 'hubverse' or 'legacy'.")
+  #   }
+  # }
 
 }
+
+#' Title
+#'
+#' @param df Data
+#' @param n_horizons Number of horizons ahead
+#' @param ... Additional arguments passed to distfromq
+#'
+#' @return data frame
+#'
+#'
+density_probs <- function(df, n_horizons = 5, ...){
+
+  a <- list(...)
+  if ("lower_tail_dist" %in% names(a)) {
+    ltd <- a$lower_tail_dist
+  } else {
+    ltd <- "norm"
+  }
+  if ("upper_tail_dist" %in% names(a)) {
+    utd <- a$upper_tail_dist
+  } else {
+    utd <- "norm"
+  }
+  p <- as.numeric(df$output_type_id)
+  q <- as.numeric(df$value)
+  obs_flu_admits <- unique(df$flu_admits)
+  ## NOTE: need to subtract observed flu admits because we're looking at *change* in forecast
+  q <- q - obs_flu_admits
+  cdf <- distfromq::make_p_fn(ps = p, qs = q, ...)
+  # Calculate the target category thresholds
+
+  tmp_horizon <- unique(df$horizon)
+
+  ## DEFINE LIST WITH BOUNDARIES HERE ...
+
+  if(n_horizons == 5) {
+    thresh <-
+      switch (as.character(tmp_horizon),
+              "-1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+                          t2 = max(c(10, as.numeric(unique(df$count_rate2))))
+              ),
+              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate3))))
+              ),
+              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate4))))
+              ),
+              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate5))))
+              ),
+              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate5))))
+              )
+      )
+  } else if (n_horizons == 4) {
+    thresh <-
+      switch (as.character(tmp_horizon),
+              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate2))))
+              ),
+              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate3))))
+              ),
+              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate4))))
+              ),
+              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate5))))
+              )
+      )
+  } else {
+    stop("The number of horizons must be 4 or 5 ...")
+  }
+
+  # t1 <- max(c(10, as.numeric(unique(df$count_rate1))))
+  # t2 <- max(c(10, as.numeric(unique(df$count_rate2))))
+
+  t1 <- thresh$t1
+  t2 <- thresh$t2
+
+  # Calculate the probabilities for each category
+  ## cdf is outputting the left tail
+  ## space between t1 and -t1 indicates probability of stable
+  ## subtract cdf of -t1 to remove tail for decrease + large decrease
+  p_s <- cdf(t1) - cdf(-1 * t1)      # Stable
+  ## space between t2 and t1 is increase
+  p_i <- cdf(t2) - cdf(t1)           # Increase
+  ## everything to the right of t2 (get right tail from subtracting left tail from 1)
+  p_li <- 1 - cdf(t2)                # Large increase
+  ## space between -t1 and -t2
+  p_d <- cdf(-1 * t1) - cdf(-1 * t2) # Decrease
+  ## left tail of -t2
+  p_ld <- cdf(-1 * t2)               # Large decrease
+  ## adding strict check for probability sums to 1
+  ## round in case there are signif digit discrepancies
+  stopifnot(round(sum(p_s, p_i, p_li, p_d, p_ld), 5) == 1)
+
+  # Construct the output dataframe
+  out_tmp <- data.frame(
+    forecast_date = rep(unique(df$reference_date),5),
+    abbreviation = rep(unique(df$abbreviation),5),
+    location = rep(unique(df$location),5),
+    location_name = rep(unique(df$location_name),5),
+    target_name = c("stable","increase","large_increase","decrease","large_decrease"),
+    target_prob = c(p_s,p_i,p_li,p_d,p_ld),
+    target_end_date = unique(df$target_end_date),
+    horizon = tmp_horizon,
+    # model = unique(df$model_name),
+    lower_tail_dist = ltd,
+    upper_tail_dist = utd
+  )
+  return(out_tmp)
+}
+

@@ -585,3 +585,22 @@ smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
     mean(.)
 
 }
+
+#' Round and preserve vector
+#'
+#' This unexported helper is used to ensure that categorical forecasts are rounded to sum to 1.
+#'
+#' @param x Numeric vector with values to round
+#' @param digits The number of digits to use in precision; defalut is `0`
+#'
+#' @return Vector of same length as "x" with values rounded
+#'
+round_preserve <- function(x, digits = 0) {
+  up <- 10 ^ digits
+  x <- x * up
+  y <- floor(x)
+  indices <- utils::tail(order(x-y), round(sum(x)) - sum(y))
+  y[indices] <- y[indices] + 1
+  y / up
+}
+

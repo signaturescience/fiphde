@@ -35,13 +35,18 @@ locations <-
 
 ## provenance of data file
 # download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-data/master/data-locations/locations.csv",
-#               destfile=here::here("data-raw/rate-change.csv"))
+#               destfile=here::here("data-raw/legacy-rate-change.csv"))
+# download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-hub/main/auxiliary-data/locations.csv",
+#               destfile=here::here("data-raw/hubverse-rate-change.csv"))
 
 ## read the location crosswalk table from file downloaded from github
 ## select columns of interest
-rate_change <-
-  read_csv(here::here("data-raw/rate-change.csv"), col_types="cccddd") %>%
+legacy_rate_change <-
+  read_csv(here::here("data-raw/legacy-rate-change.csv"), col_types="cccddd") %>%
   select(location, count_rate1per100k, count_rate2per100k)
+
+hubverse_rate_change <-
+  read_csv(here::here("data-raw/hubverse-rate-change.csv"), col_types="cccddddddd")
 
 # Quantiles ---------------------------------------------------------------
 
@@ -287,7 +292,8 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
-                  rate_change,
+                  legacy_rate_change,
+                  hubverse_rate_change,
                   q,
                   quidk,
                   historical_severity,
