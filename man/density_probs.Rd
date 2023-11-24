@@ -2,20 +2,20 @@
 % Please edit documentation in R/forecast.R
 \name{density_probs}
 \alias{density_probs}
-\title{Title}
+\title{Calculate categorical probability density}
 \usage{
 density_probs(df, n_horizons = 5, ...)
 }
 \arguments{
-\item{df}{Data}
+\item{df}{Data frame with forecasts and categorical thresholds joined}
 
 \item{n_horizons}{Number of horizons ahead}
 
 \item{...}{Additional arguments passed to distfromq}
 }
 \value{
-data frame
+Data frame with probabilities for each rate change category
 }
 \description{
-Title
+This unexported helper function is used to build a distribution from quantile forecasts and then calculate the probabilty density for the thresholds associated with each category forecasted: large increase, increase, stable, decrease, large decrease.
 }
