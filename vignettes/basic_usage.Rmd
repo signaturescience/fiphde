@@ -167,7 +167,7 @@ hosp_fitfor
 Next, we can format the forecasts for [submission to FluSight](https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md) using the `format_for_submission` function.
 
 ```{r, eval=FALSE}
-formatted_list <- format_for_submission(hosp_fitfor$tsfor)
+formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 ```
 
 The list contains separate submission-ready tibbles, one element for each type of model fitted. 
@@ -288,7 +288,7 @@ res$model$fit$fitted_model$coefficients
 Next we prepare the data in the quantile format used by FluSight.
 
 ```{r}
-hi_glm_prepped <- format_for_submission(res$forecasts, method="CREG")
+hi_glm_prepped <- format_for_submission(res$forecasts, method="CREG", format = "legacy")
 hi_glm_prepped
 ```
 

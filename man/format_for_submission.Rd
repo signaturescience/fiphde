@@ -7,7 +7,9 @@
 format_for_submission(
   .forecasts,
   method = "ts",
-  .target = "wk ahead inc flu hosp"
+  .target = "wk ahead inc flu hosp",
+  format = "hubverse",
+  horizon_shift = 1
 )
 }
 \arguments{
@@ -16,14 +18,32 @@ format_for_submission(
 \item{method}{Method for forecasting; default is \code{"ts"} which will trigger the use of \link{ts_format_for_submission} internally}
 
 \item{.target}{Name of the target in the forecast; default is \code{"wk ahead inc flu hosp"}}
+
+\item{format}{The submission format to be used; must be one of \code{"hubverse"} or \code{"legacy"}; default is \code{"hubverse"}}
+
+\item{horizon_shift}{Number of horizons to shift backwards to align with reference date; only used if format is \code{"hubverse"}; default is \code{1}}
 }
 \value{
-A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission.
+
+If format is \code{"hubverse"} each tibble will have the following columns:
+\itemize{
+\item \strong{reference_date}: Date of reference for forecast submission
+\item \strong{horizon}: Horizon for the given forecast
+\item \strong{target}: Name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+\item \strong{output_type}: Type of forecasted value (e.g., "quantile")
+\item \strong{output_type_id}: The quantile for the forecasted value if output_type is "quantile"
+\item \strong{value}: The forecasted value
+}
+
+If format is \code{"legacy"} each tibble will have the following columns:
 \itemize{
 \item \strong{forecast_date}: Date of forecast
 \item \strong{target}: Horizon and name of forecasted target
 \item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
-\item \strong{location}: FIPS code for location
+\item \strong{location}: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
 \item \strong{type}: One of either "point" or "quantile" for the forecasted value
 \item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
 \item \strong{value}: The forecasted value
@@ -55,10 +75,12 @@ hosp_fitfor <- ts_fit_forecast(prepped_hosp_tsibble,
                                covariates=TRUE)
 
 # Format for submission
-formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 formatted_list
 }
 }
 \references{
+\url{https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format}
+
 \url{https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md}
 }

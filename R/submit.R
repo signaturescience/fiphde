@@ -7,18 +7,34 @@
 #' @param .forecasts Forecasts to be formatted for submission; if method is `"ts"` this should be forecasts from [ts_fit_forecast]; otherwise this must be a `tibble` with forecast output (e.g., output from [glm_forecast]) with a column designating "location"
 #' @param method Method for forecasting; default is `"ts"` which will trigger the use of [ts_format_for_submission] internally
 #' @param .target Name of the target in the forecast; default is `"wk ahead inc flu hosp"`
+#' @param format The submission format to be used; must be one of `"hubverse"` or `"legacy"`; default is `"hubverse"`
+#' @param horizon_shift Number of horizons to shift backwards to align with reference date; only used if format is `"hubverse"`; default is `1`
 #'
-#' @return A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission with the following columns:
+#' @return A named list of tibbles with probabilistic forecasts (one for each model), formatted for submission.
+#'
+#' If format is `"hubverse"` each tibble will have the following columns:
+#'
+#' - **reference_date**: Date of reference for forecast submission
+#' - **horizon**: Horizon for the given forecast
+#' - **target**: Name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+#' - **output_type**: Type of forecasted value (e.g., "quantile")
+#' - **output_type_id**: The quantile for the forecasted value if output_type is "quantile"
+#' - **value**: The forecasted value
+#'
+#' If format is `"legacy"` each tibble will have the following columns:
 #'
 #' - **forecast_date**: Date of forecast
 #' - **target**: Horizon and name of forecasted target
 #' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
-#' - **location**: FIPS code for location
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
 #' - **type**: One of either "point" or "quantile" for the forecasted value
 #' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
 #' - **value**: The forecasted value
 #'
 #'
+#' @references <https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format>
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
 #' @export
 #'
@@ -45,10 +61,10 @@
 #'                                covariates=TRUE)
 #'
 #' # Format for submission
-#' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 #' formatted_list
 #' }
-format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead inc flu hosp") {
+format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead inc flu hosp", format = "hubverse", horizon_shift = 1) {
 
   if(method == "ts") {
     res <- ts_format_for_submission(.forecasts)
@@ -73,7 +89,48 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
     res <- list(res_tmp)
     names(res) <- method
   }
-  return(res)
+
+  ## condition to update to hubverse formatting
+  if(format == "hubverse") {
+    res <- purrr::map(res, hubverse_format, horizon_shift = horizon_shift)
+    return(res)
+  } else if (format == "legacy") {
+    return(res)
+  } else {
+    stop("Format must be one of 'hubverse' or 'legacy'.")
+  }
+
+}
+
+#' Hubverse formatting
+#'
+#' This unexported helper is used internally inside in [format_for_submission].It specifically updates formatting for Hubverse guidelines.
+#'
+#' @param dat Forecast prepped in "legacy" format
+#' @param horizon_shift Number of horizons to shift backwards to align with reference date; default is `1`
+#' @return Formatted `tibble`
+#'
+#' @references <https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format>
+#' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md>
+#'
+hubverse_format <- function(dat, horizon_shift = 1) {
+
+  dat %>%
+    dplyr::rename(reference_date = forecast_date, output_type = type, output_type_id = quantile) %>%
+    ## separate out the numeric horizon from the target name
+    tidyr::separate(target, into = c("horizon", "target"), sep = "(?<=[0-9]) ") %>%
+    dplyr::mutate(horizon = as.numeric(horizon)) %>%
+    ## shift horizon to reflect orientation to "reference week"
+    dplyr::mutate(horizon = horizon - horizon_shift) %>%
+    dplyr::mutate(target = gsub(" ahead", "", target)) %>%
+    ## do not include point estimates (quantile == 0.5 will be used as point estimate)
+    dplyr::filter(output_type != "point") %>%
+    dplyr::select(reference_date, horizon, target, target_end_date, location, output_type, output_type_id, value) %>%
+    dplyr::mutate(output_type_id = ifelse(output_type == "quantile", as.numeric(output_type_id), output_type_id)) %>%
+    dplyr::mutate(output_type_id = as.character(output_type_id)) %>%
+    ## set reference date as saturday of the current epiweek
+    dplyr::mutate(reference_date = this_saturday())
+
 }
 
 #' @title Format time series forecast
