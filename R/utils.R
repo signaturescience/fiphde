@@ -1,8 +1,22 @@
+#' @title Get Saturday
+#'
+#' @description
+#'
+#' This function is a helper to get the date for the Saturday of the current week. The function determines the current week based on epidemiological week orientation (i.e., week begins with Sunday).
+#'
+#' @return Date for the Saturday of the current week.
+#' @export
+#' @examples
+#' this_saturday()
+this_saturday <- function() {
+  tmp <- MMWRweek::MMWRweek(lubridate::today())
+  MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 7)
+}
 #' @title Get Monday
 #'
 #' @description
 #'
-#' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
+#' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiological week orientation (i.e., week begins with Sunday).
 #'
 #' @return Date for the Monday of the current week.
 #' @export
