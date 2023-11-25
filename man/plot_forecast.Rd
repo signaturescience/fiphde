@@ -10,7 +10,8 @@ plot_forecast(
   location = "US",
   pi = 0.95,
   .model = NULL,
-  .outcome = "flu.admits"
+  .outcome = "flu.admits",
+  format = "legacy"
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ plot_forecast(
 \item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
 
 \item{.outcome}{The name of the outcome variable you're plotting in the historical data; defaults to \code{"flu.admits"}}
+
+\item{format}{The submission format to be used; must be one of \code{"hubverse"} or \code{"legacy"}; default is \code{"legacy"}}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location

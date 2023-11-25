@@ -145,6 +145,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
 #' @param .outcome The name of the outcome variable you're plotting in the historical data; defaults to `"flu.admits"`
+#' @param format The submission format to be used; must be one of `"hubverse"` or `"legacy"`; default is `"legacy"`
 #'
 #' @details
 #'
@@ -247,7 +248,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
 #' }
-plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits") {
+plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits", format = "legacy") {
 
   if(!is.null(.model)) {
     submission$model <- .model
@@ -276,6 +277,28 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
     dplyr::select(location, date=week_end,point={{.outcome}}) %>%
     dplyr::mutate(model="Observed")
 
+  if(format == "hubverse") {
+    submission <-
+      submission %>%
+      dplyr::filter(output_type == "quantile") %>%
+      dplyr::mutate(target = paste0(horizon, " ", target)) %>%
+      dplyr::mutate(target = gsub("wk", "wk ahead", target)) %>%
+      dplyr::select(model, forecast_date = reference_date, target, target_end_date, location, type = output_type, quantile = output_type_id, value)
+
+    ## need to prep point estimates for hubverse format
+    ## will use q0.5 as point estimates for plotting below
+    point_estimates <-
+      submission %>%
+      dplyr::filter(quantile == 0.5) %>%
+      dplyr::mutate(type = "point") %>%
+      dplyr::mutate(quantile = NA)
+
+    submission <-
+      submission %>%
+      dplyr::filter(quantile != 0.5) %>%
+      dplyr::bind_rows(., point_estimates)
+  }
+
   ## get appropriate boundaries based on specified width of PI
   ## default is 0.95 ...
   ## which would estrict to q0.025 (lower) and q0.975 (upper)
@@ -297,6 +320,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
       dplyr::group_by(model) %>%
       dplyr::filter(type=="point" | quantile == lower_bound | quantile == upper_bound)
 
+    # return(tmp_forecasted)
     # Grab the forecasted data
     forecasted <-
       tmp_forecasted %>%
