@@ -472,7 +472,13 @@ server <- function(input, output) {
       scores$scores_summary %>%
       map_df(., as_tibble)
 
-    res
+    ## return scores
+    ## make sure to join to fiphde locations for location names
+    res %>%
+      left_join(fiphde:::locations) %>%
+      select(-abbreviation, -population, -location) %>%
+      rename(location = location_name) %>%
+      select(location, everything())
 
   })
   ## tabular output
