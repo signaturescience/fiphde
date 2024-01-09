@@ -9,6 +9,7 @@ library(stringr)
 library(fiphde)
 library(plotly)
 library(waiter)
+library(rplanes)
 
 ## data dir
 ## list files in data dir
@@ -307,6 +308,7 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Visualization", uiOutput("plots")),
+        tabPanel("Plausibility", DT::dataTableOutput("planes")),
         tabPanel("Table", DT::dataTableOutput("table")),
         tabPanel("Summary",
                  verbatimTextOutput("horizons"),
@@ -441,6 +443,38 @@ server <- function(input, output) {
 
   })
 
+  output$planes <- DT::renderDataTable({
+
+    req(length(input$model) == 1)
+
+    ## prep signal objects for plausibility analysis
+    ## need to find the forecast file selected first ...
+    ## possible that there are multiple models with the same "forecast" date
+    ## using two steps
+    tmp_fp <- grep(input$forecast, fps, value = TRUE)
+    tmp_fp <- grep(input$model, tmp_fps, value = TRUE)
+    forc <- rplanes::read_forecast(tmp_fp, format = input$format)
+    forc_signal <- to_signal(forc, outcome = "flu.admits", type = "forecast", resolution = "weeks", horizon = 4)
+
+    obs_dat <-
+      prepped_hosp %>%
+      select(location, date = week_start, flu.admits)
+
+    obs_signal <- to_signal(obs_dat, outcome = "flu.admits", type = "observed", resolution = "weeks")
+
+    ## create the seed based on the saturday before the oldest date in the forecast
+    ## forecast date column will be the saturday based on the target end date
+    prepped_seed <- plane_seed(obs_signal, cut_date = as.Date(min(forc$date)-7))
+
+    scores <- plane_score(forc_signal, prepped_seed, components = c("diff","cover","taper","trend","repeat","zero"))
+
+    res <-
+      scores$scores_summary %>%
+      map_df(., as_tibble)
+
+    res
+
+  })
   ## tabular output
   output$table <- DT::renderDataTable({
     submission()$formatted_data
