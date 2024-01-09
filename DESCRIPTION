@@ -62,7 +62,7 @@ Suggests:
     urca,
     rmarkdown,
     waiter,
-    bslib
+    rplanes
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://signaturescience.github.io/fiphde/
