@@ -308,9 +308,15 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Visualization", uiOutput("plots")),
-        tabPanel("Plausibility", DT::dataTableOutput("planes")),
+        tabPanel("Plausibility",
+                 tags$h3("Plausibility analysis with PLANES only available if one model is selected."),
+                 selectInput("planes_components", "PLANES Components",choices = c("diff","cover","taper","trend","repeat","zero","shape"), selected = c("diff","cover","taper","trend","repeat","zero"), multiple = TRUE),
+                 actionButton("run_planes","Run PLANES scoring"),
+                 tags$br(),
+                 DT::dataTableOutput("planes")),
         tabPanel("Table", DT::dataTableOutput("table")),
         tabPanel("Summary",
+                 tags$h3("Summary data only available if one model is selected."),
                  verbatimTextOutput("horizons"),
                  fluidRow(
                    column(
@@ -443,7 +449,7 @@ server <- function(input, output) {
 
   })
 
-  output$planes <- DT::renderDataTable({
+  planes_dat <- eventReactive(input$run_planes, {
 
     req(length(input$model) == 1)
 
@@ -466,15 +472,22 @@ server <- function(input, output) {
     ## forecast date column will be the saturday based on the target end date
     prepped_seed <- plane_seed(obs_signal, cut_date = as.Date(min(forc$date)-7))
 
-    scores <- plane_score(forc_signal, prepped_seed, components = c("diff","cover","taper","trend","repeat","zero"))
+    scores <- plane_score(forc_signal, prepped_seed, components = input$planes_components)
 
     res <-
       scores$scores_summary %>%
       map_df(., as_tibble)
 
+    return(list(res = res))
+  })
+
+  output$planes <- DT::renderDataTable({
+
+    req(length(input$model) == 1)
+
     ## return scores
     ## make sure to join to fiphde locations for location names
-    res %>%
+    planes_dat()$res %>%
       left_join(fiphde:::locations) %>%
       select(-abbreviation, -population, -location) %>%
       rename(location = location_name) %>%
