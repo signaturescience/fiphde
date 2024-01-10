@@ -19,6 +19,7 @@ jobs:
         run: |
           ## --------------------------------------------------------------------
           lib <- file.path(dirname(.Library), "site-library")
+          dir.create(lib, showWarnings = FALSE, recursive = TRUE)
           install.packages("remotes")
           remotes::install_github("signaturescience/rplanes", build_vignettes=FALSE, lib = lib)
           remotes::install_github("reichlab/distfromq", build_vignettes=FALSE, lib = lib)
