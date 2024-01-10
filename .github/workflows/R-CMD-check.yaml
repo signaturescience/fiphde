@@ -15,15 +15,15 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
     steps:
-      - name: install-other-deps
-        run: |
-          ## --------------------------------------------------------------------
-          lib <- file.path(dirname(.Library), "site-library")
-          dir.create(lib, showWarnings = FALSE, recursive = TRUE)
-          install.packages("remotes", lib = lib)
-          remotes::install_github("signaturescience/rplanes", build_vignettes=FALSE, lib = lib)
-          remotes::install_github("reichlab/distfromq", build_vignettes=FALSE, lib = lib)
-        shell: Rscript {0}
+      # - name: install-other-deps
+      #   run: |
+      #     ## --------------------------------------------------------------------
+      #     lib <- file.path(dirname(.Library), "site-library")
+      #     dir.create(lib, showWarnings = FALSE, recursive = TRUE)
+      #     install.packages("remotes", lib = lib)
+      #     remotes::install_github("signaturescience/rplanes", build_vignettes=FALSE, lib = lib)
+      #     remotes::install_github("reichlab/distfromq", build_vignettes=FALSE, lib = lib)
+      #   shell: Rscript {0}
 
       - uses: actions/checkout@v2
 
@@ -33,6 +33,6 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: rcmdcheck
+          extra-packages: rcmdcheck, any::rplanes, any::distfromq
 
       - uses: r-lib/actions/check-r-package@v2
