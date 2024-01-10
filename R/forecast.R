@@ -474,9 +474,9 @@ pois_forc <- function(.data, .location, .var, horizon = 4) {
 #'                                outcome="flu.admits",
 #'                                covariates=TRUE)
 #' # Prepare forecast for quantile submission format
-#' prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
+#' forc <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 #' # Run categorical summary of quantiles for the time series ensemble
-#' forecast_categorical(prepped_forecast$ensemble, prepped_hosp, method = "interpolation", format = "legacy")
+#' forecast_categorical(forc$ensemble, prepped_hosp, method = "interpolation", format = "legacy")
 #' }
 forecast_categorical <- function(.forecast, .observed, method = "density", format = "hubverse", horizon = 4) {
 
