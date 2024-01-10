@@ -15,6 +15,14 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
     steps:
+      - name: install-other-deps
+        run: |
+          ## --------------------------------------------------------------------
+          install.packages("remotes")
+          remotes::install_github("signaturescience/rplanes", build_vignettes=FALSE)
+          remotes::install_github("reichlab/distfromq", build_vignettes=FALSE)
+        shell: Rscript {0}
+
       - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-r@v2
