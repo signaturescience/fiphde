@@ -29,14 +29,14 @@ Adapted from \code{cdcfluview::hospitalizations}.
 This unexported helper function leverages the CDC FluView API to pull influenza hospitalizations collected by surveillance instruments (including FluSurv-NET). The data retrieved can be parameterized by geographic granularity and/or flu season, and includes hospitalization rates by age group. The function is used internally by \link{get_cdc_hosp}.
 }
 \details{
+\strong{NOTE}: The list of regions was compiled in February 2023 by querying the CDC FluView API. Individual regions may not be accessible in all cases. As of late 2023, the query was only returning results for the "Entire Network" selection.
+
 Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \code{"ihsp"}) can be further queried by region. The following is a list of valid regions:
 \itemize{
 \item \strong{flusurv}: "Entire Network"
 \item \strong{eip}: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
 \item \strong{ihsp}: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
 }
-
-NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API.
 }
 \references{
 \itemize{

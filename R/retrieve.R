@@ -569,13 +569,14 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 #'
 #' @details
 #'
+#' **NOTE**: The list of regions was compiled in February 2023 by querying the CDC FluView API. Individual regions may not be accessible in all cases. As of late 2023, the query was only returning results for the "Entire Network" selection.
+#'
 #' Each possible value "surveillance_area" (`"flusurv"`, `"eip"`, or `"ihsp"`) can be further queried by region. The following is a list of valid regions:
 #'
 #' - **flusurv**: "Entire Network"
 #' - **eip**: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
 #' - **ihsp**: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
 #'
-#' NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API.
 #'
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
