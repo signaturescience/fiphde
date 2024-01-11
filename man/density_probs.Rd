@@ -11,11 +11,11 @@ density_probs(df, n_horizons = 5, ...)
 
 \item{n_horizons}{Number of horizons ahead}
 
-\item{...}{Additional arguments passed to distfromq}
+\item{...}{Additional arguments passed to \code{distfromq::distfromq()}}
 }
 \value{
 Data frame with probabilities for each rate change category
 }
 \description{
-This unexported helper function is used to build a distribution from quantile forecasts and then calculate the probabilty density for the thresholds associated with each category forecasted: large increase, increase, stable, decrease, large decrease.
+This unexported helper function is used to build a distribution from quantile forecasts and then calculate the probability density for the thresholds associated with each category forecasted: large increase, increase, stable, decrease, large decrease.
 }

@@ -615,11 +615,11 @@ forecast_categorical <- function(.forecast, .observed, method = "density", forma
 
 #' Calculate categorical probability density
 #'
-#' This unexported helper function is used to build a distribution from quantile forecasts and then calculate the probabilty density for the thresholds associated with each category forecasted: large increase, increase, stable, decrease, large decrease.
+#' This unexported helper function is used to build a distribution from quantile forecasts and then calculate the probability density for the thresholds associated with each category forecasted: large increase, increase, stable, decrease, large decrease.
 #'
 #' @param df Data frame with forecasts and categorical thresholds joined
 #' @param n_horizons Number of horizons ahead
-#' @param ... Additional arguments passed to distfromq
+#' @param ... Additional arguments passed to `distfromq::distfromq()`
 #'
 #' @return Data frame with probabilities for each rate change category
 #'
@@ -718,7 +718,6 @@ density_probs <- function(df, n_horizons = 5, ...){
     target_prob = c(p_s,p_i,p_li,p_d,p_ld),
     target_end_date = unique(df$target_end_date),
     horizon = tmp_horizon,
-    # model = unique(df$model_name),
     lower_tail_dist = ltd,
     upper_tail_dist = utd
   )
