@@ -25,6 +25,9 @@
     <loc>https://signaturescience.github.io/fiphde/reference/clin_nowcast.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/density_probs.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/dot-mcga.html</loc>
   </url>
   <url>
@@ -73,6 +76,9 @@
     <loc>https://signaturescience.github.io/fiphde/reference/hospitalizations.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/hubverse_format.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/ilinet.html</loc>
   </url>
   <url>
@@ -112,10 +118,16 @@
     <loc>https://signaturescience.github.io/fiphde/reference/replace_ili_nowcast.html</loc>
   </url>
   <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/round_preserve.html</loc>
+  </url>
+  <url>
     <loc>https://signaturescience.github.io/fiphde/reference/smoothie.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/this_monday.html</loc>
+  </url>
+  <url>
+    <loc>https://signaturescience.github.io/fiphde/reference/this_saturday.html</loc>
   </url>
   <url>
     <loc>https://signaturescience.github.io/fiphde/reference/to_num.html</loc>
