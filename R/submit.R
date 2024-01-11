@@ -104,7 +104,7 @@ format_for_submission <- function(.forecasts, method = "ts", .target="wk ahead i
 
 #' Hubverse formatting
 #'
-#' This unexported helper is used internally inside in [format_for_submission].It specifically updates formatting for Hubverse guidelines.
+#' This unexported helper is used internally inside in [format_for_submission]. It specifically updates formatting for Hubverse guidelines.
 #'
 #' @param dat Forecast prepped in "legacy" format
 #' @param horizon_shift Number of horizons to shift backwards to align with reference date; default is `1`

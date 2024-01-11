@@ -15,7 +15,7 @@ hubverse_format(dat, horizon_shift = 1)
 Formatted \code{tibble}
 }
 \description{
-This unexported helper is used internally inside in \link{format_for_submission}.It specifically updates formatting for Hubverse guidelines.
+This unexported helper is used internally inside in \link{format_for_submission}. It specifically updates formatting for Hubverse guidelines.
 }
 \references{
 \url{https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format}
