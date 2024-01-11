@@ -1,3 +1,35 @@
+# fiphde 2.0.0
+
+## New features
+
+### Accommodation for Hubverse formatting 
+
+As of this release, the package now optionally supports forecast submission prep and visualization for the Hubverse forecast format (https://hubdocs.readthedocs.io/en/latest/user-guide/model-output.html) that is being used in the 2023-24 FluSight initiative (https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format). To accommodate this format, several functions now have an additional option for "format". Affected functions include `format_for_submission()`, `forecast_categorical()`, and `plot_forecast()`. Additionally, the explorer app (launched by `fiphde_launcher()`) now includes an option to specify the format for input forecasts. In all cases, the format must either be "hubverse" or "legacy" (i.e., the previously standardized quantile forecast format).
+
+### Shift back for HHS hospitalization data
+
+The data retrieved via the `get_hdgov_hosp()` function reports the count of flu hospitalizations for the prior day. The retrieval function now includes an option to shift the date back from the report date to the date of the previous day. This could impact weekly aggregation with `prep_hdgov_hosp()`. By default this "shift_back" option is set to `TRUE`.
+
+### Probability density method for categorical forecasts
+
+The `forecast_categorical()` function converts quantile forecasts to categorical rate change targets. Previously, the method for conversion was exclusively an interpolation procedure. In this release, the function now also supports a probability density estimation method using the `distfromq` package (https://reichlab.io/distfromq/). This option can be toggled using the "method" argument. As mentioned above, the `forecast_categorical()` function now also supports Hubverse formatting. The density method is only available for quantile forecasts given the "hubverse" format option. Likewise, the "interpolation" method is only available for quantile forecasts prepared in the "legacy" format.
+
+### Expanded horizons
+
+Some of the functions now accept an argument to adjust horizons in forecasting. In particular, the `pois_forc()` helper and the `forecast_categorical()` function now both can be parameterized to forecast different horizons.
+
+### Updated rate change thresholds
+
+The 2022-23 FluSight guidelines solicited categorical rate change forecasts for only the 2 week horizon. As of 2023-24, FluSight now solicits forecasts for all horizons. With that in mind, we retrieved updated rate change threshold data in .csv format from the FluSight repository and now include both "legacy" and "hubverse" rate change data internally. In both cases, these internal datasets provide the threshold at which the rate change should be considered an increase / decrease for each given population.
+
+### Plausibility analysis in explorer app
+
+As of this release, the explorer app now includes a plausibility analysis feature built using the `rplanes` package (https://signaturescience.github.io/rplanes/). The plausibility analysis is intended to help guide human forecast review via visualizatons. Currently the scoring uses default parameters, although users can define the components to use via a select input prior to running the scoring in the explorer app.
+
+### Additional example data
+
+Given the new Hubverse compatibility features, the package now includes data for forecasts prepared in that format to motivate examples and testing.
+
 # fiphde 1.1.1
 
 ## New features
