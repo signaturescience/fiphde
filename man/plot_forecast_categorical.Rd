@@ -18,7 +18,7 @@ A \code{ggplot2} object with categorical forecasts shown as a stacked bar plot.
 This function creates a bar plot for categorical forecasts. See examples for demonstration of usage.
 }
 \details{
-The categorical plotting function works both with "legacy" formatting (i.e., format used in the 2022-23 FluSight season) and the "hubverse" formatting (i.e., format used in the 2023-24 FluSight season). The unlike the "legacy" format, the "hubverse" format allows for quantile and categorical forecasts to be co-mingled in the same submission object. If the format is specified as "hubverse", then the \code{plot_forecast_categorical()} function will interally look for the "pmf" forecasts.
+The categorical plotting function works both with "legacy" formatting (i.e., format used in the 2022-23 FluSight season) and the "hubverse" formatting (i.e., format used in the 2023-24 FluSight season). Unlike the "legacy" format, the "hubverse" format allows for quantile and categorical forecasts to be co-mingled in the same submission object. If the format is specified as "hubverse", then the \code{plot_forecast_categorical()} function will interally look for the "pmf" forecasts.
 }
 \examples{
 \dontrun{
