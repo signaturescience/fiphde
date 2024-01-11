@@ -127,5 +127,10 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "models",
                                                         "model_name",
                                                         "nas_removed",
+                                                        "output_type",
+                                                        "output_type_id",
+                                                        "reference_date",
+                                                        "target_name",
+                                                        "target_prob",
                                                         "."))
 

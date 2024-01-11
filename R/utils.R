@@ -1,8 +1,22 @@
+#' @title Get Saturday
+#'
+#' @description
+#'
+#' This function is a helper to get the date for the Saturday of the current week. The function determines the current week based on epidemiological week orientation (i.e., week begins with Sunday).
+#'
+#' @return Date for the Saturday of the current week.
+#' @export
+#' @examples
+#' this_saturday()
+this_saturday <- function() {
+  tmp <- MMWRweek::MMWRweek(lubridate::today())
+  MMWRweek::MMWRweek2Date(tmp$MMWRyear, tmp$MMWRweek, 7)
+}
 #' @title Get Monday
 #'
 #' @description
 #'
-#' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiogical week orientation (i.e., week begins with Sunday).
+#' This function is a helper to get the date for the Monday of the current week. The function determines the current week based on epidemiological week orientation (i.e., week begins with Sunday).
 #'
 #' @return Date for the Monday of the current week.
 #' @export
@@ -131,6 +145,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' @param pi Width of prediction interval to plot; default is `0.95` for 95% PI; if set to `NULL` the PI will not be plotted
 #' @param .model Name of the model used to generate forecasts; default is `NULL` and the name of the model will be assumed to be stored in a column called "model" in formatted submission file
 #' @param .outcome The name of the outcome variable you're plotting in the historical data; defaults to `"flu.admits"`
+#' @param format The submission format to be used; must be one of `"hubverse"` or `"legacy"`; default is `"legacy"`
 #'
 #' @details
 #'
@@ -139,7 +154,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' - **location**: FIPS location code
 #' - **week_end**: Date of the last day (Saturday) in the given epidemiological week
 #'
-#' The "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum following columns:
+#' If format is "legacy" the "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum the following columns:
 #'
 #' - **forecast_date**: Date of forecast
 #' - **target**: Horizon and name of forecasted target
@@ -147,6 +162,17 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' - **location**: FIPS code for location
 #' - **type**: One of either "point" or "quantile" for the forecasted value
 #' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
+#' If format is "hubverse" the "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum the following columns:
+#'
+#' - **reference_date**: Date of reference for forecast submission
+#' - **horizon**: Horizon for the given forecast
+#' - **target**: Name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+#' - **output_type**: Type of forecasted value (e.g., "quantile")
+#' - **output_type_id**: The quantile for the forecasted value if output_type is "quantile"
 #' - **value**: The forecasted value
 #'
 #' The "submission" data may optionally include a column with the name of the model used, such that multiple models can be visualized in the same plot.
@@ -233,7 +259,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = 0.95)
 #' plot_forecast(prepped_hosp, combo_20220110, location = "24", pi = NULL)
 #' }
-plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits") {
+plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = NULL, .outcome="flu.admits", format = "legacy") {
 
   if(!is.null(.model)) {
     submission$model <- .model
@@ -262,6 +288,28 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
     dplyr::select(location, date=week_end,point={{.outcome}}) %>%
     dplyr::mutate(model="Observed")
 
+  if(format == "hubverse") {
+    submission <-
+      submission %>%
+      dplyr::filter(output_type == "quantile") %>%
+      dplyr::mutate(target = paste0(horizon, " ", target)) %>%
+      dplyr::mutate(target = gsub("wk", "wk ahead", target)) %>%
+      dplyr::select(model, forecast_date = reference_date, target, target_end_date, location, type = output_type, quantile = output_type_id, value)
+
+    ## need to prep point estimates for hubverse format
+    ## will use q0.5 as point estimates for plotting below
+    point_estimates <-
+      submission %>%
+      dplyr::filter(quantile == 0.5) %>%
+      dplyr::mutate(type = "point") %>%
+      dplyr::mutate(quantile = NA)
+
+    submission <-
+      submission %>%
+      dplyr::filter(quantile != 0.5) %>%
+      dplyr::bind_rows(., point_estimates)
+  }
+
   ## get appropriate boundaries based on specified width of PI
   ## default is 0.95 ...
   ## which would estrict to q0.025 (lower) and q0.975 (upper)
@@ -283,6 +331,7 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
       dplyr::group_by(model) %>%
       dplyr::filter(type=="point" | quantile == lower_bound | quantile == upper_bound)
 
+    # return(tmp_forecasted)
     # Grab the forecasted data
     forecasted <-
       tmp_forecasted %>%
@@ -351,8 +400,13 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 
 #' @title Plot categorical forecasts
 #' @description This function creates a bar plot for categorical forecasts. See examples for demonstration of usage.
-#' @param categorical_forecast A `tibble` with categorical forecasts created with [forecast_categorical]
+#' @param categorical_forecast Either a `tibble` with categorical forecasts created with [forecast_categorical] or prepared forecast submission in "hubverse" format (see Details)
+#' @param format Either "hubverse" or "legacy"; the "hubverse" format will require an input forecast that includes output for "pmf" (see Details); default is "hubverse"
 #' @return A `ggplot2` object with categorical forecasts shown as a stacked bar plot.
+#'
+#' @details
+#' The categorical plotting function works both with "legacy" formatting (i.e., format used in the 2022-23 FluSight season) and the "hubverse" formatting (i.e., format used in the 2023-24 FluSight season). Unlike the "legacy" format, the "hubverse" format allows for quantile and categorical forecasts to be co-mingled in the same submission object. If the format is specified as "hubverse", then the `plot_forecast_categorical()` function will interally look for the "pmf" forecasts.
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -374,26 +428,43 @@ plot_forecast <- function(.data, submission, location="US", pi = 0.95, .model = 
 #' # Run categorical summary of quantiles for the time series ensemble
 #' categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
 #' # Plot the categorical forecast
-#' plot_forecast_categorical(categorical_forecast)
+#' plot_forecast_categorical(categorical_forecast, format = "legacy")
 #' }
-plot_forecast_categorical <- function(categorical_forecast) {
-  categorical_forecast %>%
-    dplyr::inner_join(locations, by="location") %>%
-    dplyr::select(loc=abbreviation, type_id, value) %>%
-    tidyr::spread(type_id, value) %>%
-    dplyr::mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
-    dplyr::mutate(loc=factor(loc) %>% stats::reorder(score)) %>%
-    dplyr::mutate(loc=stats::relevel(loc, ref="US")) %>%
-    dplyr::select(-score) %>%
-    tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
-    dplyr::mutate(type_id=factor(type_id,
-                                 levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
-                                 labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
-    ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=type_id)) +
-    ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
-    ggplot2::theme_classic() +
-    ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
-    ggplot2::labs(x=NULL, y=NULL)
+plot_forecast_categorical <- function(categorical_forecast, format = "hubverse") {
+  if(format == "legacy") {
+    categorical_forecast %>%
+      dplyr::inner_join(locations, by="location") %>%
+      dplyr::select(loc=abbreviation, type_id, value) %>%
+      tidyr::spread(type_id, value) %>%
+      dplyr::mutate(score=(2*large_increase + increase + (-1)*decrease + (-2)*large_decrease)) %>%
+      dplyr::mutate(loc=factor(loc) %>% stats::reorder(score)) %>%
+      dplyr::mutate(loc=stats::relevel(loc, ref="US")) %>%
+      dplyr::select(-score) %>%
+      tidyr::pivot_longer(-loc, names_to="type_id", values_to="value") %>%
+      dplyr::mutate(type_id=factor(type_id,
+                                   levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
+                                   labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
+      ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=type_id)) +
+      ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
+      ggplot2::labs(x=NULL, y=NULL)
+  } else if (format == "hubverse") {
+    categorical_forecast %>%
+      dplyr::filter(output_type == "pmf") %>%
+      dplyr::inner_join(locations, by="location") %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
+      dplyr::select(loc=abbreviation, output_type_id, value, horizon) %>%
+      dplyr::mutate(output_type_id=factor(output_type_id,
+                                          levels=c("large_decrease", "decrease", "stable", "increase", "large_increase"),
+                                          labels=c("Large decrease", "Decrease", "Stable", "Increase", "Large increase"))) %>%
+      ggplot2::ggplot(ggplot2::aes(loc, value)) + ggplot2::geom_col(ggplot2::aes(fill=output_type_id)) +
+      ggplot2::scale_fill_manual(values=c("darkorchid", "cornflowerblue", "gray80", "orange", "red2")) +
+      ggplot2::facet_wrap(~horizon, ncol = 1) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(legend.position="bottom", legend.title=ggplot2::element_blank()) +
+      ggplot2::labs(x=NULL, y=NULL)
+  }
 }
 
 #' @title Minimum non-zero
@@ -549,3 +620,22 @@ smoothie <- function(x, n = 4, weights = c(1,2,3,4)) {
     mean(.)
 
 }
+
+#' Round and preserve vector
+#'
+#' This unexported helper is used to ensure that categorical forecasts are rounded to sum to 1.
+#'
+#' @param x Numeric vector with values to round
+#' @param digits The number of digits to use in precision; defalut is `0`
+#'
+#' @return Vector of same length as "x" with values rounded
+#'
+round_preserve <- function(x, digits = 0) {
+  up <- 10 ^ digits
+  x <- x * up
+  y <- floor(x)
+  indices <- utils::tail(order(x-y), round(sum(x)) - sum(y))
+  y[indices] <- y[indices] + 1
+  y / up
+}
+

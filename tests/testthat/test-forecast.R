@@ -28,9 +28,9 @@ test_that("Categorical forecasting operates as expected", {
 
   set.seed(2023-01-30)
   hosp_fitfor_test <- ts_fit_forecast(prepped_tsibble, horizon=4L, outcome="flu.admits", covariates=TRUE)
-  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts")
+  formatted_list <- format_for_submission(hosp_fitfor_test$tsfor, method = "ts", format = "legacy")
   ens_forc <- formatted_list$ensemble
-  cat_forcs <- forecast_categorical(ens_forc, prepped_hosp)
+  cat_forcs <- forecast_categorical(ens_forc, prepped_hosp, method = "interpolation", format = "legacy")
 
   ## check that categorical forecasts include all type_id values
   expect_equal(sort(unique(as.character(cat_forcs$type_id))), c("decrease","increase","large_decrease","large_increase","stable"))

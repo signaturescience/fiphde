@@ -10,7 +10,8 @@ plot_forecast(
   location = "US",
   pi = 0.95,
   .model = NULL,
-  .outcome = "flu.admits"
+  .outcome = "flu.admits",
+  format = "legacy"
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ plot_forecast(
 \item{.model}{Name of the model used to generate forecasts; default is \code{NULL} and the name of the model will be assumed to be stored in a column called "model" in formatted submission file}
 
 \item{.outcome}{The name of the outcome variable you're plotting in the historical data; defaults to \code{"flu.admits"}}
+
+\item{format}{The submission format to be used; must be one of \code{"hubverse"} or \code{"legacy"}; default is \code{"legacy"}}
 }
 \value{
 A \code{ggplot2} plot object with line plots for outcome trajectories faceted by location
@@ -41,7 +44,7 @@ To plot the forecasted output alongside the observed historical data, both the "
 \item \strong{week_end}: Date of the last day (Saturday) in the given epidemiological week
 }
 
-The "submission" data should be a probabilistic forecast prepared as a \code{tibble} with at minimum following columns:
+If format is "legacy" the "submission" data should be a probabilistic forecast prepared as a \code{tibble} with at minimum the following columns:
 \itemize{
 \item \strong{forecast_date}: Date of forecast
 \item \strong{target}: Horizon and name of forecasted target
@@ -49,6 +52,18 @@ The "submission" data should be a probabilistic forecast prepared as a \code{tib
 \item \strong{location}: FIPS code for location
 \item \strong{type}: One of either "point" or "quantile" for the forecasted value
 \item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
+}
+
+If format is "hubverse" the "submission" data should be a probabilistic forecast prepared as a \code{tibble} with at minimum the following columns:
+\itemize{
+\item \strong{reference_date}: Date of reference for forecast submission
+\item \strong{horizon}: Horizon for the given forecast
+\item \strong{target}: Name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+\item \strong{output_type}: Type of forecasted value (e.g., "quantile")
+\item \strong{output_type_id}: The quantile for the forecasted value if output_type is "quantile"
 \item \strong{value}: The forecasted value
 }
 

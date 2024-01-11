@@ -1,6 +1,6 @@
 Package: fiphde
 Title: Forecasting Influenza in Support of Public Health Decision Making
-Version: 1.1.1
+Version: 2.0.0
 Authors@R: 
     c(person(given = "VP",
              family = "Nagraj",
@@ -47,7 +47,8 @@ Imports:
     scales,
     readr,
     shiny,
-    httr
+    httr,
+    distfromq
 Depends: 
     R (>= 2.10)
 Suggests: 
@@ -61,7 +62,8 @@ Suggests:
     urca,
     rmarkdown,
     waiter,
-    bslib
+    rplanes
+Remotes: signaturescience/rplanes, reichlab/distfromq
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://signaturescience.github.io/fiphde/

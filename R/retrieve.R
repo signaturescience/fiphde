@@ -7,6 +7,7 @@
 #' @param endpoint URL to healthdata.gov endpoint
 #' @param limitcols Logical as to whether or not to limit to prespecified set of columns (see "Value" section for more details); default `FALSE`
 #' @param app_token App token from healthdata.gov; default is to look for environment variable called `"HEALTHDATA_APP_TOKEN"` and if a token is not supplied to proceed with possibility of rate limitation (see "Details" for more information)
+#' @param shift_back Logical as to whether or not the dates for the retrieved data should be shifted back to reflect previous day; default is `TRUE`
 #' @details The data retrieval will proceed whether or not an API token has been supplied via the `app_token` argument. However, to avoid possible rate limits it is recommended to retrieve a token for the healthdata.gov API (<https://healthdata.gov/profile/edit/developer_settings>), and add that token as an entry to `.Renviron` with `HEALTHDATA_APP_TOKEN="yourtokenhere"`.
 #' @return A `tibble` with at least the following columns:
 #'
@@ -40,7 +41,8 @@
 #' @export
 get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/rows.csv",
                            app_token=Sys.getenv("HEALTHDATA_APP_TOKEN"),
-                           limitcols=FALSE) {
+                           limitcols=FALSE,
+                           shift_back = TRUE) {
 
   api_url <- endpoint
 
@@ -83,7 +85,9 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
   }
 
   # Data is previous day's stats. Shift dates back one day to deal with this.
-  d$date <- d$date-1
+  if(shift_back) {
+    d$date <- d$date-1
+  }
 
   message(paste0(nrow(d), " rows retrieved from:\n", api_url))
   return(d)
@@ -565,13 +569,14 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 #'
 #' @details
 #'
+#' **NOTE**: The list of regions was compiled in February 2023 by querying the CDC FluView API. Individual regions may not be accessible in all cases. As of late 2023, the query was only returning results for the "Entire Network" selection.
+#'
 #' Each possible value "surveillance_area" (`"flusurv"`, `"eip"`, or `"ihsp"`) can be further queried by region. The following is a list of valid regions:
 #'
 #' - **flusurv**: "Entire Network"
 #' - **eip**: "Entire Network", "California", "Colorado", "Connecticut", "Georgia", "Maryland", "Minnesota", "New Mexico", "New York - Albany", "New York - Rochester", "Oregon, "Tennessee"
 #' - **ihsp**: "Entire Network", "Idaho", "Iowa", "Michigan", "Ohio", "Oklahoma", "Rhode Island", "South Dakota", "Utah"
 #'
-#' NOTE: the list of regions above was compiled in February 2023 by querying the CDC FluView API.
 #'
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
