@@ -154,7 +154,7 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' - **location**: FIPS location code
 #' - **week_end**: Date of the last day (Saturday) in the given epidemiological week
 #'
-#' The "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum following columns:
+#' If format is "legacy" the "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum the following columns:
 #'
 #' - **forecast_date**: Date of forecast
 #' - **target**: Horizon and name of forecasted target
@@ -162,6 +162,17 @@ replace_ili_nowcast <- function(ilidat, start_date = NULL, weeks_to_replace=1, f
 #' - **location**: FIPS code for location
 #' - **type**: One of either "point" or "quantile" for the forecasted value
 #' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
+#'
+#' If format is "hubverse" the "submission" data should be a probabilistic forecast prepared as a `tibble` with at minimum the following columns:
+#'
+#' - **reference_date**: Date of reference for forecast submission
+#' - **horizon**: Horizon for the given forecast
+#' - **target**: Name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+#' - **output_type**: Type of forecasted value (e.g., "quantile")
+#' - **output_type_id**: The quantile for the forecasted value if output_type is "quantile"
 #' - **value**: The forecasted value
 #'
 #' The "submission" data may optionally include a column with the name of the model used, such that multiple models can be visualized in the same plot.
