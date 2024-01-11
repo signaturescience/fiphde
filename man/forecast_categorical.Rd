@@ -24,14 +24,29 @@ forecast_categorical(
 \item{horizon}{The number of horizons ahead to forecast; must be one of \code{4} or \code{5}; default is \code{4}}
 }
 \value{
-A \code{tibble} with formatted categorical forecasts that includes the following columns:
+A \code{tibble} with formatted categorical forecasts.
+
+If format is \code{"hubverse"} the tibble will have the following columns:
+\itemize{
+\item \strong{reference_date}: Date of reference for forecast submission
+\item \strong{horizon}: Horizon for the given forecast
+\item \strong{target}: Name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+\item \strong{output_type}: Type of forecasted value (e.g., "quantile")
+\item \strong{output_type_id}: The quantile for the forecasted value if output_type is "quantile"
+\item \strong{value}: The forecasted value
+}
+
+If format is \code{"legacy"} the tibble will have the following columns:
 \itemize{
 \item \strong{forecast_date}: Date of forecast
-\item \strong{target}: Name of target forecasted; fixed at "2 wk flu hosp rate change"
-\item \strong{location}: FIPS code for the location
-\item \strong{type}: The type of forecast output; fixed at "category"
-\item \strong{type_id}: Categorical label; one of "large decrease", "decrease", "stable", "increase", "large increase"
-\item \strong{value}: Probability of observing the given "type_id" at the given "location"
+\item \strong{target}: Horizon and name of forecasted target
+\item \strong{target_end_date}: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+\item \strong{location}: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+\item \strong{type}: One of either "point" or "quantile" for the forecasted value
+\item \strong{quantile}: The quantile for the forecasted value; \code{NA} if "type" is \code{"point"}
+\item \strong{value}: The forecasted value
 }
 }
 \description{

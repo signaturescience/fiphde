@@ -445,13 +445,28 @@ pois_forc <- function(.data, .location, .var, horizon = 4) {
 #' @param horizon The number of horizons ahead to forecast; must be one of `4` or `5`; default is `4`
 
 #'
-#' @return A `tibble` with formatted categorical forecasts that includes the following columns:
+#' @return A `tibble` with formatted categorical forecasts.
+#'
+#' If format is `"hubverse"` the tibble will have the following columns:
+#'
+#' - **reference_date**: Date of reference for forecast submission
+#' - **horizon**: Horizon for the given forecast
+#' - **target**: Name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+#' - **output_type**: Type of forecasted value (e.g., "quantile")
+#' - **output_type_id**: The quantile for the forecasted value if output_type is "quantile"
+#' - **value**: The forecasted value
+#'
+#' If format is `"legacy"` the tibble will have the following columns:
+#'
 #' - **forecast_date**: Date of forecast
-#' - **target**: Name of target forecasted; fixed at "2 wk flu hosp rate change"
-#' - **location**: FIPS code for the location
-#' - **type**: The type of forecast output; fixed at "category"
-#' - **type_id**: Categorical label; one of "large decrease", "decrease", "stable", "increase", "large increase"
-#' - **value**: Probability of observing the given "type_id" at the given "location"
+#' - **target**: Horizon and name of forecasted target
+#' - **target_end_date**: Last date of the forecasted target (e.g., Saturday of the given epidemiological week)
+#' - **location**: Name or geographic identifier (e.g., FIPS code) for location for the given forecast
+#' - **type**: One of either "point" or "quantile" for the forecasted value
+#' - **quantile**: The quantile for the forecasted value; `NA` if "type" is `"point"`
+#' - **value**: The forecasted value
 #'
 #' @references <https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md>
 #' @export
@@ -578,7 +593,7 @@ forecast_categorical <- function(.forecast, .observed, method = "density", forma
   } else if (method == "density") {
 
     if(format != "hubverse") {
-      stop("Currently the desnity method only works with 'legacy' forecast format.")
+      stop("Currently the desnity method only works with 'hubverse' forecast format.")
     }
 
     last_week <-
