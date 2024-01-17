@@ -1,3 +1,11 @@
+# fiphde 2.0.1
+
+## Bug fixes
+
+### Explorer app internal object naming
+
+This release resolves an issue with naming of an internal object in the plausibility analysis section of the explorer app.
+
 # fiphde 2.0.0
 
 ## New features

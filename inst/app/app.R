@@ -458,7 +458,7 @@ server <- function(input, output) {
     ## possible that there are multiple models with the same "forecast" date
     ## using two steps
     tmp_fp <- grep(input$forecast, fps, value = TRUE)
-    tmp_fp <- grep(input$model, tmp_fps, value = TRUE)
+    tmp_fp <- grep(input$model, tmp_fp, value = TRUE)
     forc <- rplanes::read_forecast(tmp_fp, format = input$format)
     forc_signal <- to_signal(forc, outcome = "flu.admits", type = "forecast", resolution = "weeks", horizon = 4)
 
