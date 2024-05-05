@@ -1,3 +1,11 @@
+# fiphde 2.0.2
+
+## New features
+
+### NNETAR in ensemble
+
+As of this release, if the NNETAR model is specified in the `ts_fit_forecast()` function (i.e., "nnetar" is not `NULL` in the model list) then the model will be included in the ensemble. In previous releases, if the NNETAR method was used the results would be included in the returned forecast and fit objects but would not be ensembled with the other components. Note that currently *all* of the possible models (ARIMA, ETS, and NNETAR) must be specified to use the NNETAR in the ensemble.
+
 # fiphde 2.0.1
 
 ## Bug fixes
