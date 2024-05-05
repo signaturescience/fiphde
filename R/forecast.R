@@ -122,10 +122,13 @@ ts_fit_forecast <- function(prepped_tsibble,
   # e.g. if an ARIMA model doesn't fit for one location but the ETS does, you still want the ETS model for that location.
   tsfit <- purrr::reduce(tsfit, dplyr::inner_join, by="location")
 
-  # Ensemble the ARIMA and ETS models
-  # Hard-coded for now - can always ensemble other models if/when we add them.
-  # fixme: this could be more flexible
-  if (ensemble & !is.null(models$arima) & !is.null(models$ets)) {
+  # Ensemble the models
+  # TODO: make this more flexible and not hard-coded in the future?
+  if (ensemble & !is.null(models$arima) & !is.null(models$ets) & !is.null(models$nnetar)) {
+    tsfit <-
+      tsfit %>%
+      dplyr::mutate(ensemble=(arima+ets+nnetar)/3)
+  } else if (ensemble & !is.null(models$arima) & !is.null(models$ets)) {
     tsfit <-
       tsfit %>%
       dplyr::mutate(ensemble=(arima+ets)/2)

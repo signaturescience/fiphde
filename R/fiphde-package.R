@@ -132,5 +132,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "reference_date",
                                                         "target_name",
                                                         "target_prob",
+                                                        "nnetar",
                                                         "."))
 
