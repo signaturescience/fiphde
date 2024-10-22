@@ -193,8 +193,8 @@ get_cdc_hosp <- function(years=NULL) {
                      region="US",
                      epiyear=year,
                      epiweek=weeknumber,
-                     week_start=weekend,
-                     week_end=weekstart,
+                     week_end=weekend,
+                     week_start=weekstart,
                      rate,
                      weeklyrate,
                      season=season_label) %>%
