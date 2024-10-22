@@ -187,14 +187,14 @@ get_cdc_hosp <- function(years=NULL) {
     dplyr::filter(race_label=="Overall") %>%
     dplyr::filter(sexid == 0) %>%
     dplyr::filter(name == "FluSurv-NET") %>%
-    dplyr::filter(!is.na(weeklyrate)) %>%
+    dplyr::filter(!is.na(weeklyrate) & !is.na(rate)) %>%
     dplyr::transmute(location="US",
                      abbreviation="US",
                      region="US",
                      epiyear=year,
                      epiweek=weeknumber,
-                     week_start=weekend,
-                     week_end=weekstart,
+                     week_end=weekend,
+                     week_start=weekstart,
                      rate,
                      weeklyrate,
                      season=season_label) %>%
