@@ -4,10 +4,12 @@
 \alias{get_cdc_hosp}
 \title{Retrieve hospitalization data from FluSurv-NET}
 \usage{
-get_cdc_hosp(years = NULL)
+get_cdc_hosp(source = "resp-net", years = NULL)
 }
 \arguments{
-\item{years}{A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the \emph{previous} flu season. Default value (\code{NULL}) retrieves \strong{all} years.}
+\item{source}{The source for the hospitalization data; must be one of \code{"fluview"} or \code{"resp-net"}; default is \code{"resp-net"}}
+
+\item{years}{A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the \emph{previous} flu season. Default value (\code{NULL}) retrieves \strong{all} years. Only used if \code{source="fluview"}.}
 }
 \value{
 A \code{tibble} with the following columns:
@@ -25,7 +27,10 @@ A \code{tibble} with the following columns:
 }
 }
 \description{
-This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
+This function retrieves historical FluSurv-NET hospitalization data via either RESP-NET or the CDC FluView API (see 'Details' section).
+}
+\details{
+The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data cumulative rates and weekly incident rates overall across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
 }
 \examples{
 \dontrun{
@@ -34,5 +39,10 @@ get_cdc_hosp(years=2019)
 }
 }
 \references{
-\url{https://gis.cdc.gov/GRASP/fluview/FluViewPhase3QuickReferenceGuide.pdf}
+\itemize{
+\item \href{https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html}{Hospital Portal}
+\item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}
+\item \href{https://data.cdc.gov/Public-Health-Surveillance/Rates-of-Laboratory-Confirmed-RSV-COVID-19-and-Flu/kvib-3txy/about_data}{RESP-NET Data Portal}
+\item \href{https://www.cdc.gov/resp-net/dashboard/}{RESP-NET Dashboard}
+}
 }

@@ -155,10 +155,10 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #'
 #' @description
 #'
-#' This function retrieves historical FluSurv-NET hospitalization data via the CDC FluView API.
+#' This function retrieves historical FluSurv-NET hospitalization data via either RESP-NET or the CDC FluView API (see 'Details' section).
 #'
-#'
-#' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years.
+#' @param source The source for the hospitalization data; must be one of `"fluview"` or `"resp-net"`; default is `"resp-net"`
+#' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years. Only used if `source="fluview"`.
 #'
 #' @return A `tibble` with the following columns:
 #'
@@ -173,33 +173,58 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' - **weekly_rate**: The weekly rate per 100k
 #' - **season**: The flu season to which the given epidemiological week belongs
 #'
-#' @references <https://gis.cdc.gov/GRASP/fluview/FluViewPhase3QuickReferenceGuide.pdf>
+#' @details
+#' The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data cumulative rates and weekly incident rates overall across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
+#'
+#' @references
+#' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
+#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' - [RESP-NET Data Portal](https://data.cdc.gov/Public-Health-Surveillance/Rates-of-Laboratory-Confirmed-RSV-COVID-19-and-Flu/kvib-3txy/about_data)
+#' - [RESP-NET Dashboard](https://www.cdc.gov/resp-net/dashboard/)
 #' @export
 #' @examples
 #' \dontrun{
 #' # Retrieve FluSurv-Net hospitalization data for specific year(s)
 #' get_cdc_hosp(years=2019)
 #' }
-get_cdc_hosp <- function(years=NULL) {
-  d <- hospitalizations(surveillance_area="flusurv", region="all", years=NULL)
-  d <- d %>%
-    dplyr::filter(age_label=="Overall") %>%
-    dplyr::filter(race_label=="Overall") %>%
-    dplyr::filter(sexid == 0) %>%
-    dplyr::filter(name == "FluSurv-NET") %>%
-    dplyr::filter(!is.na(weeklyrate) & !is.na(rate)) %>%
-    dplyr::transmute(location="US",
-                     abbreviation="US",
-                     region="US",
-                     epiyear=year,
-                     epiweek=weeknumber,
-                     week_end=weekend,
-                     week_start=weekstart,
-                     rate,
-                     weeklyrate,
-                     season=season_label) %>%
-    ## coerce to tibble
-    dplyr::as_tibble(.)
+get_cdc_hosp <- function(source = "resp-net", years=NULL) {
+
+  if(tolower(source) == "fluview") {
+    d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)
+    d <- d %>%
+      dplyr::filter(age_label=="Overall") %>%
+      dplyr::filter(race_label=="Overall") %>%
+      dplyr::filter(sexid == 0) %>%
+      dplyr::filter(name == "FluSurv-NET") %>%
+      dplyr::filter(!is.na(weeklyrate) & !is.na(rate)) %>%
+      dplyr::transmute(location="US",
+                       abbreviation="US",
+                       region="US",
+                       epiyear=year,
+                       epiweek=weeknumber,
+                       week_end=weekend,
+                       week_start=weekstart,
+                       rate,
+                       weekly_rate = weeklyrate,
+                       season=season_label) %>%
+      ## coerce to tibble
+      dplyr::as_tibble(.)
+  } else if (tolower(source) == "resp-net") {
+
+    d <- get_respnet()
+
+    d <-
+      d %>%
+      dplyr::filter(.data$race_ethnicity == "Overall") %>%
+      dplyr::filter(.data$age_group == "Overall") %>%
+      dplyr::filter(.data$sex == "Overall") %>%
+      dplyr::filter(.data$site == "Overall") %>%
+      dplyr::mutate(location = "US", abbreviation = "US", region = "US") %>%
+      dplyr::select(-c("age_group","sex","race_ethnicity","site","type","surveillance_network")) %>%
+      dplyr::rename("rate" = "cumulative_rate") %>%
+      dplyr::select(c("location","abbreviation","region","epiyear","epiweek","week_start","week_end","rate","weekly_rate","season"))
+
+  }
   message(sprintf("Latest week_start / year / epiweek available:\n%s / %d / %d",
                   max(d$week_start),
                   unique(d$epiyear[d$week_start==max(d$week_start)]),
@@ -713,6 +738,46 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
   xdf
 
 }
+
+#' @title Retrieve data from RESP-NET
+#'
+#' @description
+#'
+#' This unexported helper function retrieves data from the RESP-NET API for respiratory hospitalizations. The data retrieved can be filtered to specific network(s) reported. The function is used internally by [get_cdc_hosp].
+#'
+#' @param network The name of the RESP-NET network to query; must be one of `"FluSurv-NET"`, `"COVID-NET"`, `"RSV-NET"`, or `"Combined"`; default is `"FluSurv-NET"`
+#'
+#' @references
+#' - [RESP-NET Data Portal](https://data.cdc.gov/Public-Health-Surveillance/Rates-of-Laboratory-Confirmed-RSV-COVID-19-and-Flu/kvib-3txy/about_data)
+#' - [RESP-NET Dashboard](https://www.cdc.gov/resp-net/dashboard/)
+#'
+get_respnet <- function(network="FluSurv-NET") {
+
+  dat <- readr::read_csv("https://data.cdc.gov/api/views/kvib-3txy/rows.csv")
+
+  dat %>%
+    dplyr::rename(
+      "surveillance_network" = "Surveillance Network",
+      "season" = "Season",
+      "epiyear" = "MMWR Year",
+      "epiweek" = "MMWR Week",
+      "age_group" = "Age group",
+      "sex" = "Sex",
+      "race_ethnicity" = "Race/Ethnicity",
+      "site" = "Site",
+      "weekly_rate" = "Weekly Rate",
+      "cumulative_rate" = "Cumulative Rate",
+      "week_end" = "Week Ending Date",
+      "type" = "Type"
+    ) %>%
+    dplyr::filter(
+      .data$surveillance_network == .env$network
+    ) %>%
+    dplyr::mutate(week_end = as.Date(.data$week_end)) %>%
+    dplyr::mutate(week_start = .data$week_end - 6)
+
+}
+
 
 #' @title WHO/NREVSS clinical lab surveillance data
 #'

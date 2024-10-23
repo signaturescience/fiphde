@@ -1,3 +1,6 @@
+## usethis namespace: start
+#' @importFrom rlang .data
+#' @importFrom rlang .env
 #' @keywords internal
 "_PACKAGE"
 
