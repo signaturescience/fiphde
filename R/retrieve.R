@@ -157,7 +157,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #'
 #' This function retrieves historical FluSurv-NET hospitalization data via either RESP-NET or the CDC FluView API (see 'Details' section).
 #'
-#' @param source The source for the hospitalization data; must be one of `"fluview"` or `"resp-net"`; default is `"resp-net"`
+#' @param source The source for the hospitalization data; must be one of `"fluview"` or `"resp-net"`; default is `"fluview"`
 #' @param years A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the _previous_ flu season. Default value (`NULL`) retrieves **all** years. Only used if `source="fluview"`.
 #'
 #' @return A `tibble` with the following columns:
@@ -187,7 +187,7 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' # Retrieve FluSurv-Net hospitalization data for specific year(s)
 #' get_cdc_hosp(years=2019)
 #' }
-get_cdc_hosp <- function(source = "resp-net", years=NULL) {
+get_cdc_hosp <- function(source = "fluview", years=NULL) {
 
   if(tolower(source) == "fluview") {
     d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)

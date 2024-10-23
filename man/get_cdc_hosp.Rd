@@ -4,10 +4,10 @@
 \alias{get_cdc_hosp}
 \title{Retrieve hospitalization data from FluSurv-NET}
 \usage{
-get_cdc_hosp(source = "resp-net", years = NULL)
+get_cdc_hosp(source = "fluview", years = NULL)
 }
 \arguments{
-\item{source}{The source for the hospitalization data; must be one of \code{"fluview"} or \code{"resp-net"}; default is \code{"resp-net"}}
+\item{source}{The source for the hospitalization data; must be one of \code{"fluview"} or \code{"resp-net"}; default is \code{"fluview"}}
 
 \item{years}{A vector of years to retrieve data for (i.e. 2014 for CDC flu season 2014-2015). CDC has data going back to 2009 and up until the \emph{previous} flu season. Default value (\code{NULL}) retrieves \strong{all} years. Only used if \code{source="fluview"}.}
 }
