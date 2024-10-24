@@ -192,11 +192,13 @@ get_cdc_hosp <- function(source = "fluview", years=NULL) {
   if(tolower(source) == "fluview") {
     d <- hospitalizations(surveillance_area="flusurv", region="all", years=years)
     d <- d %>%
-      dplyr::filter(age_label=="Overall") %>%
-      dplyr::filter(race_label=="Overall") %>%
-      dplyr::filter(sexid == 0) %>%
-      dplyr::filter(name == "FluSurv-NET") %>%
-      dplyr::filter(!is.na(weeklyrate) & !is.na(rate)) %>%
+      dplyr::filter(.data$age_label=="Overall") %>%
+      dplyr::filter(.data$race_label=="Overall") %>%
+      dplyr::filter(.data$sexid == 0) %>%
+      dplyr::filter(.data$name == "FluSurv-NET") %>%
+      ## get the overall for influenza a/b
+      dplyr::filter(.data$flutype == 0) %>%
+      dplyr::filter(!is.na(.data$weeklyrate) & !is.na(.data$rate)) %>%
       dplyr::transmute(location="US",
                        abbreviation="US",
                        region="US",
