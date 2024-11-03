@@ -47,7 +47,7 @@ legacy_rate_change <-
 
 hubverse_rate_change <-
   # read_csv(here::here("data-raw/hubverse-rate-change-2324.csv"), col_types="cccddddddd")
-  read_csv(here::here("data-raw/hubverse-rate-change-2425.csv"), col_types="cccddddddd")
+  read_csv(here::here("data-raw/hubverse-rate-change-2425.csv"), col_types="cccddddddddd")
 
 # Quantiles ---------------------------------------------------------------
 
