@@ -36,9 +36,9 @@ locations <-
 ## provenance of data file
 # download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-data/master/data-locations/locations.csv",
 #               destfile=here::here("data-raw/legacy-rate-change.csv"))
+## NOTE: this data was updated for the 2024-25 season and re-downloaded so we can use the correct thresholds
 # download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-hub/main/auxiliary-data/locations.csv",
-#               destfile=here::here("data-raw/hubverse-rate-change.csv"))
-
+#               destfile=here::here("data-raw/hubverse-rate-change-2425.csv"))
 ## read the location crosswalk table from file downloaded from github
 ## select columns of interest
 legacy_rate_change <-
@@ -46,7 +46,8 @@ legacy_rate_change <-
   select(location, count_rate1per100k, count_rate2per100k)
 
 hubverse_rate_change <-
-  read_csv(here::here("data-raw/hubverse-rate-change.csv"), col_types="cccddddddd")
+  # read_csv(here::here("data-raw/hubverse-rate-change-2324.csv"), col_types="cccddddddd")
+  read_csv(here::here("data-raw/hubverse-rate-change-2425.csv"), col_types="cccddddddddd")
 
 # Quantiles ---------------------------------------------------------------
 
