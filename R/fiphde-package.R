@@ -136,5 +136,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "target_name",
                                                         "target_prob",
                                                         "nnetar",
+                                                        "mean_flu_admits",
                                                         "."))
 
