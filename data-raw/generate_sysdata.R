@@ -75,18 +75,23 @@ hosp <- fiphde:::hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
-  filter(age_label == "Overall") %>%
+  dplyr::filter(age_label=="Overall") %>%
+  dplyr::filter(race_label=="Overall") %>%
+  dplyr::filter(sexid == 0) %>%
+  dplyr::filter(name == "FluSurv-NET") %>%
+  ## get the overall for influenza a/b
+  dplyr::filter(flutype == 0)  %>%
   filter(year %>% between(2010, 2021)) %>%
   mutate("counts" = as.numeric(weeklyrate)*3300) %>%
-  dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
-  rename(epiweek = year_wk_num) %>%
+  dplyr::select(c("weekstart", "counts", "weeknumber")) %>%
+  rename(epiweek = weeknumber) %>%
   group_by(epiweek) %>%
-  summarise(min = min(counts),
+  summarise(min = min(counts, na.rm = TRUE),
             lowhinge = IQR(counts, 0.25),
-            med = median(counts),
+            med = median(counts, na.rm=TRUE),
             uprhinge = IQR(counts, 0.75),
-            max = max(counts),
-            mean = mean(counts))
+            max = max(counts, na.rm=TRUE),
+            mean = mean(counts, na.rm = TRUE))
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
@@ -107,8 +112,13 @@ ilisum
 hospsum <-
   hosp %>%
   filter(year %>% between(2010, 2019)) %>%
-  filter(age_label=="Overall") %>%
-  rename(epiweek=year_wk_num) %>%
+  dplyr::filter(age_label=="Overall") %>%
+  dplyr::filter(race_label=="Overall") %>%
+  dplyr::filter(sexid == 0) %>%
+  dplyr::filter(name == "FluSurv-NET") %>%
+  ## get the overall for influenza a/b
+  dplyr::filter(flutype == 0)  %>%
+  rename(epiweek=weeknumber) %>%
   group_by(epiweek) %>%
   summarize(hosp_mean=mean(weeklyrate)) %>%
   mutate(hosp_rank=rank(hosp_mean) %>% as.integer())
@@ -183,7 +193,7 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
                                covariates=TRUE)
 
 # Format for submission
-vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
+vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor, method = "ts", format = "legacy")
 
 # CREG ILI data - stuff in vd$ is created here and saved
 # # Original: no time limit and nowcast
@@ -289,9 +299,13 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
   ilinearby <- read_csv(here::here("data-raw/ilinearby.csv"), col_types="cciid")
 }
 
+## read in imputed data
+nhsn_imputed <- readRDS(here::here("data-raw/control_imputed_summaries.rds"))
+
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
+                  nhsn_imputed,
                   legacy_rate_change,
                   hubverse_rate_change,
                   q,

@@ -35,10 +35,10 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                covariates=TRUE)
 hosp_fitfor
 
-prepped_forecast_ts <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+prepped_forecast_ts <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 prepped_forecast_ts
 
-prepped_forecast_ts_cat <- forecast_categorical(prepped_forecast_ts$ensemble, prepped_hosp)
+prepped_forecast_ts_cat <- forecast_categorical(prepped_forecast_ts$ensemble, prepped_hosp, format = "legacy", method = "interpolation")
 prepped_forecast_ts_cat
 
 forcplot <- plot_forecast(prepped_tsibble, prepped_forecast_ts$ensemble)

@@ -9,7 +9,9 @@ prep_hdgov_hosp(
   statesonly = TRUE,
   trim = list(epiyear = 2020, epiweek = 43),
   remove_incomplete = TRUE,
-  min_per_week = 1
+  min_per_week = 1,
+  augment = FALSE,
+  augment_stop = "2020-10-18"
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ prep_hdgov_hosp(
 \item{remove_incomplete}{Logical as to whether or not to remove the last week if incomplete; defaults is \code{TRUE}.}
 
 \item{min_per_week}{The minimum number of flu.admits per week needed to retain that state. Default removes states with less than 1 flu admission per week over the last 30 days.}
+
+\item{augment}{Logical as to whether or not the data should be augmented with imputed NHSN hospitalizations (see 'Details' for more); default is \code{FALSE}.}
+
+\item{augment_stop}{ipsum}
 }
 \value{
 A \code{tibble} with hospitalization data summarized to epiyear/epiweek with the following columns:
