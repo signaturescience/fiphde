@@ -596,7 +596,7 @@ forecast_categorical <- function(.forecast, .observed, method = "density", forma
   } else if (method == "density") {
 
     if(format != "hubverse") {
-      stop("Currently the desnity method only works with 'hubverse' forecast format.")
+      stop("Currently the density method only works with 'hubverse' forecast format.")
     }
 
     last_week <-
