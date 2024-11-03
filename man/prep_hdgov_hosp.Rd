@@ -25,9 +25,9 @@ prep_hdgov_hosp(
 
 \item{min_per_week}{The minimum number of flu.admits per week needed to retain that state. Default removes states with less than 1 flu admission per week over the last 30 days.}
 
-\item{augment}{Logical as to whether or not the data should be augmented with imputed NHSN hospitalizations (see 'Details' for more); default is \code{FALSE}.}
+\item{augment}{Logical as to whether or not the data should be augmented with NHSN hospitalizations imputed backwards in time (see 'Details' for more); default is \code{FALSE}.}
 
-\item{augment_stop}{ipsum}
+\item{augment_stop}{Date at which the time series imputation data should stop; yyyy-mm-dd format; only used if "augment" is \code{TRUE} default is \code{"2020-10-18"}}
 }
 \value{
 A \code{tibble} with hospitalization data summarized to epiyear/epiweek with the following columns:
@@ -49,6 +49,9 @@ A \code{tibble} with hospitalization data summarized to epiyear/epiweek with the
 }
 \description{
 This function prepares hospitalization data retrieved using \link{get_hdgov_hosp} for downstream forecasting. The function optionally limits to states only, trims to a given date, removes incomplete weeks, and removes locations with little reporting over the last month.
+}
+\details{
+The preparation for the weekly flu hospitalization data includes an option to "augment" the input time series. The augmentation is based on an extended time series that was developed with an imputation approach. The extended time series estimates flu hospitalizations at the state-level in years before NHSN reporting became available. If the user decides to include the imputed data, then the time series is extended backwards in time from the "augment_stop" date (defaults to October 18, 2020). The prepended data augmentation is formatted to match the true NSHN reporting. For more details on the data augmentation approach, refer to the publication: \url{https://www.medrxiv.org/content/10.1101/2024.07.31.24311314v1}.
 }
 \examples{
 \dontrun{
