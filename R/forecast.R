@@ -673,32 +673,32 @@ density_probs <- function(df, n_horizons = 5, ...){
               "-1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
                           t2 = max(c(10, as.numeric(unique(df$count_rate2))))
               ),
-              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p3)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate1p7))))
+              ),
+              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p5)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate3))))
               ),
-              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2)))),
+              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p7)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate4))))
               ),
-              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
-                         t2 = max(c(10, as.numeric(unique(df$count_rate5))))
-              ),
-              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
+              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate5))))
               )
       )
   } else if (n_horizons == 4) {
     thresh <-
       switch (as.character(tmp_horizon),
-              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
-                         t2 = max(c(10, as.numeric(unique(df$count_rate2))))
+              "0" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p3)))),
+                         t2 = max(c(10, as.numeric(unique(df$count_rate1p7))))
               ),
-              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
+              "1" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p5)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate3))))
               ),
-              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2)))),
+              "2" = list(t1 = max(c(10, as.numeric(unique(df$count_rate0p7)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate4))))
               ),
-              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate2p5)))),
+              "3" = list(t1 = max(c(10, as.numeric(unique(df$count_rate1)))),
                          t2 = max(c(10, as.numeric(unique(df$count_rate5))))
               )
       )
