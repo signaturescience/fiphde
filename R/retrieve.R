@@ -909,3 +909,36 @@ who_nrevss <- function(region = c("national", "hhs", "census", "state"), years =
 
 }
 
+#' Retrieve weekly NHSN flu hospitalization data
+#'
+#' This function retrieves weekly aggregated NHSN flu hospitalization data. The function was written to use the default API endpoint (see description of "endpoint" argument and link in references). Note that this endpoint includes data flagged as "preliminary". All reported weekly aggregates include the number of facilities reporting. In the weeks between April 28, 2024 and November 02, 2024 the NHSN flu hospitalization signal was not required to be reported.
+#'
+#' @param endpoint URL to data.cdc.gov endpoint; default is `"https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv"`
+#'
+#' @return A `tibble` with the following columns:
+#'
+#' - **abbreviation**: Abbreviation of the state or US aggregate
+#' - **week_end**: End date for the epiweek/epiyear being reproted
+#' - **flu.admits**: Count of incident flu cases among hospitalized patients
+#' - **flu.admits.cov**: Coverage (number of hospitals reporting) for incident flu cases
+#' - **flu.admits.cov.perc**: Coverage (percentage of hospitals reporting) for incident flu cases
+#'
+#' @export
+#'
+#' @references <https://data.cdc.gov/Public-Health-Surveillance/Weekly-Hospital-Respiratory-Data-HRD-Metrics-by-Ju/mpgq-jmmr/about_data>
+#'
+#'
+get_nhsn_weekly <- function(endpoint = "https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv") {
+
+  dat <-
+    ## read from endpoint
+    readr::read_csv(endpoint) %>%
+    ## NOTE: the mpgq-jmmr has issues with spaces in the names for two columns
+    dplyr::rename(`Percent Hospitals Reporting Influenza Admissions` = `Percent Hospitals Reporting  Influenza Admissions`) %>%
+    dplyr::rename(`Number Hospitals Reporting Influenza Admissions` = `Number Hospitals Reporting  Influenza Admissions`) %>%
+    ## downselect to just a few columns
+    dplyr::select(abbreviation = `Geographic aggregation`, week_end = `Week Ending Date`, flu.admits = `Total Influenza Admissions`, flu.admits.cov = `Number Hospitals Reporting Influenza Admissions`, flu.admits.cov.perc = `Percent Hospitals Reporting Influenza Admissions`)
+
+  dat
+
+}
