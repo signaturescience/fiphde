@@ -180,6 +180,7 @@ make_tsibble <- function(df, epiyear, epiweek, key=location) {
 #'
 #' @param dat Weekly hospital utilization data from [prep_nhsn_weekly]
 #' @param adjust_partial Logical as to whether or not the partial reporting should be adjusted (see 'Details' for more); default is `TRUE`.
+#' @param trim Named list with elements for epiyear and epiweek corresponding to the minimum epidemiological week to retain; default is set to `NULL` the data will not be trimmed; to override the default use a named list (e.g., `list(epiyear=2020, epiweek=43)`)
 #' @param statesonly Logical as to whether or not the data should be limited to states and DC (i.e., no other territories included); default is `TRUE`.
 #' @param augment Logical as to whether or not the data should be augmented with NHSN hospitalizations imputed backwards in time (see 'Details' for more); default is `FALSE`.
 #' @param augment_stop Date at which the time series imputation data should stop; yyyy-mm-dd format; only used if "augment" is `TRUE` default is `"2020-10-18"`
@@ -208,6 +209,7 @@ make_tsibble <- function(df, epiyear, epiweek, key=location) {
 #'
 prep_nhsn_weekly <- function(dat,
                              adjust_partial = TRUE,
+                             trim = NULL,
                              statesonly = TRUE,
                              augment = FALSE,
                              augment_stop = "2020-10-18") {
@@ -265,6 +267,14 @@ prep_nhsn_weekly <- function(dat,
     dat <-
       dat %>%
       dplyr::filter(location %in% c("US", stringr::str_pad(1:56, width=2, pad="0")))
+  }
+
+  # Trim to desired start
+  if (!is.null(trim) && is.list(trim)) {
+    message(sprintf("Trimming data to start at %s", MMWRweek::MMWRweek2Date(trim$epiyear, trim$epiweek)))
+    dat <-
+      dat %>%
+      dplyr::filter(week_start >= MMWRweek::MMWRweek2Date(trim$epiyear, trim$epiweek))
   }
 
   dat %>%

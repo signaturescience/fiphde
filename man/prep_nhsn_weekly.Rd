@@ -7,6 +7,7 @@
 prep_nhsn_weekly(
   dat,
   adjust_partial = TRUE,
+  trim = NULL,
   statesonly = TRUE,
   augment = FALSE,
   augment_stop = "2020-10-18"
@@ -16,6 +17,8 @@ prep_nhsn_weekly(
 \item{dat}{Weekly hospital utilization data from \link{prep_nhsn_weekly}}
 
 \item{adjust_partial}{Logical as to whether or not the partial reporting should be adjusted (see 'Details' for more); default is \code{TRUE}.}
+
+\item{trim}{Named list with elements for epiyear and epiweek corresponding to the minimum epidemiological week to retain; default is set to \code{NULL} the data will not be trimmed; to override the default use a named list (e.g., \code{list(epiyear=2020, epiweek=43)})}
 
 \item{statesonly}{Logical as to whether or not the data should be limited to states and DC (i.e., no other territories included); default is \code{TRUE}.}
 
