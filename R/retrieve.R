@@ -911,7 +911,7 @@ who_nrevss <- function(region = c("national", "hhs", "census", "state"), years =
 
 #' Retrieve weekly NHSN flu hospitalization data
 #'
-#' This function retrieves weekly aggregated NHSN flu hospitalization data. The function was written to use the default API endpoint (see description of "endpoint" argument and link in references). Note that this endpoint includes data flagged as "preliminary". All reported weekly aggregates include the number of facilities reporting. In the weeks between April 28, 2024 and November 02, 2024 the NHSN flu hospitalization signal was not required to be reported.
+#' This function retrieves wweekly aggregated NHSN hospital respiratory data API. The function was written to use the default API endpoint (see description of "endpoint" argument and link in references). Note that this endpoint includes data flagged as "preliminary". All reported weekly aggregates include the number of facilities reporting. In the weeks between April 28, 2024 and November 02, 2024 the NHSN flu hospitalization signal was not required to be reported.
 #'
 #' @param endpoint URL to data.cdc.gov endpoint; default is `"https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv"`
 #'
