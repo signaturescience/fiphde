@@ -639,3 +639,141 @@ round_preserve <- function(x, digits = 0) {
   y / up
 }
 
+#' @title Non-seasonal flu hospitalization imputation
+#'
+#' @description
+#'
+#' This unexported helper function is used to create a "non-seasonal", location-specific imputation estimate for weekly NHSN flu hospitalization counts. The imputation approach was motivated by the change in reporting requirements for the NHSN hospital respiratory disease metrics, which became option from April 2024 to November 2024. This function includes four different approaches (see 'Details' for more) to adjusting and/or filling the gap in reporting state-level flu hospitalizations.
+#'
+#' @param dat A `tibble` with hospitalization data prepared either by [prep_hdgov_hosp] or [prep_nhsn_weekly]
+#' @param location FIPS code for location to impute
+#' @param method Imputation method to use; must be one of `"val"`, `"diff"`, `"median"`, or `"partial"` (see 'Details' for more); default is `"val"`.
+#' @param begin_date Start date for imputation in YYYY-MM-DD format; default is `"2024-04-28"`
+#' @param end_date End date for imputation in YYYY-MM-DD; default is `"2024-11-02"`
+#'
+#' @details
+#' There are four possible methods for imputing non-seasonal weeks implemented in this function:
+#'
+#' - "val": Random sampling from a vector of values including all flu hospitalizations reported weeks between June-October 2022 and June-October 2023 for the given location; first and last values are defined as median of the random sample and the closest un-imputed value (i.e., the week before imputation begins and the week after imputation ends)
+#' - "diff": Random sampling from a vector of differences in flu hospitalizations reported weeks between June-October 2022 and June-October 2023 for the given location
+#' - "median": Median of 2022 and 2023 values reported for the given epiweek
+#' - "partial": Uses the `adjust_partial=TRUE` flag for the [prep_nhsn_weekly] for weeks in the date range specified
+#'
+#' @return A `tibble` with the same structure as the input for the "dat" argument, but with weeks between "begin_date" and "end_date" imputed.
+#'
+#' @export
+#'
+#'
+ns_impute <- function(dat, location, method = "val", begin_date = "2024-04-28", end_date = "2024-11-02") {
+
+  ## enforce date-ness for date math below
+  begin_date <- as.Date(begin_date)
+  end_date <- as.Date(end_date)
+
+  ## correct for the beginning date being the *week start* (i.e., sunday)
+  ## all of the dates will be oriented towards *week end* (i.e., saturday)
+  true_begin <- begin_date + 6
+
+  ## get a sequence of the beginning and end weeks for imputation
+  imputed_weeks <- seq(true_begin, end_date, by = 7)
+
+  ## restrict data to the location of interest
+  tmp_dat <-
+    dat %>%
+    dplyr::filter(.data$location == .env$location) %>%
+    dplyr::filter(!dplyr::between(.data$week_end, true_begin, end_date))
+
+  if(method %in% c("diff","val")) {
+    ## pull non-seasonal values for 2022/2023
+    ## NOTE: for now this is hardcoded as anything between start of June and start of October)
+    nonseasonal_vals <-
+      tmp_dat %>%
+      dplyr::filter(dplyr::between(.data$week_start, as.Date("2022-06-01"), as.Date("2022-10-01")) | dplyr::between(.data$week_start, as.Date("2023-06-01"), as.Date("2023-10-01"))) %>%
+      dplyr::pull("flu.admits")
+
+    ## use observed non-seasonal values to find observed point-to-point differences
+    nonseasonal_diffs <- diff(nonseasonal_vals)
+
+    ## get the last value to use with the imputed differences and smoothing below
+    last_left_val <-
+      tmp_dat %>%
+      dplyr::filter(.data$week_end == as.Date(begin_date - 1)) %>%
+      dplyr::pull(flu.admits)
+
+    ## get the first value of restarted reporting to use with smoothing below
+    first_right_val <-
+      tmp_dat %>%
+      dplyr::filter(.data$week_end == as.Date(end_date + 7)) %>%
+      dplyr::pull(flu.admits)
+
+    if(method == "diff") {
+      ## randomly sample from non-seasonal differences for the length of the sequence of weeks to impute
+      imputed_diffs <- sample(nonseasonal_diffs, length(imputed_weeks), replace = TRUE)
+
+      ## get the cumulative sum of the differences added to the last value
+      ## the -1 index removes the last value so we dont repeat that in the time series when we stitch together
+      imputed_ts <- cumsum(c(last_left_val,imputed_diffs))[-1]
+    } else if (method == "val") {
+      imputed_ts <- sample(nonseasonal_vals, length(imputed_weeks), replace = TRUE)
+
+      ## smooth left edge by taking mean of non seasonal impute and the "last left value" ...
+      ## ... i.e., the last reported week before non xseasonal impute begins
+      imputed_ts[1] <- stats::median(c(imputed_ts[1],last_left_val))
+      ## smooth right edge by taking mean of non seasonal impute and the "last right value" ...
+      ## ... i.e., the first reported week after non seasonal impute ends
+      imputed_ts[length(imputed_ts)] <- stats::median(c(imputed_ts[length(imputed_ts)],first_right_val))
+    }
+  } else if (method == "median") {
+
+    ## get the epiweeks for the week end dates to impute
+    ews <- lubridate::epiweek(imputed_weeks)
+
+    ## use a median imputation approach for equivalent weeks in 2022 and 2023
+    imputed_ts <-
+      tmp_dat %>%
+      ## make sure we dont use data prior to NHSN flu hosps being required fields
+      dplyr::filter(week_end >= as.Date("2022-04-01")) %>%
+      dplyr::filter(epiweek %in% ews) %>%
+      dplyr::group_by(epiweek) %>%
+      ## just take the median at each epiweek
+      dplyr::summarise(flu.admits = stats::median(flu.admits, na.rm = TRUE)) %>%
+      dplyr::pull(flu.admits)
+  } else if (method == "partial") {
+
+    ## get partially reported data from NHSN weekly aggregates
+    ## prep to format as imputed ts
+    partial_dat <-
+      get_nhsn_weekly() %>%
+      prep_nhsn_weekly(adjust_partial = TRUE) %>%
+      ## the data has other weeks in it so we need to filter for the date range of interest
+      dplyr::filter(dplyr::between(week_end, begin_date,end_date)) %>%
+      dplyr::filter(.data$location == .env$location) %>%
+      dplyr::select(abbreviation, flu.admits, week_end)
+
+    imputed_ts <-
+      partial_dat %>%
+      dplyr::pull(flu.admits)
+
+  }
+
+
+  ## truncate at zero so there are no negative counts
+  imputed_ts <- ifelse(imputed_ts < 0, 0, imputed_ts)
+
+  res <-
+    dplyr::tibble(
+      location = .env$location,
+      abbreviation = unique(tmp_dat$abbreviation),
+      flu.admits = imputed_ts,
+      week_end = imputed_weeks
+    ) %>%
+    dplyr::mutate(week_start = week_end - 6,
+                  epiyear = lubridate::epiyear(week_end),
+                  epiweek = lubridate::epiweek(week_end),
+                  monday = week_start + 1) %>%
+    dplyr::bind_rows(., tmp_dat) %>%
+    dplyr::arrange(week_end)
+
+  return(res)
+}
+

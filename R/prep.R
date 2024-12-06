@@ -207,6 +207,7 @@ make_tsibble <- function(df, epiyear, epiweek, key=location) {
 #' - **hosp_mean**: Estimate of historical flu hospitalization rate for the given epidemiological week
 #' - **hosp_rank**: Rank of the given epidemiological week in terms of flu hospitalizations across season (1 being highest average activity)
 #'
+#' @export
 prep_nhsn_weekly <- function(dat,
                              adjust_partial = TRUE,
                              trim = NULL,
