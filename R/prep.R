@@ -279,6 +279,6 @@ prep_nhsn_weekly <- function(dat,
   }
 
   dat %>%
-    select(abbreviation, location, week_start, monday, week_end, epiyear, epiweek, flu.admits, flu.admits.cov, ili_mean, ili_rank, hosp_mean, hosp_rank)
+    dplyr::select(abbreviation, location, week_start, monday, week_end, epiyear, epiweek, flu.admits, flu.admits.cov, ili_mean, ili_rank, hosp_mean, hosp_rank)
 
 }
