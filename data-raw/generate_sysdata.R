@@ -303,10 +303,16 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
 ## read in imputed data
 nhsn_imputed <- readRDS(here::here("data-raw/control_imputed_summaries.rds"))
 
+## read in floom data
+## this data was generated with the script in data-raw/floom.R
+## NOTE: the procedure includes steps to manually inspect plots of reported NHSN data and potential adjustments
+nhsn_floom <- read_csv(here::here("data-raw/floom.csv"))
+
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
                   nhsn_imputed,
+                  nhsn_floom,
                   legacy_rate_change,
                   hubverse_rate_change,
                   q,
