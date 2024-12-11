@@ -20,8 +20,10 @@ A \code{tibble} with the following columns:
 }
 }
 \description{
-This function retrieves wweekly aggregated NHSN hospital respiratory data API. The function was written to use the default API endpoint (see description of "endpoint" argument and link in references). Note that this endpoint includes data flagged as "preliminary". All reported weekly aggregates include the number of facilities reporting. In the weeks between April 28, 2024 and November 02, 2024 the NHSN flu hospitalization signal was not required to be reported.
+This function retrieves weekly aggregated NHSN hospital respiratory data API. The function was written to use the default API endpoint (see description of "endpoint" argument and link in references). Note one the available endpoints includes data flagged as "preliminary". All reported weekly aggregates include the number of facilities reporting. In the weeks between April 28, 2024 and November 02, 2024 the NHSN flu hospitalization signal was not required to be reported.
 }
 \references{
 \url{https://data.cdc.gov/Public-Health-Surveillance/Weekly-Hospital-Respiratory-Data-HRD-Metrics-by-Ju/mpgq-jmmr/about_data}
+
+\url{https://data.cdc.gov/Public-Health-Surveillance/Weekly-Hospital-Respiratory-Data-HRD-Metrics-by-Ju/ua7e-t2fy/about_data}
 }
