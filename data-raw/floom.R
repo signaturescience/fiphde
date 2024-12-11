@@ -135,8 +135,8 @@ nhsn_floom <-
   bind_rows(., all_bound_nsimputed) %>%
   ## NOTE: for now just US and states
   filter(!location == "11") %>%
-  mutate(week_end = ifelse(is.na(week_end), week_start + 6, week_end)) %>%
-  mutate(monday = ifelse(is.na(monday), week_start + 1, week_start)) %>%
+  mutate(week_end = if_else(is.na(week_end), week_start + 6, week_end)) %>%
+  mutate(monday = if_else(is.na(monday), week_start + 1, week_start)) %>%
   left_join(fiphde:::historical_severity) %>%
   ## ensures no "new" NSHN data (i.e., after reporting became mandatory)
   filter(week_start <= "2024-11-03")

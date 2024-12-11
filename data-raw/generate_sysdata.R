@@ -311,6 +311,7 @@ nhsn_imputed <-
 ## read in floom data
 ## this data was generated with the script in data-raw/floom.R
 ## NOTE: the procedure includes steps to manually inspect plots of reported NHSN data and potential adjustments
+#abbreviation,week_start,epiyear,epiweek,flu.admits,epoch,source,location,monday,week_end,flu.admits.cov,ili_mean,ili_rank,hosp_mean,hosp_rank
 nhsn_floom <- read_csv(here::here("data-raw/floom.csv"))
 
 # Write package data ------------------------------------------------------
