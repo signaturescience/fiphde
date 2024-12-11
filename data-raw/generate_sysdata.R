@@ -301,7 +301,12 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
 }
 
 ## read in imputed data
-nhsn_imputed <- readRDS(here::here("data-raw/control_imputed_summaries.rds"))
+## NOTE: the imputed data includes separate rds files and without ILI included in augmentation procedure
+# nhsn_imputed <- readRDS(here::here("data-raw/imputed_summaries_without_ili.rds"))
+nhsn_imputed <-
+  readRDS("data-raw/imputed_summaries.rds") %>%
+  select(location, date, pop = population, hhs_region, year, week, mean_flu_admits, sd_flu_admits, source, n_imputes)
+
 
 ## read in floom data
 ## this data was generated with the script in data-raw/floom.R
