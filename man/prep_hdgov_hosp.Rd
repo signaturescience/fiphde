@@ -39,7 +39,7 @@ A \code{tibble} with hospitalization data summarized to epiyear/epiweek with the
 \item \strong{week_end}: Date of end (Saturday) of the given epidemiological week
 \item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
 \item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
-\item \strong{flu.admits}: Count of flu cases among admitted patients on previous day
+\item \strong{flu.admits}: Count of flu cases among admitted patients on previous week
 \item \strong{flu.admits.cov}: Coverage (number of hospitals reporting) for incident flu cases
 \item \strong{ili_mean}: Estimate of historical ILI activity for the given epidemiological week
 \item \strong{ili_rank}: Rank of the given epidemiological week in terms of ILI activity across season (1 being highest average activity)
