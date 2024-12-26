@@ -5,6 +5,7 @@ library(ggplot2)
 library(purrr)
 library(fiphde)
 
+## NOTE: this script uses the *preliminary NSHN weekly-aggregated API for all "epochs"
 hosp1 <-
   get_nhsn_weekly(endpoint = "https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv") %>%
   prep_nhsn_weekly(., augment = FALSE, adjust_partial = FALSE) %>%
