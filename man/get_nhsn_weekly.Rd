@@ -7,13 +7,13 @@
 get_nhsn_weekly(endpoint = "https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv")
 }
 \arguments{
-\item{endpoint}{URL to data.cdc.gov endpoint; default is \code{"https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv"}}
+\item{endpoint}{URL to data.cdc.gov endpoint; default is \code{"https://data.cdc.gov/api/views/mpgq-jmmr/rows.csv"} for the preliminary reporting signal}
 }
 \value{
 A \code{tibble} with the following columns:
 \itemize{
 \item \strong{abbreviation}: Abbreviation of the state or US aggregate
-\item \strong{week_end}: End date for the epiweek/epiyear being reproted
+\item \strong{week_end}: End date for the epiweek/epiyear being reported
 \item \strong{flu.admits}: Count of incident flu cases among hospitalized patients
 \item \strong{flu.admits.cov}: Coverage (number of hospitals reporting) for incident flu cases
 \item \strong{flu.admits.cov.perc}: Coverage (percentage of hospitals reporting) for incident flu cases
