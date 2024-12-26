@@ -36,10 +36,10 @@ hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
                                horizon=4L,
                                outcome="flu.admits")
 # Prepare forecast for quantile submission format
-prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "hubverse")
 # Run categorical summary of quantiles for the time series ensemble
-categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp)
+categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp, format = "hubverse")
 # Plot the categorical forecast
-plot_forecast_categorical(categorical_forecast, format = "legacy")
+plot_forecast_categorical(categorical_forecast, format = "hubverse")
 }
 }
