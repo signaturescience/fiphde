@@ -251,7 +251,7 @@ get_cdc_hosp <- function(source = "fluview", years=NULL) {
 #' - **abbreviation**: Abbreviation for the location
 #' - **epiyear**: Year of reporting (in epidemiological week calendar)
 #' - **epiweek**: Week of reporting (in epidemiological week calendar)
-#' - **weigthed_ili_now**: Nowcasted ILI value
+#' - **weighted_ili_now**: Nowcasted ILI value
 #'
 #' @details
 #'
