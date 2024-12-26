@@ -17,7 +17,7 @@ ns_impute(
 
 \item{location}{FIPS code for location to impute}
 
-\item{method}{Imputation method to use; must be one of \code{"val"}, \code{"diff"}, \code{"median"}, or \code{"partial"} (see 'Details' for more); default is \code{"val"}.}
+\item{method}{Imputation method to use; must be one of \code{"val"}, \code{"diff"}, \code{"median"}, or \code{"partial"} (see 'Details' for more); default is \code{"val"}}
 
 \item{begin_date}{Start date for imputation in YYYY-MM-DD format; default is \code{"2024-04-28"}}
 
@@ -27,14 +27,14 @@ ns_impute(
 A \code{tibble} with the same structure as the input for the "dat" argument, but with weeks between "begin_date" and "end_date" imputed.
 }
 \description{
-This unexported helper function is used to create a "non-seasonal", location-specific imputation estimate for weekly NHSN flu hospitalization counts. The imputation approach was motivated by the change in reporting requirements for the NHSN hospital respiratory disease metrics, which became option from April 2024 to November 2024. This function includes four different approaches (see 'Details' for more) to adjusting and/or filling the gap in reporting state-level flu hospitalizations.
+This unexported helper function is used to create a "non-seasonal", location-specific imputation estimate for weekly NHSN flu hospitalization counts. The imputation approach was motivated by the change in reporting requirements for the NHSN hospital respiratory disease metrics, which became optional from April 2024 to November 2024. This function includes four different approaches (see 'Details' for more) for adjusting and/or filling the gap in state-level flu hospitalization reporting.
 }
 \details{
 There are four possible methods for imputing non-seasonal weeks implemented in this function:
 \itemize{
-\item "val": Random sampling from a vector of values including all flu hospitalizations reported weeks between June-October 2022 and June-October 2023 for the given location; first and last values are defined as median of the random sample and the closest un-imputed value (i.e., the week before imputation begins and the week after imputation ends)
-\item "diff": Random sampling from a vector of differences in flu hospitalizations reported weeks between June-October 2022 and June-October 2023 for the given location
+\item "val": Random sampling from a vector of values including all flu hospitalizations reported weeks between June-October 2022 and June-October 2023 for the given location; first and last values are defined as median of the random sample and the most recent un-imputed value (i.e., the week before imputation begins and the week after imputation ends)
+\item "diff": Random sampling from a vector of week-to-week differences in flu hospitalizations reported in weeks between June-October 2022 and June-October 2023 for the given location
 \item "median": Median of 2022 and 2023 values reported for the given epiweek
-\item "partial": Uses the \code{adjust_partial=TRUE} flag for the \link{prep_nhsn_weekly} for weeks in the date range specified
+\item "partial": Uses the \code{adjust_partial=TRUE} flag for the \link{prep_nhsn_weekly} function to fill the weeks in the date range specified
 }
 }
