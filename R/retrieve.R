@@ -174,18 +174,18 @@ get_cdc_ili <- function(region=c("national", "state", "hhs"), years=NULL) {
 #' - **season**: The flu season to which the given epidemiological week belongs
 #'
 #' @details
-#' The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data cumulative rates and weekly incident rates overall across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
+#' The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data as overall cumulative rates and weekly incident rates across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
 #'
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
-#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' - [cdcfluview package](https://github.com/hrbrmstr/cdcfluview)
 #' - [RESP-NET Data Portal](https://data.cdc.gov/Public-Health-Surveillance/Rates-of-Laboratory-Confirmed-RSV-COVID-19-and-Flu/kvib-3txy/about_data)
 #' - [RESP-NET Dashboard](https://www.cdc.gov/resp-net/dashboard/)
 #' @export
 #' @examples
 #' \dontrun{
 #' # Retrieve FluSurv-Net hospitalization data for specific year(s)
-#' get_cdc_hosp(years=2019)
+#' get_cdc_hosp()
 #' }
 get_cdc_hosp <- function(source = "fluview", years=NULL) {
 
@@ -607,7 +607,7 @@ ilinet <- function(region = c("national", "hhs", "census", "state"), years = NUL
 #'
 #' @references
 #' - [Hospital Portal](https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html)
-#' - [cdcfluview package](https://github.dev/hrbrmstr/cdcfluview)
+#' - [cdcfluview package](https://github.com/hrbrmstr/cdcfluview)
 #'
 hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
                              region="all", years=NULL) {

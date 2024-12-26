@@ -30,18 +30,18 @@ A \code{tibble} with the following columns:
 This function retrieves historical FluSurv-NET hospitalization data via either RESP-NET or the CDC FluView API (see 'Details' section).
 }
 \details{
-The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data cumulative rates and weekly incident rates overall across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
+The data retrieval from FluView and and RESP-NET pulls FluSurv-NET lab-confirmed hospitalization data as overall cumulative rates and weekly incident rates across reporting sites, age groups, sex, and race/ethnicity categories. Note that as of October 2024, the FluSurv-NET hospitalizations from RESP-NET begin in the 2018-19 season, while the FluView data goes back to 2009-10.
 }
 \examples{
 \dontrun{
 # Retrieve FluSurv-Net hospitalization data for specific year(s)
-get_cdc_hosp(years=2019)
+get_cdc_hosp()
 }
 }
 \references{
 \itemize{
 \item \href{https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html}{Hospital Portal}
-\item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}
+\item \href{https://github.com/hrbrmstr/cdcfluview}{cdcfluview package}
 \item \href{https://data.cdc.gov/Public-Health-Surveillance/Rates-of-Laboratory-Confirmed-RSV-COVID-19-and-Flu/kvib-3txy/about_data}{RESP-NET Data Portal}
 \item \href{https://www.cdc.gov/resp-net/dashboard/}{RESP-NET Dashboard}
 }
