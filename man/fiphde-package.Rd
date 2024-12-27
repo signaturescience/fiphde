@@ -12,6 +12,7 @@ Miscellaneous functions for retrieving data, creating and evaluating time series
 Useful links:
 \itemize{
   \item \url{https://signaturescience.github.io/fiphde/}
+  \item \url{https://github.com/signaturescience/fiphde}
 }
 
 }

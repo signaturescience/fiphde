@@ -276,7 +276,7 @@ ts_format_for_submission <- function (tsfor, .target="wk ahead inc flu hosp", .c
 #'
 #'
 #' # Format for submission
-#' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts")
+#' formatted_list <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "legacy")
 #' # Validate one of the forecasts
 #' # Note that this expects forecast is prepared with forecast date = Monday of the current week
 #' ens_forc <- formatted_list$ensemble

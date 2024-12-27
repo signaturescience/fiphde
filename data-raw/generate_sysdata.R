@@ -36,9 +36,9 @@ locations <-
 ## provenance of data file
 # download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-data/master/data-locations/locations.csv",
 #               destfile=here::here("data-raw/legacy-rate-change.csv"))
+## NOTE: this data was updated for the 2024-25 season and re-downloaded so we can use the correct thresholds
 # download.file("https://raw.githubusercontent.com/cdcepi/Flusight-forecast-hub/main/auxiliary-data/locations.csv",
-#               destfile=here::here("data-raw/hubverse-rate-change.csv"))
-
+#               destfile=here::here("data-raw/hubverse-rate-change-2425.csv"))
 ## read the location crosswalk table from file downloaded from github
 ## select columns of interest
 legacy_rate_change <-
@@ -46,7 +46,8 @@ legacy_rate_change <-
   select(location, count_rate1per100k, count_rate2per100k)
 
 hubverse_rate_change <-
-  read_csv(here::here("data-raw/hubverse-rate-change.csv"), col_types="cccddddddd")
+  # read_csv(here::here("data-raw/hubverse-rate-change-2324.csv"), col_types="cccddddddd")
+  read_csv(here::here("data-raw/hubverse-rate-change-2425.csv"), col_types="cccddddddddd")
 
 # Quantiles ---------------------------------------------------------------
 
@@ -75,18 +76,23 @@ hosp <- fiphde:::hospitalizations(surveillance_area = "flusurv", region="all")
 hosp
 hospstats <-
   hosp %>%
-  filter(age_label == "Overall") %>%
+  dplyr::filter(age_label=="Overall") %>%
+  dplyr::filter(race_label=="Overall") %>%
+  dplyr::filter(sexid == 0) %>%
+  dplyr::filter(name == "FluSurv-NET") %>%
+  ## get the overall for influenza a/b
+  dplyr::filter(flutype == 0)  %>%
   filter(year %>% between(2010, 2021)) %>%
   mutate("counts" = as.numeric(weeklyrate)*3300) %>%
-  dplyr::select(c("wk_start", "counts", "year_wk_num")) %>%
-  rename(epiweek = year_wk_num) %>%
+  dplyr::select(c("weekstart", "counts", "weeknumber")) %>%
+  rename(epiweek = weeknumber) %>%
   group_by(epiweek) %>%
-  summarise(min = min(counts),
+  summarise(min = min(counts, na.rm = TRUE),
             lowhinge = IQR(counts, 0.25),
-            med = median(counts),
+            med = median(counts, na.rm=TRUE),
             uprhinge = IQR(counts, 0.75),
-            max = max(counts),
-            mean = mean(counts))
+            max = max(counts, na.rm=TRUE),
+            mean = mean(counts, na.rm = TRUE))
 hospstats
 
 # Get weighted and unweighted ILI (2010-2019), summarize by epiweek
@@ -107,8 +113,13 @@ ilisum
 hospsum <-
   hosp %>%
   filter(year %>% between(2010, 2019)) %>%
-  filter(age_label=="Overall") %>%
-  rename(epiweek=year_wk_num) %>%
+  dplyr::filter(age_label=="Overall") %>%
+  dplyr::filter(race_label=="Overall") %>%
+  dplyr::filter(sexid == 0) %>%
+  dplyr::filter(name == "FluSurv-NET") %>%
+  ## get the overall for influenza a/b
+  dplyr::filter(flutype == 0)  %>%
+  rename(epiweek=weeknumber) %>%
   group_by(epiweek) %>%
   summarize(hosp_mean=mean(weeklyrate)) %>%
   mutate(hosp_rank=rank(hosp_mean) %>% as.integer())
@@ -183,7 +194,7 @@ vd$hosp_fitfor <- ts_fit_forecast(vd$prepped_hosp_tsibble,
                                covariates=TRUE)
 
 # Format for submission
-vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor)
+vd$formatted_list <- format_for_submission(vd$hosp_fitfor$tsfor, method = "ts", format = "legacy")
 
 # CREG ILI data - stuff in vd$ is created here and saved
 # # Original: no time limit and nowcast
@@ -289,9 +300,25 @@ if (!file.exists(here::here("data-raw/ilinearby.csv"))) {
   ilinearby <- read_csv(here::here("data-raw/ilinearby.csv"), col_types="cciid")
 }
 
+## read in imputed data
+## NOTE: the imputed data includes separate rds files and without ILI included in augmentation procedure
+# nhsn_imputed <- readRDS(here::here("data-raw/imputed_summaries_without_ili.rds"))
+nhsn_imputed <-
+  readRDS("data-raw/imputed_summaries.rds") %>%
+  select(location, date, pop = population, hhs_region, year, week, mean_flu_admits, sd_flu_admits, source, n_imputes)
+
+
+## read in floom data
+## this data was generated with the script in data-raw/floom.R
+## NOTE: the procedure includes steps to manually inspect plots of reported NHSN data and potential adjustments
+#abbreviation,week_start,epiyear,epiweek,flu.admits,epoch,source,location,monday,week_end,flu.admits.cov,ili_mean,ili_rank,hosp_mean,hosp_rank
+nhsn_floom <- read_csv(here::here("data-raw/floom.csv"))
+
 # Write package data ------------------------------------------------------
 
 usethis::use_data(locations,
+                  nhsn_imputed,
+                  nhsn_floom,
                   legacy_rate_change,
                   hubverse_rate_change,
                   q,

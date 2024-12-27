@@ -1,3 +1,6 @@
+## usethis namespace: start
+#' @importFrom rlang .data
+#' @importFrom rlang .env
 #' @keywords internal
 "_PACKAGE"
 
@@ -133,5 +136,19 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(".",
                                                         "target_name",
                                                         "target_prob",
                                                         "nnetar",
+                                                        "mean_flu_admits",
+                                                        "Geographic aggregation",
+                                                        "Total Influenza Admissions",
+                                                        "max_reporting",
+                                                        "flu.admits.cov.perc",
+                                                        "hosp_mean",
+                                                        "hosp_rank",
+                                                        "ili_mean",
+                                                        "ili_rank",
+                                                        "Week Ending Date",
+                                                        "Percent Hospitals Reporting Influenza Admissions",
+                                                        "Percent Hospitals Reporting  Influenza Admissions",
+                                                        "Number Hospitals Reporting Influenza Admissions",
+                                                        "Number Hospitals Reporting  Influenza Admissions",
                                                         "."))
 

@@ -27,7 +27,7 @@ Either \code{NA} (if the API can't be reached) or a \code{tibble} with the follo
 \item \strong{abbreviation}: Abbreviation for the location
 \item \strong{epiyear}: Year of reporting (in epidemiological week calendar)
 \item \strong{epiweek}: Week of reporting (in epidemiological week calendar)
-\item \strong{weigthed_ili_now}: Nowcasted ILI value
+\item \strong{weighted_ili_now}: Nowcasted ILI value
 }
 }
 \description{

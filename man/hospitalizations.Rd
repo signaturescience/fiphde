@@ -41,6 +41,6 @@ Each possible value "surveillance_area" (\code{"flusurv"}, \code{"eip"}, or \cod
 \references{
 \itemize{
 \item \href{https://gis.cdc.gov/GRASP/Fluview/FluHospRates.html}{Hospital Portal}
-\item \href{https://github.dev/hrbrmstr/cdcfluview}{cdcfluview package}
+\item \href{https://github.com/hrbrmstr/cdcfluview}{cdcfluview package}
 }
 }
