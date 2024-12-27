@@ -1,3 +1,33 @@
+# fiphde 2.1.0
+
+## New features
+
+### Extended time series and augumented data
+
+As of this release, the package now includes internal package datasets for an extended and augmented NHSN flu hospitalization time series (`fiphde:::nhsn_imputed` and `fiphde:::nhsn_floom`). The extended time series was created using methods published in [Benefield et al. (2024)](https://www.medrxiv.org/content/10.1101/2024.07.31.24311314). The augmentation stitches together the extended time series (prior to 2020) and NHSN reporting (2020-2024), with weeks between April and November 2024 filled using an imputation approach due to limited reporting in this window. The script to create the final dataset is available in the package source at `data-raw/floom.R`.
+
+### Functionality to retrieve data from new NHSN API
+
+In November 2024, the NHSN weekly respiratory hospitalization metrics began being reported via a new API. The "preliminary" and "final" data are now aggregated to the week and reported at distinct endpoints. We have included the `get_nhsn_weekly()` and `prep_nhsn_weekly()` functions to retrieve and format data from these endpoints. 
+
+### Updated categorical rate trend thresholds for 2024-25 flu season
+
+The FluSight challenge updated the thresholds for categorical rate changes in the 2024-25 season (see https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md for more details). This release brings in a new crosswalk file to apply cutoffs for categorical thresholds and implements corresponding logic in the `forecast_categorical()` function.
+
+### More options for FluSurv-NET data retrieval
+
+The `get_cdc_hosp()` function now includes an option to either retrieve FluSurv-NET reporting from the the RESP-NET API or the FluView API.
+
+## Bug fixes
+
+### Incorrect column names for hospitalization retrival function output
+
+Previously, the `get_cdc_hosp()` reversed the names of the columns containing the dates for the start and end of the given epiweek. This release addresses that issue, ensuring that all columns in the `get_cdc_hosp()` output are named correctly.
+
+### Miscellaneous fixes for documentation and examples
+
+We addressed multiple instances of unclear or misspelled documentation and examples that were failing, all of which were marked as "not run" and therefore were not flagged by `R CMD CHECK`.
+
 # fiphde 2.0.2
 
 ## New features
@@ -40,7 +70,7 @@ The 2022-23 FluSight guidelines solicited categorical rate change forecasts for 
 
 ### Plausibility analysis in explorer app
 
-As of this release, the explorer app now includes a plausibility analysis feature built using the `rplanes` package (https://signaturescience.github.io/rplanes/). The plausibility analysis is intended to help guide human forecast review via visualizatons. Currently the scoring uses default parameters, although users can define the components to use via a select input prior to running the scoring in the explorer app.
+As of this release, the explorer app now includes a plausibility analysis feature built using the `rplanes` package (https://signaturescience.github.io/rplanes/). The plausibility analysis is intended to help guide human forecast review via visualizations. Currently the scoring uses default parameters, although users can define the components to use via a select input prior to running the scoring in the explorer app.
 
 ### Additional example data
 
@@ -94,7 +124,7 @@ The API for the package has been simplified to remove outmoded functions and har
 - Removed `get_cdc_vax()` function
 - Removed `state_replace_ili_nowcast_all()` function
 - Removed `submission/` directory from the source code repository on GitHub
-- More intuitive handling of arguments in `ts_fit_forecast()`, including case-insenstive model names, better handling of optional covariates, and removing the inoperative "remove_null_models" argument
+- More intuitive handling of arguments in `ts_fit_forecast()`, including case-insensitive model names, better handling of optional covariates, and removing the inoperative "remove_null_models" argument
 
 ### Documentation
 
@@ -148,7 +178,7 @@ Prior to this release the explorer app (see `?fiphde_launcher`) would default vi
 
 This release brings in additional data retrieval and processing functions. The package now includes code adapted from `cdcfluview` to query the NREVSS surveillance system and pull clinical laboratory percent positive flu data. The `who_nrevss()` function is unexported but is used in the user-facing `get_cdc_clin()` function, which pulls and preps the percent positive data. A complementary function, `clin_nowcast()`, is now available to augment the clinical laboratory percent positivity with a nowcasted value.
 
-The package also now includes helper functions to prepare covariates for modeling. For example, the new `pois_forc()` helper creates a forecasted counts based on recently observed values. This can be used to create forecasted values for number of tests and number of positive flu specimens (and thefore percent positivity) to feed into models that include percent positive lab results as a covariate. The new `smoothie()` function is also available to create weighted averages of recent observations, which can be used as covariate data in models.
+The package also now includes helper functions to prepare covariates for modeling. For example, the new `pois_forc()` helper creates a forecasted counts based on recently observed values. This can be used to create forecasted values for number of tests and number of positive flu specimens (and therefore percent positivity) to feed into models that include percent positive lab results as a covariate. The new `smoothie()` function is also available to create weighted averages of recent observations, which can be used as covariate data in models.
 
 # fiphde 0.2.1
 
