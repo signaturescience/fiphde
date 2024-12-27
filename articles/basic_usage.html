@@ -8,8 +8,8 @@
 <title>Basic Usage • fiphde</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Basic Usage">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,8 @@
 
     
     
+<pre><code><span><span class="co">#&gt; Error in get(paste0(generic, ".", class), envir = get_method_env()) : </span></span>
+<span><span class="co">#&gt;   object 'type_sum.accel' not found</span></span></code></pre>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -90,7 +92,7 @@ the code here as written will produce different results depending on
 <em>when</em> you run the code, as new data is constantly being added
 and historical data is constantly being revised.</p>
 <p>To get started, load the packages that are used in this vignette.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://signaturescience.github.io/fiphde/">fiphde</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
@@ -106,9 +108,9 @@ COVID-19 Reported Patient Impact and Hospital Capacity by State
 Timeseries API</a>. Running <code>get_hdgov_hosp(limitcols=TRUE)</code>
 will initiate an API call with an argument to return only a selection of
 fields relevant to flu hospitalization reporting.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hosp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_hdgov_hosp.html">get_hdgov_hosp</a></span><span class="op">(</span>limitcols <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hosp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_hdgov_hosp.html">get_hdgov_hosp</a></span><span class="op">(</span>limitcols <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 43,967 × 14</span></span></span>
 <span><span class="co">#&gt;    state date       flu.admits flu.admits.cov flu.deaths flu.deaths.cov flu.icu</span></span>
@@ -151,13 +153,13 @@ by week. Historical indicators for ILI and hospitalizations are
 summarized from <a href="https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html" class="external-link">CDC
 ILINet</a> and <a href="https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm" class="external-link">CDC
 FluSurv-Net</a> respectively.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Prep data</span></span>
 <span><span class="va">prepped_hosp</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/prep_hdgov_hosp.html">prep_hdgov_hosp</a></span><span class="op">(</span>statesonly<span class="op">=</span><span class="cn">TRUE</span>, min_per_week <span class="op">=</span> <span class="fl">0</span>, remove_incomplete <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span> <span class="op">!=</span> <span class="st">"DC"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,284 × 13</span></span></span>
 <span><span class="co">#&gt;    abbreviation location week_start monday     week_end   epiyear epiweek</span></span>
@@ -176,7 +178,7 @@ FluSurv-Net</a> respectively.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 6 more variables: flu.admits &lt;dbl&gt;, flu.admits.cov &lt;dbl&gt;, ili_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   ili_rank &lt;int&gt;, hosp_mean &lt;dbl&gt;, hosp_rank &lt;int&gt;</span></span></span></code></pre></div>
 <p>Now let’s explore the data.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"US"</span>, <span class="st">"CA"</span>, <span class="st">"TX"</span>, <span class="st">"NY"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">week_end</span>, <span class="va">flu.admits</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -184,7 +186,7 @@ FluSurv-Net</a> respectively.</p>
 <p><img src="basic_usage_files/figure-html/unnamed-chunk-8-1.png" width="576"></p>
 <p>What states had the highest admissions over the 2021-2022 flu
 season?</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span><span class="op">!=</span><span class="st">"US"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">week_start</span><span class="op">&gt;=</span><span class="st">"2021-07-01"</span> <span class="op">&amp;</span> <span class="va">week_end</span><span class="op">&lt;</span><span class="st">"2022-06-30"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
@@ -252,12 +254,12 @@ epidemiological week’s Monday as the weekly index and the location as
 the key. Note that the specification of arguments for epidemiological
 week / year and location key are passed as “bare” (unquoted) names of
 columns storing this information in the original tibble.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp_tsibble</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_tsibble.html">make_tsibble</a></span><span class="op">(</span><span class="va">prepped_hosp</span>,</span>
 <span>                                     epiyear<span class="op">=</span><span class="va">epiyear</span>,</span>
 <span>                                     epiweek<span class="op">=</span><span class="va">epiweek</span>,</span>
 <span>                                     key<span class="op">=</span><span class="va">location</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp_tsibble</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tsibble: 4,284 x 14 [1W]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Key:       location [51]</span></span></span>
@@ -297,7 +299,7 @@ for details). We can also trim the data used in modeling, and here we
 restrict to only include hospitalization data reported after January 1,
 2021. By setting <code>ensemble=TRUE</code> we create an ensemble model
 that averages the ARIMA and exponential smoothing models.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_fit_forecast.html">ts_fit_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp_tsibble</span>,</span>
 <span>                               horizon<span class="op">=</span><span class="fl">4L</span>,</span>
 <span>                               outcome<span class="op">=</span><span class="st">"flu.admits"</span>,</span>
@@ -322,7 +324,7 @@ weeks, one row per model per location (key in the tsibble);
 <code>$formulas</code> gives us the model formulas passed to fable
 modeling functions; and if any models failed to converge we would see
 those locations in <code>$nullmodels</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span></span>
 <span><span class="co">#&gt; $tsfit</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A mable: 51 x 4</span></span></span>
@@ -344,29 +346,30 @@ those locations in <code>$nullmodels</code>.</p>
 <span><span class="co">#&gt; $tsfor</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A fable: 612 x 10 [1W]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Key:     location, .model [153]</span></span></span>
-<span><span class="co">#&gt;    location .model    yweek flu.admits .mean epiweek ili_mean ili_rank hosp_mean</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;week&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dist&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01       arima  2022 W22  N(16, 56)  16.2      22    1.23        17         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 01       arima  2022 W23  N(20, 56)  20.4      23    1.09        14         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 01       arima  2022 W24  N(19, 65)  19.2      24    1.02        12         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 01       arima  2022 W25  N(21, 65)  21.0      25    0.984       10         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 01       ets    2022 W22  N(19, 78)  18.9      22    1.23        17         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 01       ets    2022 W23  N(19, 88)  18.9      23    1.09        14         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 01       ets    2022 W24  N(19, 99)  18.9      24    1.02        12         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 01       ets    2022 W25 N(19, 110)  18.9      25    0.984       10         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 01       ensem… 2022 W22  N(18, 63)  17.5      22    1.23        17         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 01       ensem… 2022 W23  N(20, 67)  19.7      23    1.09        14         0</span></span>
+<span><span class="co">#&gt;    location .model      yweek</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;week&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01       arima    2022 W22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 01       arima    2022 W23</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 01       arima    2022 W24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 01       arima    2022 W25</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 01       ets      2022 W22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 01       ets      2022 W23</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 01       ets      2022 W24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 01       ets      2022 W25</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 01       ensemble 2022 W22</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 01       ensemble 2022 W23</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 602 more rows</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: hosp_rank &lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: flu.admits &lt;dist&gt;, .mean &lt;dbl&gt;, epiweek &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   ili_mean &lt;dbl&gt;, ili_rank &lt;int&gt;, hosp_mean &lt;dbl&gt;, hosp_rank &lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas</span></span>
 <span><span class="co">#&gt; $formulas$arima</span></span>
 <span><span class="co">#&gt; flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55b086e3bce8&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5613a9241ed8&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas$ets</span></span>
 <span><span class="co">#&gt; flu.admits ~ season(method = "N")</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55b086e3bce8&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x5613a9241ed8&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $nullmodels</span></span>
@@ -375,58 +378,58 @@ those locations in <code>$nullmodels</code>.</p>
 <p>Next, we can format the forecasts for <a href="https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md" class="external-link">submission
 to FluSight</a> using the <code>format_for_submission</code>
 function.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">formatted_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/format_for_submission.html">format_for_submission</a></span><span class="op">(</span><span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfor</span>, method <span class="op">=</span> <span class="st">"ts"</span>, format <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span></code></pre></div>
 <p>The list contains separate submission-ready tibbles, one element for
 each type of model fitted.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">formatted_list</span></span>
 <span><span class="co">#&gt; $arima</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,896 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target            target_end_date location type  quantile value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       17   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       21   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       22   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    3    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    3    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    6    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       17   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       21   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       22   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    4    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    3    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    6    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4,886 more rows</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $ensemble</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,896 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target            target_end_date location type  quantile value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       18   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    3    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    4    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       18   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       20   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    3    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    4    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4,886 more rows</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $ets</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,896 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target            target_end_date location type  quantile value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2022-12-20    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2022-12-20    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2022-12-20    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2022-12-20    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       point <span style="color: #BB0000;">NA</span>       19   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-12-10    3 wk ahead inc f… 2022-06-18      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-12-10    4 wk ahead inc f… 2022-06-25      01       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-12-10    1 wk ahead inc f… 2022-06-04      01       quan… 0.025    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-12-10    2 wk ahead inc f… 2022-06-11      01       quan… 0.025    1    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4,886 more rows</span></span></span></code></pre></div>
 <p>We can check to see if the submission is <a href="https://github.com/cdcepi/Flusight-forecast-data/blob/e1a2a05fa2bb065dfa80a7067c444394edde05e2/data-forecasts/README.md#Forecast-validation" class="external-link">valid</a>.
 Note that this will fail if the expected date of the target dates and
@@ -437,42 +440,80 @@ forecasts are assumed to to start the following week.”</em> If
 validation succeeds, the <code>$valid</code> element of the returned
 list will be <code>TRUE</code>, and <code>FALSE</code> if any validation
 checks fail.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/validate_forecast.html">validate_forecast</a></span><span class="op">(</span><span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s plot the forecast with the observed data using the
 <code>plot_forecast</code> function. Here we plot forecasts with the 50%
 prediction interval for US, New York (FIPS 36) and Florida (FIPS
 12).</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"US"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="basic_usage_files/figure-html/unnamed-chunk-17-1.png" width="576"></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"36"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="basic_usage_files/figure-html/unnamed-chunk-17-2.png" width="576"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"12"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
 <p><img src="basic_usage_files/figure-html/unnamed-chunk-17-3.png" width="576"></p>
 <p>Finally, we can pull out the ARIMA model parameters used for each
 location to save for posterity or retrospective analysis.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfit</span><span class="op">$</span><span class="va">arima</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_df</a></span><span class="op">(</span><span class="st">"spec"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>location <span class="op">=</span> <span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfit</span><span class="op">$</span><span class="va">location</span>, .before <span class="op">=</span> <span class="st">"p"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 51 × 9</span></span></span>
-<span><span class="co">#&gt;    location     p     d     q     P     D     Q constant period</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01           2     0     0     0     0     0 TRUE         52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 02           1     0     0     0     0     0 TRUE         52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 04           2     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 05           2     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 06           2     2     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 08           1     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 09           1     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10           2     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 12           2     2     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 13           2     1     0     0     0     0 FALSE        52</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 41 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt;    location p d q P D Q constant period</span></span>
+<span><span class="co">#&gt; 1        01 2 0 0 0 0 0     TRUE     52</span></span>
+<span><span class="co">#&gt; 2        02 1 0 0 0 0 0     TRUE     52</span></span>
+<span><span class="co">#&gt; 3        04 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 4        05 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 5        06 2 2 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 6        08 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 7        09 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 8        10 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 9        12 2 2 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 10       13 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 11       15 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 12       16 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 13       17 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 14       18 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 15       19 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 16       20 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 17       21 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 18       22 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 19       23 2 1 0 0 0 0     TRUE     52</span></span>
+<span><span class="co">#&gt; 20       24 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 21       25 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 22       26 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 23       27 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 24       28 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 25       29 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 26       30 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 27       31 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 28       32 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 29       33 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 30       34 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 31       35 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 32       36 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 33       37 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 34       38 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 35       39 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 36       40 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 37       41 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 38       42 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 39       44 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 40       45 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 41       46 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 42       47 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 43       48 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 44       49 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 45       50 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 46       51 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 47       53 2 2 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 48       54 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 49       55 1 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 50       56 2 1 0 0 0 0    FALSE     52</span></span>
+<span><span class="co">#&gt; 51       US 2 1 0 0 0 0    FALSE     52</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -503,7 +544,7 @@ signal to only include Hawaii. ILI is subject to revision and may be
 less reliable when initially reported, so we replace the current week
 and one week previous with <a href="https://delphi.cmu.edu/nowcast/" class="external-link">Nowcast data</a>. Finally, we fit
 a time series model to forecast ILI for the next four weeks.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ilidat</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="fu"><a href="../reference/get_cdc_ili.html">get_cdc_ili</a></span><span class="op">(</span>region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"state"</span><span class="op">)</span>, years<span class="op">=</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2022</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">region</span> <span class="op">==</span> <span class="st">"Hawaii"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -515,7 +556,7 @@ admissions, so in this step we need to remove all the zeros. The fiphde
 package provides the <code>mnz_replace</code> function which replaces
 zeros in a variable with the smallest non-zero value of that
 variable.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ilidat</span> <span class="op">&lt;-</span> <span class="va">ilidat</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>weighted_ili<span class="op">=</span><span class="fu"><a href="../reference/mnz_replace.html">mnz_replace</a></span><span class="op">(</span><span class="va">weighted_ili</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ilifor</span><span class="op">$</span><span class="va">ilidat</span> <span class="op">&lt;-</span> <span class="va">ilifor</span><span class="op">$</span><span class="va">ilidat</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ili<span class="op">=</span><span class="fu"><a href="../reference/mnz_replace.html">mnz_replace</a></span><span class="op">(</span><span class="va">ili</span><span class="op">)</span><span class="op">)</span></span>
@@ -525,7 +566,7 @@ variable.</p>
 admission data prepared above with the forecasted ILI data in future
 weeks together with the historical severity data by epidemiological
 week.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat_hi</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span><span class="op">==</span><span class="st">"HI"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -558,7 +599,7 @@ We can inspect the formulations of each model. Note that these models
 are specified using the <a href="https://github.com/reconverse/trending" class="external-link">trending package</a> and
 internally the <a href="https://github.com/reconverse/trendeval" class="external-link">trendeval package</a> is
 used to determine the best fitting approach.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    poisson <span class="op">=</span> <span class="fu">trending</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">glm_model</a></span><span class="op">(</span><span class="va">flu.admits</span> <span class="op">~</span> <span class="va">ili</span> <span class="op">+</span> <span class="va">hosp_rank</span> <span class="op">+</span> <span class="va">ili_rank</span>, family <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span>,</span>
@@ -577,7 +618,7 @@ used to determine the best fitting approach.</p>
 <p>We must next project covariates four weeks into the future, which we
 can accomplish by pulling from the forecasted ILI and historical
 severity data.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">new_cov</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">ilifor</span><span class="op">$</span><span class="va">ili_future</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="fu">fiphde</span><span class="fu">:::</span><span class="va">historical_severity</span>, by<span class="op">=</span><span class="st">"epiweek"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -588,13 +629,13 @@ severity data.</p>
 <span><span class="co">#&gt;   location   ili ili_mean ili_rank hosp_mean hosp_rank</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 15       0.655    1.02        12         0         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 15       0.634    0.984       10         0         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 15       0.634    0.985       10         0         0</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 15       0.642    0.946        9         0         0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 15       0.644    0.921        8         0         0</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 15       0.644    0.920        8         0         0</span></span></code></pre></div>
 <p>Next we use fiphde’s <code>glm_wrap</code> function which attempts to
 find the best-fitting model out of all the models supplied, and
 specifies the prediction interval quantiles used in FluSight.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_wrap.html">glm_wrap</a></span><span class="op">(</span><span class="va">dat_hi</span>,</span>
 <span>                new_covariates <span class="op">=</span> <span class="va">new_cov</span>,</span>
 <span>                .models <span class="op">=</span> <span class="va">models</span>,</span>
@@ -602,89 +643,50 @@ specifies the prediction interval quantiles used in FluSight.</p>
 <span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span><span class="op">$</span><span class="va">location</span> <span class="op">&lt;-</span> <span class="st">"15"</span></span></code></pre></div>
 <p>We can take a quick look at the forecast output as well as different
 aspects of the final fitted model.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   epiweek epiyear quantile value location</span></span>
-<span><span class="co">#&gt; 1      22    2022    0.010     0       15</span></span>
-<span><span class="co">#&gt; 2      22    2022    0.025     0       15</span></span>
-<span><span class="co">#&gt; 3      22    2022    0.050     0       15</span></span>
-<span><span class="co">#&gt; 4      22    2022    0.100     0       15</span></span>
-<span><span class="co">#&gt; 5      22    2022    0.150     1       15</span></span>
-<span><span class="co">#&gt; 6      22    2022    0.200     1       15</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">model</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 4</span></span></span>
-<span><span class="co">#&gt;   model_class fit        location data$fit_data     </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;trndng__&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>            </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> glm         <span style="color: #949494;">&lt;glm&gt;</span>      15       <span style="color: #949494;">&lt;tibble [84 × 15]&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> glm         <span style="color: #949494;">&lt;fn&gt;</span>       15       <span style="color: #949494;">&lt;tibble [84 × 15]&gt;</span></span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span></span>
-<span><span class="co">#&gt; $fitted_model</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Call:  glm(formula = flu.admits ~ ili + hosp_rank + ili_rank, family = "poisson", </span></span>
-<span><span class="co">#&gt;     data = data)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Coefficients:</span></span>
-<span><span class="co">#&gt; (Intercept)          ili    hosp_rank     ili_rank  </span></span>
-<span><span class="co">#&gt;   -0.110528     1.463418    -0.051589     0.003076  </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Degrees of Freedom: 83 Total (i.e. Null);  80 Residual</span></span>
-<span><span class="co">#&gt; Null Deviance:       229.6 </span></span>
-<span><span class="co">#&gt; Residual Deviance: 175.6     AIC: 234</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $predict</span></span>
-<span><span class="co">#&gt; function (newdata, alpha = 0.05, add_pi = TRUE, simulate_pi = TRUE, </span></span>
-<span><span class="co">#&gt;     uncertain = TRUE) </span></span>
-<span><span class="co">#&gt; {</span></span>
-<span><span class="co">#&gt;     if (missing(newdata)) {</span></span>
-<span><span class="co">#&gt;         newdata &lt;- data[all.vars(formula(model))]</span></span>
-<span><span class="co">#&gt;     }</span></span>
-<span><span class="co">#&gt;     result &lt;- add_confidence_interval(model, newdata, alpha)</span></span>
-<span><span class="co">#&gt;     if (add_pi) {</span></span>
-<span><span class="co">#&gt;         if (simulate_pi) {</span></span>
-<span><span class="co">#&gt;             result &lt;- add_prediction_interval(model, result, </span></span>
-<span><span class="co">#&gt;                 alpha, simulate_pi, uncertain)</span></span>
-<span><span class="co">#&gt;         }</span></span>
-<span><span class="co">#&gt;         else {</span></span>
-<span><span class="co">#&gt;             result &lt;- add_prediction_interval(model, result, </span></span>
-<span><span class="co">#&gt;                 alpha, simulate_pi, uncertain)</span></span>
-<span><span class="co">#&gt;         }</span></span>
-<span><span class="co">#&gt;     }</span></span>
-<span><span class="co">#&gt;     result</span></span>
-<span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;bytecode: 0x55b093ac6130&gt;</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55b089669cb8&gt;</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "trending_model_fit" "list"</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted_model</span><span class="op">$</span><span class="va">family</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Family: poisson </span></span>
-<span><span class="co">#&gt; Link function: log</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted_model</span><span class="op">$</span><span class="va">coefficients</span></span>
-<span><span class="co">#&gt;  (Intercept)          ili    hosp_rank     ili_rank </span></span>
-<span><span class="co">#&gt; -0.110527528  1.463417923 -0.051589427  0.003075992</span></span></code></pre></div>
-<p>Next we prepare the data in the quantile format used by FluSight.</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
+<span><span class="co">#&gt;   epiweek epiyear quantile value location</span></span>
+<span><span class="co">#&gt;     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>      22    <span style="text-decoration: underline;">2</span>022    0.01      0 15      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>      22    <span style="text-decoration: underline;">2</span>022    0.025     0 15      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>      22    <span style="text-decoration: underline;">2</span>022    0.05      0 15      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>      22    <span style="text-decoration: underline;">2</span>022    0.1       0 15      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>      22    <span style="text-decoration: underline;">2</span>022    0.15      1 15      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>      22    <span style="text-decoration: underline;">2</span>022    0.2       1 15</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">model</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">&lt;trending_fit_tbl&gt; 1 x 3</span></span></span>
+<span><span class="co">#&gt;   result warnings errors</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;list&gt;</span> <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;list&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="color: #949494;">&lt;glm&gt;</span>  <span style="color: #949494;">&lt;NULL&gt;</span>   <span style="color: #949494;">&lt;NULL&gt;</span></span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span></span>
+<span><span class="co">#&gt; NULL</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted_model</span><span class="op">$</span><span class="va">family</span></span>
+<span><span class="co">#&gt; NULL</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted_model</span><span class="op">$</span><span class="va">coefficients</span></span>
+<span><span class="co">#&gt; NULL</span></span></code></pre></div>
+<p>Next we prepare the data in the quantile format used by FluSight.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hi_glm_prepped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/format_for_submission.html">format_for_submission</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span>, method<span class="op">=</span><span class="st">"CREG"</span>, format <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span>
 <span><span class="va">hi_glm_prepped</span></span>
 <span><span class="co">#&gt; $CREG</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target            target_end_date location type  quantile value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.025    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.050    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.100    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.150    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.200    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.250    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.300    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.350    2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-08-01    1 wk ahead inc f… 2022-06-04      15       quan… 0.400    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.025    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.050    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.100    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.150    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.200    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.250    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.300    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.350    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.400    2    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>Finally, we can visualize the forecasted point estimates with the 90%
 prediction interval alongside the observed data.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">dat_hi</span>, <span class="va">hi_glm_prepped</span><span class="op">$</span><span class="va">CREG</span>, location<span class="op">=</span><span class="st">"15"</span>, pi<span class="op">=</span><span class="fl">.9</span><span class="op">)</span></span></code></pre></div>
 <p><img src="basic_usage_files/figure-html/unnamed-chunk-27-1.png" width="576"></p>
 </div>
@@ -701,7 +703,7 @@ prediction interval alongside the observed data.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>

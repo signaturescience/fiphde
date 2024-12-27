@@ -18,7 +18,9 @@
 <url><loc>https://signaturescience.github.io/fiphde/reference/get_cdc_hosp.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/get_cdc_ili.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/get_hdgov_hosp.html</loc></url>
+<url><loc>https://signaturescience.github.io/fiphde/reference/get_nhsn_weekly.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/get_nowcast_ili.html</loc></url>
+<url><loc>https://signaturescience.github.io/fiphde/reference/get_respnet.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/glm_fit.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/glm_forecast.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/glm_quibble.html</loc></url>
@@ -32,11 +34,13 @@
 <url><loc>https://signaturescience.github.io/fiphde/reference/mmwr_week_to_date.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/mnz.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/mnz_replace.html</loc></url>
+<url><loc>https://signaturescience.github.io/fiphde/reference/ns_impute.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/pipe.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/plot_forecast.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/plot_forecast_categorical.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/pois_forc.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/prep_hdgov_hosp.html</loc></url>
+<url><loc>https://signaturescience.github.io/fiphde/reference/prep_nhsn_weekly.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/replace_ili_nowcast.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/round_preserve.html</loc></url>
 <url><loc>https://signaturescience.github.io/fiphde/reference/smoothie.html</loc></url>
