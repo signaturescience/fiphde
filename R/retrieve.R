@@ -51,7 +51,7 @@ get_hdgov_hosp <- function(endpoint="https://healthdata.gov/api/views/g62h-syeh/
   }
 
   # Get the data
-  d <- readr::read_csv(api_url, progress=FALSE, show_col_types = FALSE)
+  d <- read_csv_retry(api_url, progress=FALSE, show_col_types = FALSE)
 
   # Make everything except state and date numeric
   d <-
@@ -755,7 +755,7 @@ hospitalizations <- function(surveillance_area=c("flusurv", "eip", "ihsp"),
 #'
 get_respnet <- function(network="FluSurv-NET") {
 
-  dat <- readr::read_csv("https://data.cdc.gov/api/views/kvib-3txy/rows.csv")
+  dat <- read_csv_retry("https://data.cdc.gov/api/views/kvib-3txy/rows.csv")
 
   dat %>%
     dplyr::rename(
@@ -935,7 +935,7 @@ get_nhsn_weekly <- function(endpoint = "https://data.cdc.gov/api/views/mpgq-jmmr
   if(grepl(pattern = "mpgq-jmmr", endpoint)) {
     dat <-
       ## read from endpoint
-      readr::read_csv(endpoint) %>%
+      read_csv_retry(endpoint) %>%
       ## NOTE: the mpgq-jmmr has issues with spaces in the names for two columns
       dplyr::rename(`Percent Hospitals Reporting Influenza Admissions` = `Percent Hospitals Reporting  Influenza Admissions`) %>%
       dplyr::rename(`Number Hospitals Reporting Influenza Admissions` = `Number Hospitals Reporting  Influenza Admissions`) %>%
@@ -943,7 +943,7 @@ get_nhsn_weekly <- function(endpoint = "https://data.cdc.gov/api/views/mpgq-jmmr
       dplyr::select(abbreviation = `Geographic aggregation`, week_end = `Week Ending Date`, flu.admits = `Total Influenza Admissions`, flu.admits.cov = `Number Hospitals Reporting Influenza Admissions`, flu.admits.cov.perc = `Percent Hospitals Reporting Influenza Admissions`)
   } else {
     dat <-
-      readr::read_csv(endpoint) %>%
+      read_csv_retry(endpoint) %>%
       dplyr::select(abbreviation = `Geographic aggregation`, week_end = `Week Ending Date`, flu.admits = `Total Influenza Admissions`, flu.admits.cov = `Number Hospitals Reporting Influenza Admissions`, flu.admits.cov.perc = `Percent Hospitals Reporting Influenza Admissions`)
   }
 

@@ -355,7 +355,7 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
     ## get last 4 weeks of data available to average
     dplyr::filter(dplyr::row_number() >= dplyr::n() - 3) %>%
     ## get mean of last 4 weeks of data by region
-    dplyr::summarise(
+    dplyr::reframe(
       n_positive = mean(n_positive, na.rm = TRUE),
       total = mean(total, na.rm = TRUE),
       p_positive = n_positive/total * 100,
@@ -363,12 +363,10 @@ clin_nowcast <- function(clin, weeks_to_replace = 1) {
       ## ... creates a vector as long as the value of weeks to replace
       ## adds 7 to the last date for each week to replace
       week_start = max(week_start) + 7*1:weeks_to_replace,
-      abbreviation = dplyr::first(abbreviation),
-      .groups = "drop") %>%
+      abbreviation = dplyr::first(abbreviation)) %>%
     dplyr::mutate(
       epiweek = lubridate::epiweek(week_start),
-      epiyear = lubridate::epiyear(week_start)) %>%
-    dplyr::ungroup()
+      epiyear = lubridate::epiyear(week_start))
 
   dplyr::bind_rows(clin, ahead_clin) %>%
     dplyr::arrange(location, week_start)

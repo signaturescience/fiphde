@@ -1,3 +1,15 @@
+# fiphde 2.2.0
+
+## New features
+
+### More robust data retrieval approach
+
+The `fiphde` package includes the `get_nhsn_weekly()` function to retrieve data from the NHSN data source. As of this release, that function now internally uses a retry method for reading data. The retry behavior guards against intermittent network connectivity issues. Retries are currently capped at 5 attempts, with up to a puase of up to 30 seconds between each attempt.
+
+### Future-proofing and improved dependency handling
+
+We have made minor changes to replace deprecated functionality and simplify dependency resolution. Specifically, we have updated a summary operation to use `dplyr::reframe()` in the `clin_nowcast()` helper. We have also removed the remote repository declaration for `distfromq` and `rplanes` in the package `DESCRIPTION` file, given that both of those packages are now on CRAN and no longer require GitHub installs. 
+
 # fiphde 2.1.0
 
 ## New features

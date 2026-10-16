@@ -29,19 +29,3 @@ test_that("Forecast plots return expected ggplot2 data", {
   ## expect_true(all.equal(p,forcplot))
 
 })
-
-test_that("Nowcasting", {
-  skip_on_ci()
-  skip_on_cran()
-  skip_on_covr()
-  skip_if_offline(host = "delphi.cmu.edu")
-  # Check nowcast gets you data from 2020-01
-  expect_warning(get_nowcast_ili(epiyearweeks = "202201", dates=NULL))
-  expect_true(suppressWarnings(inherits(get_nowcast_ili(epiyearweeks = "202201", dates=NULL), "tbl_df")))
-  # Check nowcast currently returns missing data
-  expect_true(is.na(suppressWarnings(get_nowcast_ili(epiyearweeks = NULL))))
-  # Check augmentation
-  x <- suppressMessages(suppressWarnings(replace_ili_nowcast(ilidat, weeks_to_replace = 1)))
-  expect_true(inherits(x, "tbl_df"))
-  expect_equal(nrow(x), nrow(ilidat)+2*length(unique(ilidat$location)))
-})

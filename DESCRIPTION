@@ -1,6 +1,6 @@
 Package: fiphde
 Title: Forecasting Influenza in Support of Public Health Decision Making
-Version: 2.1.0
+Version: 2.2.0
 Authors@R: 
     c(person(given = "VP",
              family = "Nagraj",
@@ -28,7 +28,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    dplyr,
+    dplyr (>= 1.1.0),
     fable,
     fabletools (>= 0.3.2),
     lubridate,
@@ -53,7 +53,7 @@ Imports:
 Depends: 
     R (>= 2.10)
 Suggests: 
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.7),
     plotly,
     shinyWidgets,
     here,
@@ -64,7 +64,6 @@ Suggests:
     rmarkdown,
     waiter,
     rplanes
-Remotes: signaturescience/rplanes, reichlab/distfromq
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://signaturescience.github.io/fiphde/, https://github.com/signaturescience/fiphde
