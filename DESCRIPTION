@@ -53,7 +53,7 @@ Imports:
 Depends: 
     R (>= 2.10)
 Suggests: 
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.7),
     plotly,
     shinyWidgets,
     here,
