@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Basic Usage • fiphde</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Basic Usage">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fiphde</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,14 +59,12 @@
       <h1>Basic Usage</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/signaturescience/fiphde/blob/v2.1.0/vignettes/basic_usage.Rmd" class="external-link"><code>vignettes/basic_usage.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/signaturescience/fiphde/blob/main/vignettes/basic_usage.Rmd" class="external-link"><code>vignettes/basic_usage.Rmd</code></a></small>
       <div class="d-none name"><code>basic_usage.Rmd</code></div>
     </div>
 
     
     
-<pre><code><span><span class="co">#&gt; Error in get(paste0(generic, ".", class), envir = get_method_env()) : </span></span>
-<span><span class="co">#&gt;   object 'type_sum.accel' not found</span></span></code></pre>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -92,13 +90,13 @@ the code here as written will produce different results depending on
 <em>when</em> you run the code, as new data is constantly being added
 and historical data is constantly being revised.</p>
 <p>To get started, load the packages that are used in this vignette.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://signaturescience.github.io/fiphde/">fiphde</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://readr.tidyverse.org" class="external-link">readr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="data-retrieval">Data retrieval<a class="anchor" aria-label="anchor" href="#data-retrieval"></a>
 </h3>
@@ -108,9 +106,9 @@ COVID-19 Reported Patient Impact and Hospital Capacity by State
 Timeseries API</a>. Running <code>get_hdgov_hosp(limitcols=TRUE)</code>
 will initiate an API call with an argument to return only a selection of
 fields relevant to flu hospitalization reporting.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_hdgov_hosp.html">get_hdgov_hosp</a></span><span class="op">(</span>limitcols <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 43,967 × 14</span></span></span>
 <span><span class="co">#&gt;    state date       flu.admits flu.admits.cov flu.deaths flu.deaths.cov flu.icu</span></span>
@@ -153,13 +151,13 @@ by week. Historical indicators for ILI and hospitalizations are
 summarized from <a href="https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html" class="external-link">CDC
 ILINet</a> and <a href="https://www.cdc.gov/flu/weekly/influenza-hospitalization-surveillance.htm" class="external-link">CDC
 FluSurv-Net</a> respectively.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Prep data</span></span>
 <span><span class="va">prepped_hosp</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/prep_hdgov_hosp.html">prep_hdgov_hosp</a></span><span class="op">(</span>statesonly<span class="op">=</span><span class="cn">TRUE</span>, min_per_week <span class="op">=</span> <span class="fl">0</span>, remove_incomplete <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span> <span class="op">!=</span> <span class="st">"DC"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,284 × 13</span></span></span>
 <span><span class="co">#&gt;    abbreviation location week_start monday     week_end   epiyear epiweek</span></span>
@@ -178,15 +176,15 @@ FluSurv-Net</a> respectively.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 6 more variables: flu.admits &lt;dbl&gt;, flu.admits.cov &lt;dbl&gt;, ili_mean &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   ili_rank &lt;int&gt;, hosp_mean &lt;dbl&gt;, hosp_rank &lt;int&gt;</span></span></span></code></pre></div>
 <p>Now let’s explore the data.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"US"</span>, <span class="st">"CA"</span>, <span class="st">"TX"</span>, <span class="st">"NY"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">week_end</span>, <span class="va">flu.admits</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">abbreviation</span>, scale<span class="op">=</span><span class="st">"free_y"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="basic_usage_files/figure-html/unnamed-chunk-8-1.png" width="576"></p>
+<p><img src="basic_usage_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="576"></p>
 <p>What states had the highest admissions over the 2021-2022 flu
 season?</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span><span class="op">!=</span><span class="st">"US"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">week_start</span><span class="op">&gt;=</span><span class="st">"2021-07-01"</span> <span class="op">&amp;</span> <span class="va">week_end</span><span class="op">&lt;</span><span class="st">"2022-06-30"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
@@ -254,12 +252,12 @@ epidemiological week’s Monday as the weekly index and the location as
 the key. Note that the specification of arguments for epidemiological
 week / year and location key are passed as “bare” (unquoted) names of
 columns storing this information in the original tibble.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp_tsibble</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_tsibble.html">make_tsibble</a></span><span class="op">(</span><span class="va">prepped_hosp</span>,</span>
 <span>                                     epiyear<span class="op">=</span><span class="va">epiyear</span>,</span>
 <span>                                     epiweek<span class="op">=</span><span class="va">epiweek</span>,</span>
 <span>                                     key<span class="op">=</span><span class="va">location</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_hosp_tsibble</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tsibble: 4,284 x 14 [1W]</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Key:       location [51]</span></span></span>
@@ -299,7 +297,7 @@ for details). We can also trim the data used in modeling, and here we
 restrict to only include hospitalization data reported after January 1,
 2021. By setting <code>ensemble=TRUE</code> we create an ensemble model
 that averages the ARIMA and exponential smoothing models.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ts_fit_forecast.html">ts_fit_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp_tsibble</span>,</span>
 <span>                               horizon<span class="op">=</span><span class="fl">4L</span>,</span>
 <span>                               outcome<span class="op">=</span><span class="st">"flu.admits"</span>,</span>
@@ -324,13 +322,13 @@ weeks, one row per model per location (key in the tsibble);
 <code>$formulas</code> gives us the model formulas passed to fable
 modeling functions; and if any models failed to converge we would see
 those locations in <code>$nullmodels</code>.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span></span>
 <span><span class="co">#&gt; $tsfit</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A mable: 51 x 4</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># Key:     location [51]</span></span></span>
 <span><span class="co">#&gt;    location                       arima          ets      ensemble</span></span>
-<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                        <span style="color: #949494; font-style: italic;">&lt;model&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;model&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;model&gt;</span></span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;lst_mdl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;lst_mdl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lst_mdl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 01       &lt;LM w/ ARIMA(2,0,0) errors&gt; &lt;ETS(A,N,N)&gt; &lt;COMBINATION&gt;</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 02       &lt;LM w/ ARIMA(1,0,0) errors&gt; &lt;ETS(A,N,N)&gt; &lt;COMBINATION&gt;</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 04       &lt;LM w/ ARIMA(2,1,0) errors&gt; &lt;ETS(M,N,N)&gt; &lt;COMBINATION&gt;</span></span>
@@ -365,11 +363,11 @@ those locations in <code>$nullmodels</code>.</p>
 <span><span class="co">#&gt; $formulas</span></span>
 <span><span class="co">#&gt; $formulas$arima</span></span>
 <span><span class="co">#&gt; flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55a42bc233e0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x557cc8f190e0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $formulas$ets</span></span>
 <span><span class="co">#&gt; flu.admits ~ season(method = "N")</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55a42bc233e0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x557cc8f190e0&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $nullmodels</span></span>
@@ -378,11 +376,11 @@ those locations in <code>$nullmodels</code>.</p>
 <p>Next, we can format the forecasts for <a href="https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-forecasts/README.md" class="external-link">submission
 to FluSight</a> using the <code>format_for_submission</code>
 function.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">formatted_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/format_for_submission.html">format_for_submission</a></span><span class="op">(</span><span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfor</span>, method <span class="op">=</span> <span class="st">"ts"</span>, format <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span></code></pre></div>
 <p>The list contains separate submission-ready tibbles, one element for
 each type of model fitted.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">formatted_list</span></span>
 <span><span class="co">#&gt; $arima</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4,896 × 7</span></span></span>
@@ -440,24 +438,24 @@ forecasts are assumed to to start the following week.”</em> If
 validation succeeds, the <code>$valid</code> element of the returned
 list will be <code>TRUE</code>, and <code>FALSE</code> if any validation
 checks fail.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/validate_forecast.html">validate_forecast</a></span><span class="op">(</span><span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s plot the forecast with the observed data using the
 <code>plot_forecast</code> function. Here we plot forecasts with the 50%
 prediction interval for US, New York (FIPS 36) and Florida (FIPS
 12).</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"US"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-1.png" width="576"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-1.png" class="r-plt" alt="" width="576"></p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"36"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-2.png" width="576"></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-2.png" class="r-plt" alt="" width="576"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">prepped_hosp</span>, <span class="va">formatted_list</span><span class="op">$</span><span class="va">ensemble</span>, loc<span class="op">=</span><span class="st">"12"</span>, pi <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-3.png" width="576"></p>
+<p><img src="basic_usage_files/figure-html/unnamed-chunk-17-3.png" class="r-plt" alt="" width="576"></p>
 <p>Finally, we can pull out the ARIMA model parameters used for each
 location to save for posterity or retrospective analysis.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hosp_fitfor</span><span class="op">$</span><span class="va">tsfit</span><span class="op">$</span><span class="va">arima</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="st">"fit"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_df</a></span><span class="op">(</span><span class="st">"spec"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
@@ -544,7 +542,7 @@ signal to only include Hawaii. ILI is subject to revision and may be
 less reliable when initially reported, so we replace the current week
 and one week previous with <a href="https://delphi.cmu.edu/nowcast/" class="external-link">Nowcast data</a>. Finally, we fit
 a time series model to forecast ILI for the next four weeks.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ilidat</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="fu"><a href="../reference/get_cdc_ili.html">get_cdc_ili</a></span><span class="op">(</span>region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"state"</span><span class="op">)</span>, years<span class="op">=</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2022</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">region</span> <span class="op">==</span> <span class="st">"Hawaii"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -556,7 +554,7 @@ admissions, so in this step we need to remove all the zeros. The fiphde
 package provides the <code>mnz_replace</code> function which replaces
 zeros in a variable with the smallest non-zero value of that
 variable.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ilidat</span> <span class="op">&lt;-</span> <span class="va">ilidat</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>weighted_ili<span class="op">=</span><span class="fu"><a href="../reference/mnz_replace.html">mnz_replace</a></span><span class="op">(</span><span class="va">weighted_ili</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ilifor</span><span class="op">$</span><span class="va">ilidat</span> <span class="op">&lt;-</span> <span class="va">ilifor</span><span class="op">$</span><span class="va">ilidat</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ili<span class="op">=</span><span class="fu"><a href="../reference/mnz_replace.html">mnz_replace</a></span><span class="op">(</span><span class="va">ili</span><span class="op">)</span><span class="op">)</span></span>
@@ -566,7 +564,7 @@ variable.</p>
 admission data prepared above with the forecasted ILI data in future
 weeks together with the historical severity data by epidemiological
 week.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat_hi</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">prepped_hosp</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">abbreviation</span><span class="op">==</span><span class="st">"HI"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -599,7 +597,7 @@ We can inspect the formulations of each model. Note that these models
 are specified using the <a href="https://github.com/reconverse/trending" class="external-link">trending package</a> and
 internally the <a href="https://github.com/reconverse/trendeval" class="external-link">trendeval package</a> is
 used to determine the best fitting approach.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    poisson <span class="op">=</span> <span class="fu">trending</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/trending/man/trending_model.html" class="external-link">glm_model</a></span><span class="op">(</span><span class="va">flu.admits</span> <span class="op">~</span> <span class="va">ili</span> <span class="op">+</span> <span class="va">hosp_rank</span> <span class="op">+</span> <span class="va">ili_rank</span>, family <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span>,</span>
@@ -618,7 +616,7 @@ used to determine the best fitting approach.</p>
 <p>We must next project covariates four weeks into the future, which we
 can accomplish by pulling from the forecasted ILI and historical
 severity data.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">new_cov</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">ilifor</span><span class="op">$</span><span class="va">ili_future</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="fu">fiphde</span><span class="fu">:::</span><span class="va">historical_severity</span>, by<span class="op">=</span><span class="st">"epiweek"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
@@ -635,7 +633,7 @@ severity data.</p>
 <p>Next we use fiphde’s <code>glm_wrap</code> function which attempts to
 find the best-fitting model out of all the models supplied, and
 specifies the prediction interval quantiles used in FluSight.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_wrap.html">glm_wrap</a></span><span class="op">(</span><span class="va">dat_hi</span>,</span>
 <span>                new_covariates <span class="op">=</span> <span class="va">new_cov</span>,</span>
 <span>                .models <span class="op">=</span> <span class="va">models</span>,</span>
@@ -643,7 +641,7 @@ specifies the prediction interval quantiles used in FluSight.</p>
 <span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span><span class="op">$</span><span class="va">location</span> <span class="op">&lt;-</span> <span class="st">"15"</span></span></code></pre></div>
 <p>We can take a quick look at the forecast output as well as different
 aspects of the final fitted model.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
 <span><span class="co">#&gt;   epiweek epiyear quantile value location</span></span>
@@ -666,29 +664,29 @@ aspects of the final fitted model.</p>
 <span><span class="va">res</span><span class="op">$</span><span class="va">model</span><span class="op">$</span><span class="va">fit</span><span class="op">$</span><span class="va">fitted_model</span><span class="op">$</span><span class="va">coefficients</span></span>
 <span><span class="co">#&gt; NULL</span></span></code></pre></div>
 <p>Next we prepare the data in the quantile format used by FluSight.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hi_glm_prepped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/format_for_submission.html">format_for_submission</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">forecasts</span>, method<span class="op">=</span><span class="st">"CREG"</span>, format <span class="op">=</span> <span class="st">"legacy"</span><span class="op">)</span></span>
 <span><span class="va">hi_glm_prepped</span></span>
 <span><span class="co">#&gt; $CREG</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 96 × 7</span></span></span>
 <span><span class="co">#&gt;    forecast_date target            target_end_date location type  quantile value</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.010    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.025    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.050    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.100    0    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.150    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.200    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.250    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.300    1    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.350    2    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2024-12-27    1 wk ahead inc f… 2022-06-04      15       quan… 0.400    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.010    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.025    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.050    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.100    0    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.150    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.200    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.250    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.300    1    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.350    2    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 2026-10-16    1 wk ahead inc f… 2022-06-04      15       quan… 0.400    2    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 86 more rows</span></span></span></code></pre></div>
 <p>Finally, we can visualize the forecasted point estimates with the 90%
 prediction interval alongside the observed data.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_forecast.html">plot_forecast</a></span><span class="op">(</span><span class="va">dat_hi</span>, <span class="va">hi_glm_prepped</span><span class="op">$</span><span class="va">CREG</span>, location<span class="op">=</span><span class="st">"15"</span>, pi<span class="op">=</span><span class="fl">.9</span><span class="op">)</span></span></code></pre></div>
-<p><img src="basic_usage_files/figure-html/unnamed-chunk-27-1.png" width="576"></p>
+<p><img src="basic_usage_files/figure-html/unnamed-chunk-27-1.png" class="r-plt" alt="" width="576"></p>
 </div>
 </div>
 </div>
@@ -703,7 +701,7 @@ prediction interval alongside the observed data.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

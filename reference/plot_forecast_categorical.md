@@ -1,0 +1,66 @@
+# Plot categorical forecasts
+
+This function creates a bar plot for categorical forecasts. See examples
+for demonstration of usage.
+
+## Usage
+
+``` r
+plot_forecast_categorical(categorical_forecast, format = "hubverse")
+```
+
+## Arguments
+
+- categorical_forecast:
+
+  Either a `tibble` with categorical forecasts created with
+  [forecast_categorical](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+  or prepared forecast submission in "hubverse" format (see Details)
+
+- format:
+
+  Either "hubverse" or "legacy"; the "hubverse" format will require an
+  input forecast that includes output for "pmf" (see Details); default
+  is "hubverse"
+
+## Value
+
+A `ggplot2` object with categorical forecasts shown as a stacked bar
+plot.
+
+## Details
+
+The categorical plotting function works both with "legacy" formatting
+(i.e., format used in the 2022-23 FluSight season) and the "hubverse"
+formatting (i.e., format used in the 2023-24 FluSight season). Unlike
+the "legacy" format, the "hubverse" format allows for quantile and
+categorical forecasts to be co-mingled in the same submission object. If
+the format is specified as "hubverse", then the
+`plot_forecast_categorical()` function will interally look for the "pmf"
+forecasts.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Retrieve hospitalization data
+h_raw <- get_hdgov_hosp(limitcols=TRUE)
+# Prepare and summarize hospitalization data to weekly resolution
+prepped_hosp <- prep_hdgov_hosp(h_raw)
+# Create a keyed time series tibble with only locations of interest
+prepped_tsibble <- make_tsibble(prepped_hosp,
+                                     epiyear = epiyear,
+                                     epiweek=epiweek,
+                                     key=location)
+# Run with default constrained ARIMA, nonseasonal ETS, no NNETAR
+hosp_fitfor <- ts_fit_forecast(prepped_tsibble,
+                               horizon=4L,
+                               outcome="flu.admits")
+# Prepare forecast for quantile submission format
+prepped_forecast <- format_for_submission(hosp_fitfor$tsfor, method = "ts", format = "hubverse")
+# Run categorical summary of quantiles for the time series ensemble
+categorical_forecast <- forecast_categorical(prepped_forecast$ensemble, prepped_hosp, format = "hubverse")
+# Plot the categorical forecast
+plot_forecast_categorical(categorical_forecast, format = "hubverse")
+} # }
+```

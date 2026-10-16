@@ -1,0 +1,83 @@
+# Retrieve ILI nowcast
+
+This function pulls the ILI nowcast from CMU Delphi's ILI Nearby API.
+Observed ILINet data is typically reported with a lag, and the ILI
+nowcast can be used to augment the ILI data stream. The functionality
+here depends on availability of the ILI Nearby API (see 'Details'
+section).
+
+## Usage
+
+``` r
+get_nowcast_ili(
+  epiyearweeks = NULL,
+  dates = lubridate::today() - c(14, 7),
+  state = NULL,
+  boundatzero = TRUE
+)
+```
+
+## Arguments
+
+- epiyearweeks:
+
+  A vector of epiyear-epiweeks to retrieve data for, e.g., 202150,
+  202151, etc. Exclusive with dates
+
+- dates:
+
+  A vector of dates to retrieve data for, e.g., ""2021-12-12" or
+  "2021-12-19". Exclusive with epiyearweek. Defaults to two weeks prior.
+
+- state:
+
+  A vector of states to retrieve (two-letter abbreviation). Default
+  `NULL` retrieves all states, national, and hhs regions. See examples.
+
+- boundatzero:
+
+  Logical as to whether or not the values should be truncated at 0
+  (i.e., non-negative); default is `TRUE`
+
+## Value
+
+Either `NA` (if the API can't be reached) or a `tibble` with the
+following columns:
+
+- **location**: FIPS code for the location
+
+- **abbreviation**: Abbreviation for the location
+
+- **epiyear**: Year of reporting (in epidemiological week calendar)
+
+- **epiweek**: Week of reporting (in epidemiological week calendar)
+
+- **weighted_ili_now**: Nowcasted ILI value
+
+## Details
+
+As of October 2022 ILInearby was no longer being updated. As such, the
+`get_nowcast_ili()` will likely return 'NA'. See
+<https://github.com/cmu-delphi/delphi-epidata/issues/993>.
+
+## References
+
+<https://delphi.cmu.edu/nowcast/>
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Defaults to the previous two weeks for all states
+get_nowcast_ili()
+
+# Otherwise specify one or the other, not both
+get_nowcast_ili(epiyearweeks=c("202150", "202151"), dates=NULL)
+get_nowcast_ili(epiyearweeks=NULL, dates=c("2021-12-12", "2021-12-19"))
+
+# Get just one state for the last years worth of data (back 52 weeks to 1 week)
+get_nowcast_ili(epiyearweeks=NULL,
+                dates=lubridate::today()-seq(52*7, 7, -7),
+                state="FL")
+} # }
+```

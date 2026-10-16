@@ -1,0 +1,439 @@
+# Changelog
+
+## fiphde 2.2.0
+
+### New features
+
+#### More robust data retrieval approach
+
+The `fiphde` package includes the
+[`get_nhsn_weekly()`](https://signaturescience.github.io/fiphde/reference/get_nhsn_weekly.md)
+function to retrieve data from the NHSN data source. As of this release,
+that function now internally uses a retry method for reading data. The
+retry behavior guards against intermittent network connectivity issues.
+Retries are currently capped at 5 attempts, with up to a puase of up to
+30 seconds between each attempt.
+
+#### Future-proofing and improved dependency handling
+
+We have made minor changes to replace deprecated functionality and
+simplify dependency resolution. Specifically, we have updated a summary
+operation to use
+[`dplyr::reframe()`](https://dplyr.tidyverse.org/reference/reframe.html)
+in the
+[`clin_nowcast()`](https://signaturescience.github.io/fiphde/reference/clin_nowcast.md)
+helper. We have also removed the remote repository declaration for
+`distfromq` and `rplanes` in the package `DESCRIPTION` file, given that
+both of those packages are now on CRAN and no longer require GitHub
+installs.
+
+## fiphde 2.1.0
+
+### New features
+
+#### Extended time series and augumented data
+
+As of this release, the package now includes internal package datasets
+for an extended and augmented NHSN flu hospitalization time series
+(`fiphde:::nhsn_imputed` and `fiphde:::nhsn_floom`). The extended time
+series was created using methods published in [Benefield et
+al. (2024)](https://www.medrxiv.org/content/10.1101/2024.07.31.24311314).
+The augmentation stitches together the extended time series (prior to
+2020) and NHSN reporting (2020-2024), with weeks between April and
+November 2024 filled using an imputation approach due to limited
+reporting in this window. The script to create the final dataset is
+available in the package source at `data-raw/floom.R`.
+
+#### Functionality to retrieve data from new NHSN API
+
+In November 2024, the NHSN weekly respiratory hospitalization metrics
+began being reported via a new API. The “preliminary” and “final” data
+are now aggregated to the week and reported at distinct endpoints. We
+have included the
+[`get_nhsn_weekly()`](https://signaturescience.github.io/fiphde/reference/get_nhsn_weekly.md)
+and
+[`prep_nhsn_weekly()`](https://signaturescience.github.io/fiphde/reference/prep_nhsn_weekly.md)
+functions to retrieve and format data from these endpoints.
+
+#### Updated categorical rate trend thresholds for 2024-25 flu season
+
+The FluSight challenge updated the thresholds for categorical rate
+changes in the 2024-25 season (see
+<https://github.com/cdcepi/Flusight-forecast-data/blob/master/data-experimental/README.md>
+for more details). This release brings in a new crosswalk file to apply
+cutoffs for categorical thresholds and implements corresponding logic in
+the
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+function.
+
+#### More options for FluSurv-NET data retrieval
+
+The
+[`get_cdc_hosp()`](https://signaturescience.github.io/fiphde/reference/get_cdc_hosp.md)
+function now includes an option to either retrieve FluSurv-NET reporting
+from the the RESP-NET API or the FluView API.
+
+### Bug fixes
+
+#### Incorrect column names for hospitalization retrival function output
+
+Previously, the
+[`get_cdc_hosp()`](https://signaturescience.github.io/fiphde/reference/get_cdc_hosp.md)
+reversed the names of the columns containing the dates for the start and
+end of the given epiweek. This release addresses that issue, ensuring
+that all columns in the
+[`get_cdc_hosp()`](https://signaturescience.github.io/fiphde/reference/get_cdc_hosp.md)
+output are named correctly.
+
+#### Miscellaneous fixes for documentation and examples
+
+We addressed multiple instances of unclear or misspelled documentation
+and examples that were failing, all of which were marked as “not run”
+and therefore were not flagged by `R CMD CHECK`.
+
+## fiphde 2.0.2
+
+### New features
+
+#### NNETAR in ensemble
+
+As of this release, if the NNETAR model is specified in the
+[`ts_fit_forecast()`](https://signaturescience.github.io/fiphde/reference/ts_fit_forecast.md)
+function (i.e., “nnetar” is not `NULL` in the model list) then the model
+will be included in the ensemble. In previous releases, if the NNETAR
+method was used the results would be included in the returned forecast
+and fit objects but would not be ensembled with the other components.
+Note that currently *all* of the possible models (ARIMA, ETS, and
+NNETAR) must be specified to use the NNETAR in the ensemble.
+
+## fiphde 2.0.1
+
+### Bug fixes
+
+#### Explorer app internal object naming
+
+This release resolves an issue with naming of an internal object in the
+plausibility analysis section of the explorer app.
+
+## fiphde 2.0.0
+
+### New features
+
+#### Accommodation for Hubverse formatting
+
+As of this release, the package now optionally supports forecast
+submission prep and visualization for the Hubverse forecast format
+(<https://hubdocs.readthedocs.io/en/latest/user-guide/model-output.html>)
+that is being used in the 2023-24 FluSight initiative
+(<https://github.com/signaturescience/FluSight-forecast-hub/tree/main/model-output#forecast-file-format>).
+To accommodate this format, several functions now have an additional
+option for “format”. Affected functions include
+[`format_for_submission()`](https://signaturescience.github.io/fiphde/reference/format_for_submission.md),
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md),
+and
+[`plot_forecast()`](https://signaturescience.github.io/fiphde/reference/plot_forecast.md).
+Additionally, the explorer app (launched by
+[`fiphde_launcher()`](https://signaturescience.github.io/fiphde/reference/fiphde_launcher.md))
+now includes an option to specify the format for input forecasts. In all
+cases, the format must either be “hubverse” or “legacy” (i.e., the
+previously standardized quantile forecast format).
+
+#### Shift back for HHS hospitalization data
+
+The data retrieved via the
+[`get_hdgov_hosp()`](https://signaturescience.github.io/fiphde/reference/get_hdgov_hosp.md)
+function reports the count of flu hospitalizations for the prior day.
+The retrieval function now includes an option to shift the date back
+from the report date to the date of the previous day. This could impact
+weekly aggregation with
+[`prep_hdgov_hosp()`](https://signaturescience.github.io/fiphde/reference/prep_hdgov_hosp.md).
+By default this “shift_back” option is set to `TRUE`.
+
+#### Probability density method for categorical forecasts
+
+The
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+function converts quantile forecasts to categorical rate change targets.
+Previously, the method for conversion was exclusively an interpolation
+procedure. In this release, the function now also supports a probability
+density estimation method using the `distfromq` package
+(<https://reichlab.io/distfromq/>). This option can be toggled using the
+“method” argument. As mentioned above, the
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+function now also supports Hubverse formatting. The density method is
+only available for quantile forecasts given the “hubverse” format
+option. Likewise, the “interpolation” method is only available for
+quantile forecasts prepared in the “legacy” format.
+
+#### Expanded horizons
+
+Some of the functions now accept an argument to adjust horizons in
+forecasting. In particular, the
+[`pois_forc()`](https://signaturescience.github.io/fiphde/reference/pois_forc.md)
+helper and the
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+function now both can be parameterized to forecast different horizons.
+
+#### Updated rate change thresholds
+
+The 2022-23 FluSight guidelines solicited categorical rate change
+forecasts for only the 2 week horizon. As of 2023-24, FluSight now
+solicits forecasts for all horizons. With that in mind, we retrieved
+updated rate change threshold data in .csv format from the FluSight
+repository and now include both “legacy” and “hubverse” rate change data
+internally. In both cases, these internal datasets provide the threshold
+at which the rate change should be considered an increase / decrease for
+each given population.
+
+#### Plausibility analysis in explorer app
+
+As of this release, the explorer app now includes a plausibility
+analysis feature built using the `rplanes` package
+(<https://signaturescience.github.io/rplanes/>). The plausibility
+analysis is intended to help guide human forecast review via
+visualizations. Currently the scoring uses default parameters, although
+users can define the components to use via a select input prior to
+running the scoring in the explorer app.
+
+#### Additional example data
+
+Given the new Hubverse compatibility features, the package now includes
+data for forecasts prepared in that format to motivate examples and
+testing.
+
+## fiphde 1.1.1
+
+### New features
+
+#### Optionally bypass ILI nowcast API
+
+The
+[`replace_ili_nowcast()`](https://signaturescience.github.io/fiphde/reference/replace_ili_nowcast.md)
+function includes an option to “try_api”, which is set to `TRUE` by
+default and will try to query the ILI Nearby nowcast API. If set to
+`FALSE`, the function will not try to query the API at all.
+
+## fiphde 1.1.0
+
+### New features
+
+#### Improved API for GLM modeling
+
+This release future-proofs the GLM modeling and forecasting
+functionality. In particular, the API now conforms to updates to the
+`trending` and `trendeval` packages, both of which are used internally
+inside
+[`glm_wrap()`](https://signaturescience.github.io/fiphde/reference/glm_wrap.md)
+and its helpers. Both `trending` and `trendeval` introduced significant
+changes to their respective APIs in recent releases. The `fiphde`
+package now requires `trending` \>= 0.1.0 and `trendeval` \>= 0.1.0 to
+ensure all package functionality works as expected.
+
+#### Explorer app enhancements
+
+As of this release the data explorer app (see `?fiphde_launcher()`) is
+now organized into modules for easier backend maintenance. The app also
+has several new features for usability, including a new CSS theme and a
+“busy” icon to indicate that the app is loading when data processing
+delays outputs from rendering.
+
+## fiphde 1.0.0
+
+This major release introduces new features, improved documentation
+throughout, automated unit tests, and a simplified API.
+
+### New features
+
+#### `plot_forecast_categorical()`
+
+The package now includes a data visualization method for categorical
+forecast summaries via the
+[`plot_forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/plot_forecast_categorical.md)
+function. This function returns a `ggplot2` object with a stacked
+barplot showing the probabilities assigned to each categorical bin at
+every location.
+
+#### Parity between objects returned
+
+Package functions previously returned a mix of `data.frame` and `tibble`
+objects. As of this release, each such function returns a `tibble` for
+consistency.
+
+#### Messaging for `get_nowcast_ili()`
+
+The
+[`get_nowcast_ili()`](https://signaturescience.github.io/fiphde/reference/get_nowcast_ili.md)
+uses the Delphi ILI Nearby API. As of this release, the API was
+documented as no longer being updated. The function (and any others that
+call this function, like
+[`replace_ili_nowcast()`](https://signaturescience.github.io/fiphde/reference/replace_ili_nowcast.md))
+now issue the following warning:
+
+> As of October 2022 ILInearby was no longer being updated. This will
+> likely return ‘NA’. See
+> <https://github.com/cmu-delphi/delphi-epidata/issues/993>
+
+#### Simplified API
+
+The API for the package has been simplified to remove outmoded functions
+and harden arguments where needed. The list below enumerates all of
+these updates:
+
+- Removed `wis_score()` function
+- Removed `get_cdc_vax()` function
+- Removed `state_replace_ili_nowcast_all()` function
+- Removed `submission/` directory from the source code repository on
+  GitHub
+- More intuitive handling of arguments in
+  [`ts_fit_forecast()`](https://signaturescience.github.io/fiphde/reference/ts_fit_forecast.md),
+  including case-insensitive model names, better handling of optional
+  covariates, and removing the inoperative “remove_null_models” argument
+
+#### Documentation
+
+All exported functions are now robustly documented with links between
+package functions, detailed descriptions, and examples that include
+inline comments.
+
+## fiphde 0.3.4
+
+### New features
+
+This release makes two minor updates to the submission script. The
+script now includes plots of categorical forecasts to help wit
+downstream forecast review. Additionally, the script is now configured
+to only use the quasipoisson model family in the count regression grid
+search procedure.
+
+### Bug fixes
+
+Previously the
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+function would only include probabilities for the “type_id” values
+(e.g., increase, large_decrease, etc.) that were observed in at least
+one location. As of this release we now include all “type_id” values,
+assigning those that were not observed in any location to probability of
+0.
+
+## fiphde 0.3.3
+
+### New features
+
+In this release, we introduce
+[`forecast_categorical()`](https://signaturescience.github.io/fiphde/reference/forecast_categorical.md)
+to generate categorical rate change targets. The function takes a
+probabilistic forecast input (with values for each expected quantile)
+and converts it to the probability that the 2 week ahead trend will be a
+large decrease, decrease, increase, large increase, or stable. The
+function is implemented in the `fiphde` explorer Shiny app (see
+`?fiphde_launcher()`) such that the user can download the
+submission-ready categorical forecasts *and* probabilistic forecast
+files.
+
+### Bug fixes
+
+The
+[`plot_forecast()`](https://signaturescience.github.io/fiphde/reference/plot_forecast.md)
+documentation included an example with an outmoded version of the
+[`ts_fit_forecast()`](https://signaturescience.github.io/fiphde/reference/ts_fit_forecast.md)
+API. We have updated the example code so that it runs with the current
+version of the
+[`ts_fit_forecast()`](https://signaturescience.github.io/fiphde/reference/ts_fit_forecast.md)
+function.
+
+## fiphde 0.3.2
+
+### New features
+
+As of this release the submission script now includes code to prepare
+submission-ready files for “experimental” categorical rate change
+targets.
+
+### Bug fixes
+
+Previously the validation script’s date format check was limited to 2021
+and 2022. We have extended this check to work with 2023 dates.
+
+The R CMD CHECK GitHub action has been incremented to use “v2” R
+actions, which addresses an issue with failing continuous integration
+checks failing for the repository.
+
+## fiphde 0.3.1
+
+### New features
+
+This release includes a rearranged submission script that now executes
+common procedures (data retrieval, package loads, etc.) at the top of
+the script, so that CREG and TSENS can be run independently as needed.
+
+### Bug fixes
+
+Prior to this release the explorer app (see
+[`?fiphde_launcher`](https://signaturescience.github.io/fiphde/reference/fiphde_launcher.md))
+would default visualizations to *all* locations in multiple submission
+modeling methods loaded into the app. However, if any of the locations
+were available for one but not all model submission files, then the
+location(s) would remain selected and the forecast visualizations would
+break until the missing location(s) was unselected for the model. As of
+this release, the app now will default selected locations to just those
+that are present in the given submission file.
+
+## fiphde 0.3.0
+
+### New features
+
+This release brings in additional data retrieval and processing
+functions. The package now includes code adapted from `cdcfluview` to
+query the NREVSS surveillance system and pull clinical laboratory
+percent positive flu data. The
+[`who_nrevss()`](https://signaturescience.github.io/fiphde/reference/who_nrevss.md)
+function is unexported but is used in the user-facing
+[`get_cdc_clin()`](https://signaturescience.github.io/fiphde/reference/get_cdc_clin.md)
+function, which pulls and preps the percent positive data. A
+complementary function,
+[`clin_nowcast()`](https://signaturescience.github.io/fiphde/reference/clin_nowcast.md),
+is now available to augment the clinical laboratory percent positivity
+with a nowcasted value.
+
+The package also now includes helper functions to prepare covariates for
+modeling. For example, the new
+[`pois_forc()`](https://signaturescience.github.io/fiphde/reference/pois_forc.md)
+helper creates a forecasted counts based on recently observed values.
+This can be used to create forecasted values for number of tests and
+number of positive flu specimens (and therefore percent positivity) to
+feed into models that include percent positive lab results as a
+covariate. The new
+[`smoothie()`](https://signaturescience.github.io/fiphde/reference/smoothie.md)
+function is also available to create weighted averages of recent
+observations, which can be used as covariate data in models.
+
+## fiphde 0.2.1
+
+### Bug fixes
+
+Minor fix to include “start_date” parameter in
+[`replace_ili_nowcast()`](https://signaturescience.github.io/fiphde/reference/replace_ili_nowcast.md)
+function so that ILI nowcasting can be performed retrospectively if
+needed.
+
+## fiphde 0.2.0
+
+### New features
+
+This release includes code adapted from `cdcfluview` to query ILI and
+flu hospitalization data. The functions to do so are
+[`ilinet()`](https://signaturescience.github.io/fiphde/reference/ilinet.md)
+and
+[`hospitalizations()`](https://signaturescience.github.io/fiphde/reference/hospitalizations.md),
+which are unexported but used as helper functions internally. For
+example,
+[`ilinet()`](https://signaturescience.github.io/fiphde/reference/ilinet.md)
+is used by the exported
+[`get_cdc_ili()`](https://signaturescience.github.io/fiphde/reference/get_cdc_ili.md)
+function. By including these functions, we have minimized the number of
+dependencies for `fiphde` thereby streamlining the package installation
+procedure.
+
+## fiphde 0.1.0
+
+Initial release !
