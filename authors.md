@@ -16,7 +16,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/signaturescience/fiphde/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/signaturescience/fiphde/blob/v2.2.0/DESCRIPTION)
 
 Nagraj V, Williams D, Jessa S, Hulme-Lowe C, Turner S (2026). *fiphde:
 Forecasting Influenza in Support of Public Health Decision Making*. R

@@ -305,11 +305,11 @@ hosp_fitfor
 #> $formulas
 #> $formulas$arima
 #> flu.admits ~ PDQ(0, 0, 0) + pdq(1:2, 0:2, 0) + hosp_rank + ili_rank
-#> <environment: 0x557cc8f190e0>
+#> <environment: 0x55726deb7af0>
 #> 
 #> $formulas$ets
 #> flu.admits ~ season(method = "N")
-#> <environment: 0x557cc8f190e0>
+#> <environment: 0x55726deb7af0>
 #> 
 #> 
 #> $nullmodels
