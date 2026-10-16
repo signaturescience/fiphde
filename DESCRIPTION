@@ -28,7 +28,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    dplyr,
+    dplyr (>= 1.1.0),
     fable,
     fabletools (>= 0.3.2),
     lubridate,
