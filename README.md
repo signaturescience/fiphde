@@ -6,8 +6,6 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/signaturescience/fiphde/workflows/R-CMD-check/badge.svg)](https://github.com/signaturescience/fiphde/actions)
-[![CRAN
-status](https://www.r-pkg.org/badges/version/fiphde)](https://CRAN.R-project.org/package=fiphde)
 <!-- badges: end -->
 
 `fiphde`: **F**orecasting **I**nfluenza in Support of **P**ublic
